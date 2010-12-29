@@ -5,12 +5,11 @@
 package pdc;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import org.ccnx.ccn.CCNFilterListener;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.ConfigurationException;
-import org.ccnx.ccn.impl.CCNFlowControl.SaveType;
-import org.ccnx.ccn.io.content.CCNStringObject;
-import org.ccnx.ccn.profiles.namespace.ParameterizedName.PrefixName;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
@@ -21,37 +20,61 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  */
 public class NDNetwork implements CCNFilterListener {
 
+	private PDCConfigStore _config = PDCConfigStore.get_instance();
+	private Map<String, PDCCommand> _commands = new HashMap<String, PDCCommand>(5);
 	private CCNHandle _ccn_handle;
-	private String _namespace_str;
 	private ContentName _namespace;
-	private ContentName _namespace_replication;
 
-	public NDNetwork(String namespace) throws MalformedContentNameStringException, ConfigurationException, IOException {
-		_ccn_handle = CCNHandle.open();
-		_namespace_str = namespace;
+	public NDNetwork(String namespace)
+					throws IOException, ConfigurationException,
+					MalformedContentNameStringException
+	{
+		_ccn_handle = CCNHandle.getHandle();
 		_namespace = ContentName.fromURI(namespace);
+
+		addCommand(PDCDataProvider.get_instance(_ccn_handle));
+		addCommand(PDCReplicator.get_instance(_ccn_handle));
 	}
 
-	public boolean handleInterest(Interest interest) {
-		throw new UnsupportedOperationException("Not supported yet.");
+	public void startListening()
+					throws MalformedContentNameStringException, IOException
+	{
+		_ccn_handle.registerFilter(_namespace, this);
 	}
 
-	private enum namespaces {
+	public boolean handleInterest(Interest interest)
+	{
+		ContentName name = interest.name();
+		ContentName postfix = name.postfix(_namespace);
 
-		replication
-	}
+		System.out.println("Got interest: " + name + ", postfix: " + postfix);
 
-	private String getNamespace(namespaces type) {
-		switch (type) {
-			case replication:
-				return _namespace_str + "/replicate";
+		if (postfix == null || postfix.count() < 2)
+			return false;
+
+		String appname = postfix.stringComponent(0);
+
+		Application app = _config.getApplication(appname);
+		if (app == null) {
+			System.out.println("Application " + appname + " doesn't exist.");
+			return false;
 		}
 
-		return null;
+		String command = postfix.stringComponent(1);
+		if (!_commands.containsKey(command)) {
+			System.out.println("Unknown command: " + command);
+			return false;
+		}
+
+		ContentName remain = postfix.subname(2, postfix.count() - 2);
+		PDCCommand cmd = _commands.get(command);
+		System.out.printf("Firing %s(%s, %s, %s)\n", cmd.getCommandName(), app.name,
+						remain.toURIString(), interest);
+		return cmd.processCommand(app, remain, interest);
 	}
 
-	public void listen() throws MalformedContentNameStringException, IOException {
-		ContentName rep_name = ContentName.fromURI(_namespace, "replicate");
-		_ccn_handle.registerFilter(rep_name, this);
+	private void addCommand(PDCCommand command)
+	{
+		_commands.put(command.getCommandName(), command);
 	}
 }
