@@ -3,15 +3,16 @@
  * and open the template in the editor.
  */
 
-package pdc;
+package pdc.exceptions;
 
 /**
  *
  * @author takeda
  */
-class NDNetworkAlreadyListeningException extends NDNetworkException {
+class PDCApplicationDoesntExistException extends PDCException {
 
-	public NDNetworkAlreadyListeningException() {
+	public PDCApplicationDoesntExistException()
+	{
 	}
 
 }

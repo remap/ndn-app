@@ -14,13 +14,32 @@ import java.util.Map;
 public class PDCConfigStore {
 
 	private static PDCConfigStore _instance;
-	private Map<String, Application> _applications = new HashMap<String, Application>();
+	private Map<String, Application> _applications;
 
-	void addApplication(Application app) {
+	/**
+	 * Constructor
+	 */
+	private PDCConfigStore()
+	{
+		_applications = new HashMap<String, Application>();
+	}
+
+	/**
+	 * Add application to the config store
+	 * @param app
+	 */
+	void add_application(Application app)
+	{
 		_applications.put(app.name, app);
 	}
-	
-	Application getApplication(String name) {
+
+	/**
+	 * Retrieve application from the config store
+	 * @param name name of the application
+	 * @return application instance or null if doesn't exist
+	 */
+	Application get_application(String name)
+	{
 		if (_applications.containsKey(name))
 			return _applications.get(name);
 
@@ -29,9 +48,10 @@ public class PDCConfigStore {
 
 	/**
 	 * get instance of our configuration class
-	 * @return
+	 * @return instance of the class
 	 */
-	static PDCConfigStore get_instance() {
+	static PDCConfigStore get_instance()
+	{
 		if (_instance == null)
 			_instance = new PDCConfigStore();
 

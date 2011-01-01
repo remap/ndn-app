@@ -12,11 +12,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * Interface between PDV and database
  * @author takeda
  */
 public class Database {
-
+	/**
+	 * Prefix for databases
+	 * (useful when multiple PDVs run with one database; mostly for testing)
+	 */
 	private static String _prefix = null;
 	private static Mongo _connection;
 	private DB _database;
@@ -25,11 +28,14 @@ public class Database {
 		DATA
 	}
 
-	public DB getDatabase() {
+	public DB getDatabase()
+	{
 		return _database;
 	}
 
-	public Database(db_type type, String app) throws MongoException {
+	public Database(db_type type, String app)
+					throws MongoException
+	{
 		String name = type2name(type) + "_" + app;
 
 		try {
@@ -45,10 +51,11 @@ public class Database {
 		}
 	}
 
-	private String type2name(db_type type) {
+	private String type2name(db_type type)
+	{
 		switch (type) {
-			case DATA:
-				return "data";
+		case DATA:
+			return "data";
 		}
 
 		throw new RuntimeException("unknown type");
@@ -56,10 +63,11 @@ public class Database {
 
 	/**
 	 * Set prefix for database names
-	 * Should be useful if you run more than one pdv that uses the same database
-	 * @param prefix
+	 * Should be useful if you run more than one PDV that uses the same database
+	 * @param prefix string prefix
 	 */
-	public static void setPrefix(String prefix) {
+	public static void setPrefix(String prefix)
+	{
 		_prefix = prefix;
 	}
 }

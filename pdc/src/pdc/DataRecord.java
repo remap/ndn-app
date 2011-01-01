@@ -6,61 +6,65 @@ package pdc;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import org.bson.BSONObject;
 import java.text.*;
 import java.util.*;
+import org.bson.BSONObject;
 import org.bson.types.ObjectId;
+import pdc.util.Log;
 
 /**
- *
+ * Single data record stored in the database
  * @author takeda
  */
 public final class DataRecord implements DBObject {
-
+	private boolean _isPartialObject = false;
 	ObjectId id;
 	int type = -1;
 	Date timestamp = null;
 	DBObject data = new BasicDBObject();
 
-	public DataRecord() {
+	public DataRecord()
+	{
 	}
-	
-	public DataRecord(String id) {
+
+	public DataRecord(String id)
+	{
 		this.id = new ObjectId(id);
 	}
 
-	public DataRecord(int type, Date ts) {
+	public DataRecord(int type, Date ts)
+	{
 		this.type = type;
 		this.timestamp = ts;
 	}
 
-	public DataRecord(Map data) {
+	public DataRecord(Map data)
+	{
 		this.putAll(data);
 	}
 
-	public void markAsPartialObject() {
-		throw new UnsupportedOperationException("Not supported yet.");
+	public void markAsPartialObject()
+	{
+		_isPartialObject = true;
 	}
 
-	public boolean isPartialObject() {
-		throw new UnsupportedOperationException("Not supported yet.");
+	public boolean isPartialObject()
+	{
+		return _isPartialObject;
 	}
 
-	public Object put(String string, Object o) {
+	public Object put(String string, Object o)
+	{
 		if (string.equals("_id")) {
 			id = (ObjectId) o;
 
 			return id;
 		} else if (string.equals("type")) {
-			type = Integer.parseInt(o.toString());
+			type = (Integer) o;
 
 			return type;
 		} else if (string.equals("timestamp")) {
-			try {
-				timestamp = DateFormat.getInstance().parse(o.toString());
-			} catch (ParseException ex) {
-				timestamp = null;
-			}
+			timestamp = (Date) o;
 
 			return timestamp;
 		}
@@ -68,11 +72,13 @@ public final class DataRecord implements DBObject {
 		return data.put(string, o);
 	}
 
-	public void putAll(BSONObject bsono) {
+	public void putAll(BSONObject bsono)
+	{
 		putAll(bsono.toMap());
 	}
 
-	public void putAll(Map map) {
+	public void putAll(Map map)
+	{
 		Map m = new LinkedHashMap(map);
 
 		if (m.containsKey("_id")) {
@@ -86,19 +92,17 @@ public final class DataRecord implements DBObject {
 		}
 
 		if (m.containsKey("timestamp")) {
-			timestamp = (Date) m.get(m);
+			timestamp = (Date) m.get("timestamp");
 			m.remove("timestamp");
 		}
 
 		data.putAll(m);
 	}
 
-	public Object get(String string) {
-		if (string.equals("_id")) {
-//			return id == null ? null : id.toStringMongod();
+	public Object get(String string)
+	{
+		if (string.equals("_id"))
 			return id;
-		}
-
 
 		if (string.equals("type"))
 			return type != -1 ? type : null;
@@ -109,7 +113,8 @@ public final class DataRecord implements DBObject {
 		return data.get(string);
 	}
 
-	public Map toMap() {
+	public Map toMap()
+	{
 		Map map = new LinkedHashMap(data.toMap());
 
 		if (id != null)
@@ -124,7 +129,8 @@ public final class DataRecord implements DBObject {
 		return map;
 	}
 
-	public Object removeField(String string) {
+	public Object removeField(String string)
+	{
 		if (string.equals("_id")) {
 			ObjectId t = id;
 			this.id = null;
@@ -145,12 +151,14 @@ public final class DataRecord implements DBObject {
 		return data.removeField(string);
 	}
 
-	public boolean containsKey(String string) {
+	public boolean containsKey(String string)
+	{
 //		throw new UnsupportedOperationException("Apparently deprecated");
 		return containsField(string);
 	}
 
-	public boolean containsField(String string) {
+	public boolean containsField(String string)
+	{
 		if (string.equals("_id"))
 			return id != null;
 
@@ -163,7 +171,8 @@ public final class DataRecord implements DBObject {
 		return data.containsField(string);
 	}
 
-	public Set<String> keySet() {
+	public Set<String> keySet()
+	{
 		Set<String> set = new LinkedHashSet<String>(data.keySet());
 
 		if (id != null)

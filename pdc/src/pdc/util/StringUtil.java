@@ -25,7 +25,7 @@ public class StringUtil {
 		return sb.toString();
 	}
 
-	public static String stripPrfixChar(String s, String prefix) {
+	public static String stripPrefixChar(String s, String prefix) {
 		return s.startsWith(prefix) ? s.substring(1) : s;
 	}
 }

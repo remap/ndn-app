@@ -4,10 +4,14 @@
  */
 package pdc;
 
+import pdc.exceptions.PDCNoResponseException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
@@ -24,8 +28,7 @@ import pdc.util.StringUtil;
  *
  * @author takeda
  */
-class PDCReplicator extends PDCCommand {
-
+public class PDCReplicator extends PDCCommand {
 	private static PDCReplicator _instance = null;
 	private final int FRESHNESS = 1;
 	private DataEncryptor _encryptor;
@@ -94,6 +97,8 @@ class PDCReplicator extends PDCCommand {
 		Collection<String> ids;
 		ContentName uri;
 		String data;
+		SignedInfo si;
+		byte[] cipher;
 		ContentObject co;
 
 		Log.debug("Got pull request for: " + name.toURIString());
@@ -101,24 +106,28 @@ class PDCReplicator extends PDCCommand {
 		if (name.count() < 1)
 			return false;
 
-		args = StringUtil.stripPrfixChar(name.toString(), "/").split("%7C");
+		args = StringUtil.stripPrefixChar(name.toString(), "/").split("%7C");
 
-		if (args.length < 2 || args.length > 3)
+		if (args.length < 1 || args.length > 3)
 			return false;
 
 		uri = interest.name().subname(0, interest.name().count() - 3);
 
 		// Content of the data packet
 		datastream = new DataStream(app, args[0]);
-		ids = args.length == 2
-						? datastream.getRangeIds(args[1])
-						: datastream.getRangeIds(args[1], args[2]);
+		if (args.length == 1)
+			ids = datastream.getRangeIds();
+		else if (args.length == 2)
+			ids = datastream.getRangeIds(args[1]);
+		else
+			ids = datastream.getRangeIds(args[1], args[2]);
+
 		data = uri + "\n" + StringUtil.join(ids, "\n");
 
-		SignedInfo si = new SignedInfo(_publisher, SignedInfo.ContentType.ENCR,
-						_locator, FRESHNESS, null);
+		si = new SignedInfo(_publisher, SignedInfo.ContentType.ENCR, _locator,
+						FRESHNESS, null);
 
-		byte[] cipher = _encryptor.encryptData(app, datastream, data.getBytes());
+		cipher = _encryptor.encryptData(datastream, data.getBytes());
 		co = new ContentObject(interest.name(), si, cipher, _signing_key);
 		_ccn_handle.put(co);
 
@@ -149,48 +158,77 @@ class PDCReplicator extends PDCCommand {
 				return true;
 			}
 
-		} catch (InvalidKeyException ex) {
+		}
+		catch (InvalidKeyException ex) {
 			Logger.getLogger(PDCReplicator.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (SignatureException ex) {
+		}
+		catch (SignatureException ex) {
 			Logger.getLogger(PDCReplicator.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (IOException ex) {
+		}
+		catch (IOException ex) {
 			Logger.getLogger(PDCReplicator.class.getName()).log(Level.SEVERE, null, ex);
 		}
 		return false;
 	}
 
-	Collection<String> callPull(ContentName pdv, String app, String stream,
-					String start, String end)
-					throws MalformedContentNameStringException
+	List<String> callPull(ContentName pdv, DataStream stream)
+					throws PDCNoResponseException
 	{
-		ContentName uri;
+		return callPull(pdv, stream, null, null);
+	}
+
+	List<String> callPull(ContentName pdv, DataStream stream, String start)
+					throws PDCNoResponseException
+	{
+		return callPull(pdv, stream, start, null);
+	}
+
+	List<String> callPull(ContentName pdv, DataStream data_stream, String start,
+					String end)
+					throws PDCNoResponseException
+	{
+		ContentName uri = null;
+		ContentObject response;
+		byte[] decoded;
+		List<String> result = new LinkedList<String>();
 
 		assert pdv != null;
-		assert app != null;
-		assert stream != null;
-		assert start != null;
-
-		uri = pdv.append(app).append(COMMAND).append("pull");
-
-		if (end == null)
-			uri = uri.append(String.format("%s|%s", stream, start));
-		else
-			uri = uri.append(String.format("%s|%s|%s", stream, start, end));
-
-		Log.debug(uri.toURIString());
+		assert data_stream != null;
 
 		try {
-			ContentObject response = _ccn_handle.get(uri,
-							SystemConfiguration.NO_TIMEOUT);
+			uri = pdv.append(data_stream.app.name).append(COMMAND).append("pull");
+
+			if (start == null)
+				uri = uri.append(String.format("%s",
+								data_stream.data_stream_id));
+			else if (end == null)
+				uri = uri.append(String.format("%s|%s",
+								data_stream.data_stream_id, start));
+			else
+				uri = uri.append(String.format("%s|%s|%s",
+								data_stream.data_stream_id, start, end));
+		}
+		catch (MalformedContentNameStringException ex) {
+			Log.error(String.format("Unable to create proper URI (%s, %s, %s, %s, %s)",
+							data_stream.app.name, COMMAND, data_stream.data_stream_id, start,
+							end));
+			throw new Error(ex);
+		}
+
+		try {
+			response = _ccn_handle.get(uri, SystemConfiguration.LONG_TIMEOUT);
 			if (response == null)
-				return null;
+				throw new PDCNoResponseException();
 
-			Application appl = _config.getApplication(app);
-			byte[] content = _encryptor.decryptData(appl, stream, response.content());
+			//TODO: Check signature here
 
-			//XXX: Check signature here
-			Log.debug(new String(content));
-		} catch (IOException ex) {
+			decoded = _encryptor.decryptData(data_stream, response.content());
+
+			result = Arrays.asList(new String(decoded).split("\\\n"));
+
+			return result;
+		}
+		catch (IOException ex) {
 			Logger.getLogger(PDCReplicator.class.getName()).log(Level.SEVERE, null, ex);
 		}
 		return null;

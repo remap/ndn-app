@@ -19,7 +19,6 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author takeda
  */
 public class NDNetwork implements CCNFilterListener {
-
 	private PDCConfigStore _config = PDCConfigStore.get_instance();
 	private Map<String, PDCCommand> _commands = new HashMap<String, PDCCommand>(5);
 	private CCNHandle _ccn_handle;
@@ -54,7 +53,7 @@ public class NDNetwork implements CCNFilterListener {
 
 		String appname = postfix.stringComponent(0);
 
-		Application app = _config.getApplication(appname);
+		Application app = _config.get_application(appname);
 		if (app == null) {
 			System.out.println("Application " + appname + " doesn't exist.");
 			return false;

@@ -4,18 +4,17 @@
  */
 package pdc;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
+import pdc.exceptions.PDCNoResponseException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.bson.BSONDecoder;
 import org.bson.BSONEncoder;
 import org.bson.BSONObject;
-import org.bson.types.ObjectId;
 import org.ccnx.ccn.CCNHandle;
+import org.ccnx.ccn.config.SystemConfiguration;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
@@ -27,8 +26,7 @@ import pdc.util.Log;
  *
  * @author takeda
  */
-class PDCDataProvider extends PDCCommand {
-
+public class PDCDataProvider extends PDCCommand {
 	private static PDCDataProvider _instance = null;
 	private final int FRESHNESS = 5;
 	private DataEncryptor _encryptor;
@@ -60,46 +58,54 @@ class PDCDataProvider extends PDCCommand {
 	@Override
 	boolean processCommand(Application app, ContentName postfix, Interest interest)
 	{
+		BSONEncoder encoder = new BSONEncoder();
+		String datastream_id, record_id;
+		DataStream datastream;
+		DataRecord record;
+		SignedInfo si;
+		byte[] cipher;
+		ContentObject co;
+
 		if (postfix.count() != 2)
 			return false;
 
-		String datastream = postfix.stringComponent(0);
-		String record_id = postfix.stringComponent(1);
+		datastream_id = postfix.stringComponent(0);
+		record_id = postfix.stringComponent(1);
 
-		Log.debug("Requested; app = " + app.name + " datastream = " + datastream
-						+ ", record_id = " + record_id + "\n");
+		Log.debug("Requested; app = " + app.name + " datastream = " + datastream_id
+						+ ", record_id = " + record_id);
 
-		if (!app.data_stream_exists(datastream)) {
+		datastream = app.data_stream_get(datastream_id);
+		if (datastream == null) {
 			Log.debug("Unknown data stream");
 			return false;
 		}
 
-		DataRecord record = getRecord(app, datastream, record_id);
+		record = datastream.getRecord(record_id);
 		if (record == null)
 			return false;
 
-		SignedInfo si = new SignedInfo(_publisher, SignedInfo.ContentType.ENCR,
+		si = new SignedInfo(_publisher, SignedInfo.ContentType.ENCR,
 						_locator, FRESHNESS, null);
 
-		byte[] cipher = _encryptor.encryptData(app, datastream, JSON.serialize(
-						record).getBytes());
+		cipher = _encryptor.encryptData(datastream, encoder.encode(record));
+//		cipher = _encryptor.encryptData(app, datastream_id, JSON.serialize(record).getBytes());
 
-//		BSONEncoder encoder = new BSONEncoder();
-//		byte[] cipher = _encryptor.encryptData(app, acl, encoder.encode(record));
-
-		ContentObject co;
 		try {
 			co = new ContentObject(interest.name(), si, cipher, _signing_key);
 			_ccn_handle.put(co);
 
 			return true;
-		} catch (IOException ex) {
+		}
+		catch (IOException ex) {
 			Logger.getLogger(PDCDataProvider.class.getName()).log(Level.SEVERE, null,
 							ex);
-		} catch (InvalidKeyException ex) {
+		}
+		catch (InvalidKeyException ex) {
 			Logger.getLogger(PDCDataProvider.class.getName()).log(Level.SEVERE, null,
 							ex);
-		} catch (SignatureException ex) {
+		}
+		catch (SignatureException ex) {
 			Logger.getLogger(PDCDataProvider.class.getName()).log(Level.SEVERE, null,
 							ex);
 		}
@@ -107,21 +113,48 @@ class PDCDataProvider extends PDCCommand {
 		return false;
 	}
 
-	private DataRecord getRecord(Application app, String datastream,
-					String record_id)
+	DataRecord fetchRecord(ContentName pdv, Application app, String stream,
+					String content_id) throws PDCNoResponseException
 	{
-		Database datastore = new Database(Database.db_type.DATA, app.name);
-		DBCollection coll = datastore.getDatabase().getCollection(datastream);
-		coll.setObjectClass(DataRecord.class);
+		BSONDecoder decoder = new BSONDecoder();
+		ContentName uri;
+		ContentObject response;
+		byte[] decrypted;
+		BSONObject content;
 
-		DataRecord record = (DataRecord) coll.findOne(new ObjectId(record_id));
-		if (record == null) {
-			Log.error("Object " + record_id + " doesn't exist");
-			return null;
+		assert pdv != null;
+		assert app != null;
+		assert stream != null;
+		assert content_id != null;
+
+		try {
+			uri = pdv.append(app.name).append(COMMAND).
+							append(stream).append(content_id);
+		}
+		catch (MalformedContentNameStringException ex) {
+			Log.error(String.format("Unable to create proper URI (%s, %s, %s, %s)",
+							app.name, COMMAND, stream, content_id));
+			throw new Error(ex);
 		}
 
-		Log.debug(JSON.serialize(record));
+		try {
+			response = _ccn_handle.get(uri, SystemConfiguration.LONG_TIMEOUT);
+			if (response == null)
+				throw new PDCNoResponseException();
 
-		return record;
+			//TODO: Check signature
+
+			decrypted = _encryptor.decryptData(app, stream, response.content());
+			content = decoder.readObject(decrypted);
+			DataRecord record = new DataRecord(content.toMap());
+
+			return record;
+		}
+		catch (IOException ex) {
+			Logger.getLogger(PDCDataProvider.class.getName()).log(Level.SEVERE, null,
+							ex);
+		}
+
+		return null;
 	}
 }

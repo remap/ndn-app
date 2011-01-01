@@ -2,13 +2,14 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
-package pdc;
+package pdc.exceptions;
 
 /**
  *
  * @author takeda
  */
-class NDNetworkException extends RuntimeException {
-
+public class PDCNoResponseException extends PDCException {
+	public PDCNoResponseException()
+	{
+	}
 }
