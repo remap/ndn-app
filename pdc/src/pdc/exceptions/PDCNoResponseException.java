@@ -6,7 +6,7 @@ package pdc.exceptions;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 public class PDCNoResponseException extends PDCException {
 	public PDCNoResponseException()

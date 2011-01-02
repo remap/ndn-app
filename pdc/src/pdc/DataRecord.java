@@ -14,7 +14,7 @@ import pdc.util.Log;
 
 /**
  * Single data record stored in the database
- * @author takeda
+ * @author Derek Kulinski
  */
 public final class DataRecord implements DBObject {
 	private boolean _isPartialObject = false;

@@ -10,7 +10,7 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  * Stores information about every node we communicate with
- * @author takeda
+ * @author Derek Kulinski
  */
 class PDVNode {
 	/**

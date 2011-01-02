@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 public class StringUtilTest {
 	public StringUtilTest()

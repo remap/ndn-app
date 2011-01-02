@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 
 /**
  * Interface between PDV and database
- * @author takeda
+ * @author Derek Kulinski
  */
 public class Database {
 	/**

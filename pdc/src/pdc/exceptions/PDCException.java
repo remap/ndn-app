@@ -6,7 +6,15 @@ package pdc.exceptions;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
-class PDCException extends Exception {
+public class PDCException extends Exception {
+	public PDCException()
+	{
+		super();
+	}
+
+	public PDCException(String message) {
+		super(message);
+	}
 }

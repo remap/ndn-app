@@ -2,17 +2,14 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package pdc.exceptions;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
-class PDCApplicationDoesntExistException extends PDCException {
-
+public class PDCApplicationDoesntExistException extends PDCException {
 	public PDCApplicationDoesntExistException()
 	{
 	}
-
 }

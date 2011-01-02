@@ -16,7 +16,7 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 public class NDNetwork implements CCNFilterListener {
 	private PDCConfigStore _config = PDCConfigStore.get_instance();

@@ -6,7 +6,7 @@ package pdc.util;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 public class Log {
 	static boolean isAssertionEnabled = false;

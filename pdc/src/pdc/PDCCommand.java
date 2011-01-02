@@ -15,7 +15,7 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 abstract class PDCCommand {
 	protected final String COMMAND;

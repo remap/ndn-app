@@ -21,7 +21,7 @@ import pdc.util.Log;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 public class DataStream {
 	final String data_stream_id;
@@ -142,9 +142,9 @@ public class DataStream {
 			iter.next();
 
 		while (iter.hasNext()) {
-			record = _data_provider.fetchRecord(node.uri, app, data_stream_id,
-							iter.next());
-
+			String data_id = iter.next();
+			Log.debug("pulling: " + data_id);
+			record = _data_provider.fetchRecord(node.uri, app, data_stream_id, data_id);
 			Log.debug("got: " + JSON.serialize(record));
 			insertRecord(record);
 			_last_entry = record.id.toStringMongod();
@@ -163,7 +163,8 @@ public class DataStream {
 		cur.limit(1);
 
 		if (!cur.hasNext()) {
-			Log.debug("Doesn't look like we have anything in the database -> no last_entry");
+			Log.debug(
+							"Doesn't look like we have anything in the database -> no last_entry");
 			_last_entry = null;
 			return;
 		}

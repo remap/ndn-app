@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  * Stores information about applications that PDV handles
- * @author takeda
+ * @author Derek Kulinski
  */
 public class Application {
 	final String name;

@@ -10,7 +10,7 @@ import java.util.Iterator;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 public class StringUtil {
 	public static String join(Collection<String> list, String delimiter) {

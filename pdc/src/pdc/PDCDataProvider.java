@@ -20,11 +20,12 @@ import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.SignedInfo;
+import pdc.exceptions.PDCException;
 import pdc.util.Log;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 public class PDCDataProvider extends PDCCommand {
 	private static PDCDataProvider _instance = null;
@@ -88,14 +89,16 @@ public class PDCDataProvider extends PDCCommand {
 		si = new SignedInfo(_publisher, SignedInfo.ContentType.ENCR,
 						_locator, FRESHNESS, null);
 
-		cipher = _encryptor.encryptData(datastream, encoder.encode(record));
-//		cipher = _encryptor.encryptData(app, datastream_id, JSON.serialize(record).getBytes());
-
 		try {
+			cipher = _encryptor.encryptData(datastream, encoder.encode(record));
+//		cipher = _encryptor.encryptData(app, datastream_id, JSON.serialize(record).getBytes());
 			co = new ContentObject(interest.name(), si, cipher, _signing_key);
 			_ccn_handle.put(co);
 
 			return true;
+		}
+		catch (PDCException ex) {
+			throw new Error(ex);
 		}
 		catch (IOException ex) {
 			Logger.getLogger(PDCDataProvider.class.getName()).log(Level.SEVERE, null,
@@ -114,7 +117,8 @@ public class PDCDataProvider extends PDCCommand {
 	}
 
 	DataRecord fetchRecord(ContentName pdv, Application app, String stream,
-					String content_id) throws PDCNoResponseException
+					String content_id)
+					throws PDCNoResponseException
 	{
 		BSONDecoder decoder = new BSONDecoder();
 		ContentName uri;

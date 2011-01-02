@@ -6,9 +6,9 @@ package pdc.exceptions;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
-class NDNetworkAlreadyListeningException extends PDCException {
+public class NDNetworkAlreadyListeningException extends PDCException {
 	public NDNetworkAlreadyListeningException()
 	{
 	}

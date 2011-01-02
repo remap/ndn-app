@@ -21,12 +21,13 @@ import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.SignedInfo;
+import pdc.exceptions.PDCException;
 import pdc.util.Log;
 import pdc.util.StringUtil;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 public class PDCReplicator extends PDCCommand {
 	private static PDCReplicator _instance = null;
@@ -113,8 +114,13 @@ public class PDCReplicator extends PDCCommand {
 
 		uri = interest.name().subname(0, interest.name().count() - 3);
 
+		datastream = app.data_stream_get(args[0]);
+		if (datastream == null) {
+			Log.info("Unknown stream: " + args[0]);
+			return false;
+		}
+
 		// Content of the data packet
-		datastream = new DataStream(app, args[0]);
 		if (args.length == 1)
 			ids = datastream.getRangeIds();
 		else if (args.length == 2)
@@ -127,9 +133,14 @@ public class PDCReplicator extends PDCCommand {
 		si = new SignedInfo(_publisher, SignedInfo.ContentType.ENCR, _locator,
 						FRESHNESS, null);
 
-		cipher = _encryptor.encryptData(datastream, data.getBytes());
-		co = new ContentObject(interest.name(), si, cipher, _signing_key);
-		_ccn_handle.put(co);
+		try {
+			cipher = _encryptor.encryptData(datastream, data.getBytes());
+			co = new ContentObject(interest.name(), si, cipher, _signing_key);
+			_ccn_handle.put(co);
+		}
+		catch (PDCException ex) {
+			throw new Error("Unable to encrypt data", ex);
+		}
 
 		return true;
 	}

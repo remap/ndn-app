@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 public class PDCConfigStore {
 

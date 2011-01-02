@@ -12,31 +12,28 @@ import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.TwofishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
-import org.bouncycastle.crypto.modes.CTSBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
+import pdc.exceptions.PDCException;
 import pdc.util.Log;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski
  */
 public class DataEncryptor {
 	private BufferedBlockCipher _cipher;
 
 	public DataEncryptor()
 	{
-//		_cipher = new DESEngine();
-//		_cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(engine));
-//		BlockCipher engine = new AESEngine();
-
 		BlockCipher engine = new TwofishEngine();
 
 		BlockCipher mode = new CBCBlockCipher(engine);
 //		BlockCipher mode = new SICBlockCipher(engine);
 
 //		_cipher = new BufferedBlockCipher(mode);
-		_cipher = new CTSBlockCipher(mode);
-//		_cipher = new PaddedBufferedBlockCipher(mode);
+//		_cipher = new CTSBlockCipher(mode);
+		_cipher = new PaddedBufferedBlockCipher(mode);
 
 //		// This version doesn't do any encryption
 //		BlockCipher engine = new NullEngine();
@@ -44,15 +41,13 @@ public class DataEncryptor {
 	}
 
 	byte[] encryptData(DataStream stream, byte[] data)
+					throws PDCException
 	{
 		byte[] cipherText;
 		int outputLen;
 
-		if (stream.key == null) {
-			Log.error("Data stream key is not set");
-			return null;
-		}
-
+		if (stream.key == null)
+			throw new PDCException("Data stream key is not set");
 
 		_cipher.init(true, new KeyParameter(stream.key));
 
@@ -65,6 +60,7 @@ public class DataEncryptor {
 
 		try {
 			_cipher.doFinal(cipherText, outputLen);
+			return cipherText;
 		}
 		catch (DataLengthException ex) {
 			Logger.getLogger(DataEncryptor.class.getName()).log(Level.SEVERE, null, ex);
@@ -76,28 +72,35 @@ public class DataEncryptor {
 			Logger.getLogger(DataEncryptor.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
-		return cipherText;
+		return null;
 	}
 
 	byte[] decryptData(DataStream stream, byte[] cipherText)
 	{
-		byte[] decrypted;
+		byte[] buffer, decrypted;
 		int outputLen;
 
-		if (stream.key == null)
+		if (stream.key == null) {
+			Log.error("Data stream key is not set");
 			return null;
+		}
 
 		_cipher.init(false, new KeyParameter(stream.key));
 
 //		byte[] iv = generateIV(app, acl);
 //		_cipher.init(false, new ParametersWithIV(new KeyParameter(aclkey), iv));
 
-		decrypted = new byte[_cipher.getOutputSize(cipherText.length)];
-		outputLen = _cipher.processBytes(cipherText, 0, cipherText.length, decrypted,
+		buffer = new byte[_cipher.getOutputSize(cipherText.length)];
+		outputLen = _cipher.processBytes(cipherText, 0, cipherText.length, buffer,
 						0);
 
 		try {
-			_cipher.doFinal(decrypted, outputLen);
+			outputLen += _cipher.doFinal(buffer, outputLen);
+
+			decrypted = new byte[outputLen];
+			System.arraycopy(buffer, 0, decrypted, 0, outputLen);
+
+			return decrypted;
 		}
 		catch (DataLengthException ex) {
 			Logger.getLogger(DataEncryptor.class.getName()).log(Level.SEVERE, null, ex);
@@ -109,7 +112,7 @@ public class DataEncryptor {
 			Logger.getLogger(DataEncryptor.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
-		return decrypted;
+		return null;
 	}
 
 	/**
@@ -119,7 +122,7 @@ public class DataEncryptor {
 	 * @param cipherText
 	 * @return
 	 */
-	byte[] decryptData(Application app, String stream_id, byte[] cipherText)
+	 byte[] decryptData(Application app, String stream_id, byte[] cipherText)
 	{
 		DataStream stream = app.data_stream_get(stream_id);
 		assert stream != null;
