@@ -13,6 +13,7 @@ import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import pdc.util.Log;
 
 /**
  *
@@ -46,7 +47,7 @@ public class NDNetwork implements CCNFilterListener {
 		ContentName name = interest.name();
 		ContentName postfix = name.postfix(_namespace);
 
-		System.out.println("Got interest: " + name + ", postfix: " + postfix);
+		Log.debug("Got interest: " + name + ", postfix: " + postfix);
 
 		if (postfix == null || postfix.count() < 2)
 			return false;
@@ -55,20 +56,20 @@ public class NDNetwork implements CCNFilterListener {
 
 		Application app = _config.get_application(appname);
 		if (app == null) {
-			System.out.println("Application " + appname + " doesn't exist.");
+			Log.warning("Application " + appname + " doesn't exist.");
 			return false;
 		}
 
 		String command = postfix.stringComponent(1);
 		if (!_commands.containsKey(command)) {
-			System.out.println("Unknown command: " + command);
+			Log.warning("Unknown command: " + command);
 			return false;
 		}
 
 		ContentName remain = postfix.subname(2, postfix.count() - 2);
 		PDCCommand cmd = _commands.get(command);
-		System.out.printf("Firing %s(%s, %s, %s)\n", cmd.getCommandName(), app.name,
-						remain.toURIString(), interest);
+		Log.info(String.format("Firing %s(%s, %s, %s)\n", cmd.getCommandName(), app.name,
+						remain.toURIString(), interest));
 		return cmd.processCommand(app, remain, interest);
 	}
 

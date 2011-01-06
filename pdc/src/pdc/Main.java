@@ -55,6 +55,7 @@ public class Main {
 		byte[] key = new byte[]{'t', 'e', 's', 't', 'k', 'e', 'y', 0};
 		Application n1_app, n2_app = null;
 		DataStream n1_ds, n2_ds = null;
+		NDNetwork test = null;
 
 		if (args.length != 1)
 			usage();
@@ -67,24 +68,28 @@ public class Main {
 
 		//Disable annoying ccnx debug messages
 		Log.setDefaultLevel(Log.FAC_ALL, Level.WARNING);
-		NDNetwork test = new NDNetwork(args[0]);
+
+		if (uri.equals("database"))
+			test = new NDNetwork(node1.uri.toURIString());
+		else
+			test = new NDNetwork(args[0]);
 
 		if (uri.equals(node1.uri.toURIString())) {
 			Database.setPrefix("pdv1_");
 			n1_app = new Application("myapp");
-			n1_app.add_downlink(node2);
 
 			n1_ds = new DataStream(n1_app, "myacl");
 			n1_ds.key = key.clone();
+			n1_ds.add_downlink(node2);
 			n1_app.data_stream_add(n1_ds);
 			config.add_application(n1_app);
 		} else if (uri.equals(node2.uri.toURIString())) {
 			Database.setPrefix("pdv2_");
 			n2_app = new Application("myapp");
-			n2_app.set_uplink(node1);
 
 			n2_ds = new DataStream(n2_app, "myacl");
 			n2_ds.key = key.clone();
+			n2_ds.set_uplink(node1);
 			n2_app.data_stream_add(n2_ds);
 			config.add_application(n2_app);
 		} else if (uri.equals("database")) {
@@ -97,7 +102,7 @@ public class Main {
 			fillDatabase(ds);
 			System.exit(0);
 		} else {
-			System.out.println("Unknown URI");
+			pdc.util.Log.error("Unknown URI");
 			System.exit(10);
 		}
 

@@ -12,6 +12,7 @@ import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -24,15 +25,29 @@ import pdc.util.Log;
  * @author Derek Kulinski
  */
 public class DataStream {
+	/**
+	 * id of the data stream
+	 */
 	final String data_stream_id;
+	/**
+	 * application associated with the DS
+	 */
 	final Application app;
+	/**
+	 * key used for symmetric encryption
+	 */
 	byte[] key = null;
+	/**
+	 * id of last record in the database
+	 */
 	private String _last_entry = null;
+	private PDVNode _uplink = null;
+	private List<PDVNode> _downlinks = new ArrayList<PDVNode>();
 	final private Database _db;
 	final private DBCollection _coll;
-	private PDCConfigStore _config = PDCConfigStore.get_instance();
-	private PDCReplicator _replicator = PDCReplicator.get_instance();
-	private PDCDataProvider _data_provider = PDCDataProvider.get_instance();
+	final private PDCConfigStore _config = PDCConfigStore.get_instance();
+	final private PDCReplicator _replicator = PDCReplicator.get_instance();
+	final private PDCDataProvider _data_provider = PDCDataProvider.get_instance();
 
 	DataStream(Application app, String data_stream_id)
 	{
@@ -46,6 +61,26 @@ public class DataStream {
 		_db = new Database(Database.db_type.DATA, app.name);
 		_coll = _db.getDatabase().getCollection(data_stream_id);
 		_coll.setObjectClass(DataRecord.class);
+	}
+
+	PDVNode get_uplink()
+	{
+		return _uplink;
+	}
+
+	void set_uplink(PDVNode node)
+	{
+		_uplink = node;
+	}
+
+	void add_downlink(PDVNode node)
+	{
+		_downlinks.add(node);
+	}
+
+	void del_downlink(PDVNode node)
+	{
+		_downlinks.remove(node);
 	}
 
 	/**
@@ -122,7 +157,7 @@ public class DataStream {
 		DataRecord record;
 		Collection<String> ids;
 
-		node = app.get_uplink();
+		node = get_uplink();
 		if (node == null) {
 			Log.warning("No uplink defined; fetching aborted");
 			return;

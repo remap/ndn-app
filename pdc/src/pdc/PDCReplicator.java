@@ -61,33 +61,56 @@ public class PDCReplicator extends PDCCommand {
 	private boolean handlePush(Interest interest, Application app,
 					ContentName name)
 	{
-		System.out.println("Got push request for: " + name.toURIString());
+		String[] args;
+		DataStream stream;
+		SignedInfo si;
+		ContentObject co;
+
+		Log.debug("Got push request for: " + name.toURIString());
+
+		if (name.count() < 1)
+			return false;
+
+		//<data stream>[|<last entry>]
+		args = StringUtil.stripPrefixChar(name.toString(), "/").split("%7C");
+
+		if (args.length < 1 || args.length > 2)
+			return false;
+
+		stream = app.data_stream_get(args[0]);
+		if (stream == null) {
+			Log.info("Stream " + args[0] + " doesn't exist.");
+			return false;
+		}
+
+		si = new SignedInfo(_publisher, SignedInfo.ContentType.GONE, _locator,
+						1, null);
+
+		try {
+			co = new ContentObject(interest.name(), si, null, _signing_key);
+			_ccn_handle.put(co);
+
+			//TODO: handle situation when argument is given
+			stream.fetchDataFromUplink();
+
+			return true;
+		}
+		catch (InvalidKeyException ex) {
+			throw new RuntimeException("Unable to sign content object", ex);
+		}
+		catch (SignatureException ex) {
+			throw new RuntimeException("Unable to sign content object", ex);
+		}
+		catch (IOException ex) {
+			throw new RuntimeException("Unable to send response", ex);
+		}
+		catch (PDCNoResponseException ex) {
+			Log.error("Uplink didin't respond");
+		}
+
 		return false;
 	}
 
-//	private boolean handlePull(Interest interest, Application app, ContentName name) {
-//		Log.debug("Got pull request for: " + name.toURIString());
-//
-//		if (name.count() < 1)
-//			return false;
-//
-//		String[] args = name.toString().split("%7C");
-//
-//		if (args.length < 2 || args.length > 3)
-//			return false;
-//
-//		try {
-//			ContentName uri = ContentName.fromNative(args[0])
-//							.append(app.name).append("share").append(args[1]);
-//
-//		} catch (MalformedContentNameStringException ex) {
-//			Log.error("Invalid uri: " + args[0]);
-//			return false;
-//		}
-//
-//
-//		return false;
-//	}
 	private boolean handlePull(Interest interest, Application app,
 					ContentName name)
 					throws InvalidKeyException, SignatureException, IOException
@@ -99,6 +122,7 @@ public class PDCReplicator extends PDCCommand {
 		ContentName uri;
 		String data;
 		SignedInfo si;
+
 		byte[] cipher;
 		ContentObject co;
 
@@ -115,12 +139,12 @@ public class PDCReplicator extends PDCCommand {
 		uri = interest.name().subname(0, interest.name().count() - 3);
 
 		datastream = app.data_stream_get(args[0]);
+
 		if (datastream == null) {
 			Log.info("Unknown stream: " + args[0]);
-			return false;
-		}
 
-		// Content of the data packet
+			return false;
+		} // Content of the data packet
 		if (args.length == 1)
 			ids = datastream.getRangeIds();
 		else if (args.length == 2)
@@ -148,10 +172,11 @@ public class PDCReplicator extends PDCCommand {
 	@Override
 	boolean processCommand(Application app, ContentName postfix, Interest interest)
 	{
-		System.out.println("Got replication interest for: " + postfix.toURIString());
+		Log.debug("Got replication interest for: " + postfix.toURIString());
 
 		if (postfix.count() == 0) {
-			System.err.println("No subcommand!");
+			Log.error("No subcommand!");
+
 			return false;
 		}
 
@@ -166,9 +191,9 @@ public class PDCReplicator extends PDCCommand {
 				ContentObject co = ContentObject.buildContentObject(interest.name(),
 								"invalid request!".getBytes());
 				_ccn_handle.put(co);
+
 				return true;
 			}
-
 		}
 		catch (InvalidKeyException ex) {
 			Logger.getLogger(PDCReplicator.class.getName()).log(Level.SEVERE, null, ex);
@@ -179,6 +204,7 @@ public class PDCReplicator extends PDCCommand {
 		catch (IOException ex) {
 			Logger.getLogger(PDCReplicator.class.getName()).log(Level.SEVERE, null, ex);
 		}
+
 		return false;
 	}
 
@@ -200,6 +226,7 @@ public class PDCReplicator extends PDCCommand {
 	{
 		ContentName uri = null;
 		ContentObject response;
+
 		byte[] decoded;
 		List<String> result = new LinkedList<String>();
 
@@ -228,11 +255,11 @@ public class PDCReplicator extends PDCCommand {
 
 		try {
 			response = _ccn_handle.get(uri, SystemConfiguration.LONG_TIMEOUT);
+
 			if (response == null)
 				throw new PDCNoResponseException();
 
 			//TODO: Check signature here
-
 			decoded = _encryptor.decryptData(data_stream, response.content());
 
 			result = Arrays.asList(new String(decoded).split("\\\n"));
@@ -242,6 +269,7 @@ public class PDCReplicator extends PDCCommand {
 		catch (IOException ex) {
 			Logger.getLogger(PDCReplicator.class.getName()).log(Level.SEVERE, null, ex);
 		}
+
 		return null;
 	}
 }

@@ -28,8 +28,9 @@ public class DataEncryptor {
 	{
 		BlockCipher engine = new TwofishEngine();
 
-		BlockCipher mode = new CBCBlockCipher(engine);
+		//TODO: Make use of CTR/SIC mode (needs a good iv)
 //		BlockCipher mode = new SICBlockCipher(engine);
+		BlockCipher mode = new CBCBlockCipher(engine);
 
 //		_cipher = new BufferedBlockCipher(mode);
 //		_cipher = new CTSBlockCipher(mode);

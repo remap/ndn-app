@@ -27,26 +27,6 @@ public class Application {
 		this.name = name;
 	}
 
-	PDVNode get_uplink()
-	{
-		return _uplink;
-	}
-
-	void set_uplink(PDVNode node)
-	{
-		_uplink = node;
-	}
-
-	void add_downlink(PDVNode node)
-	{
-		_downlinks.add(node);
-	}
-
-	void del_downlink(PDVNode node)
-	{
-		_downlinks.remove(node);
-	}
-
 	/**
 	 * Check if given data stream exists
 	 * @param id
@@ -65,20 +45,5 @@ public class Application {
 	DataStream data_stream_add(DataStream ds)
 	{
 		return _data_stream.put(ds.data_stream_id, ds);
-	}
-
-	/**
-	 * Get an encryption key for given data stream
-	 * @param id
-	 * @return key or null if doesn't exists
-	 * @deprecated
-	 */
-	 byte[] data_stream_get_key(String id)
-	{
-		DataStream ds = _data_stream.get(id);
-		if (ds == null)
-			return null;
-
-		return ds.key;
 	}
 }
