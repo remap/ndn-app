@@ -10,7 +10,6 @@ import java.text.*;
 import java.util.*;
 import org.bson.BSONObject;
 import org.bson.types.ObjectId;
-import pdc.util.Log;
 
 /**
  * Single data record stored in the database
@@ -19,8 +18,10 @@ import pdc.util.Log;
 public final class DataRecord implements DBObject {
 	private boolean _isPartialObject = false;
 	ObjectId id;
-	int type = -1;
 	Date timestamp = null;
+	String imei;
+	Double latitude;
+	Double longitude;
 	DBObject data = new BasicDBObject();
 
 	public DataRecord()
@@ -32,9 +33,8 @@ public final class DataRecord implements DBObject {
 		this.id = new ObjectId(id);
 	}
 
-	public DataRecord(int type, Date ts)
+	public DataRecord(Date ts)
 	{
-		this.type = type;
 		this.timestamp = ts;
 	}
 
@@ -59,17 +59,33 @@ public final class DataRecord implements DBObject {
 			id = (ObjectId) o;
 
 			return id;
-		} else if (string.equals("type")) {
-			type = (Integer) o;
-
-			return type;
 		} else if (string.equals("timestamp")) {
 			timestamp = (Date) o;
 
 			return timestamp;
+		} else if (string.equals("imei")) {
+			imei = (String) o;
+
+			return imei;
+		} else if (string.equals("latitude")) {
+			latitude = (Double) o;
+
+			return latitude;
+		} else if (string.equals("longitude")) {
+			longitude = (Double) o;
+
+			return longitude;
 		}
 
 		return data.put(string, o);
+	}
+
+	private void putAllValue(Map m, final String key)
+	{
+		if (m.containsKey(key)) {
+			put(key, m.get(key));
+			m.remove(key);
+		}
 	}
 
 	public void putAll(BSONObject bsono)
@@ -81,20 +97,11 @@ public final class DataRecord implements DBObject {
 	{
 		Map m = new LinkedHashMap(map);
 
-		if (m.containsKey("_id")) {
-			id = (ObjectId) m.get("_id");
-			m.remove("_id");
-		}
-
-		if (m.containsKey("type")) {
-			type = (Integer) m.get("type");
-			m.remove("type");
-		}
-
-		if (m.containsKey("timestamp")) {
-			timestamp = (Date) m.get("timestamp");
-			m.remove("timestamp");
-		}
+		putAllValue(m, "_id");
+		putAllValue(m, "timestamp");
+		putAllValue(m, "imei");
+		putAllValue(m, "latitude");
+		putAllValue(m, "longitude");
 
 		data.putAll(m);
 	}
@@ -104,11 +111,17 @@ public final class DataRecord implements DBObject {
 		if (string.equals("_id"))
 			return id;
 
-		if (string.equals("type"))
-			return type != -1 ? type : null;
-
 		if (string.equals("timestamp"))
 			return timestamp;
+
+		if (string.equals("imei"))
+			return imei;
+
+		if (string.equals("latitude"))
+			return latitude;
+
+		if (string.equals("longitude"))
+			return longitude;
 
 		return data.get(string);
 	}
@@ -120,11 +133,18 @@ public final class DataRecord implements DBObject {
 		if (id != null)
 			map.put("_id", id);
 
-		if (type != -1)
-			map.put("type", type);
-
 		if (timestamp != null)
-			map.put("timestamp", DateFormat.getDateTimeInstance().format(timestamp));
+//			map.put("timestamp", DateFormat.getDateTimeInstance().format(timestamp));
+			map.put("timestamp", timestamp);
+
+		if (imei != null)
+			map.put("imei", imei);
+
+		if (latitude != null)
+			map.put("latitude", latitude);
+
+		if (longitude != null)
+			map.put("longitude", longitude);
 
 		return map;
 	}
@@ -136,14 +156,24 @@ public final class DataRecord implements DBObject {
 			this.id = null;
 
 			return t;
-		} else if (string.equals("type")) {
-			int t = this.type;
-			this.type = -1;
-
-			return t;
 		} else if (string.equals("timestamp")) {
 			Date t = timestamp;
 			timestamp = null;
+
+			return t;
+		} else if (string.equals("imei")) {
+			String t = imei;
+			imei = null;
+
+			return t;
+		} else if (string.equals("latitude")) {
+			Double t = latitude;
+			latitude = null;
+
+			return t;
+		} else if (string.equals("longitude")) {
+			Double t = longitude;
+			longitude = null;
 
 			return t;
 		}
@@ -162,11 +192,17 @@ public final class DataRecord implements DBObject {
 		if (string.equals("_id"))
 			return id != null;
 
-		if (string.equals("type"))
-			return type != -1;
-
 		if (string.equals("timestamp"))
 			return timestamp != null;
+
+		if (string.equals("imei"))
+			return imei != null;
+
+		if (string.equals("latitude"))
+			return latitude != null;
+
+		if (string.equals("longitude"))
+			return longitude != null;
 
 		return data.containsField(string);
 	}
@@ -178,11 +214,17 @@ public final class DataRecord implements DBObject {
 		if (id != null)
 			set.add("_id");
 
-		if (type != -1)
-			set.add("type");
-
 		if (timestamp != null)
 			set.add("timestamp");
+
+		if (imei != null)
+			set.add("imei");
+
+		if (latitude != null)
+			set.add("latitude");
+
+		if (longitude != null)
+			set.add("longitude");
 
 		return set;
 	}

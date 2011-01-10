@@ -4,6 +4,8 @@
  */
 package pdc;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import pdc.exceptions.PDCNoResponseException;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
@@ -17,6 +19,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import org.bson.types.ObjectId;
 import pdc.util.Log;
 
@@ -43,6 +47,7 @@ public class DataStream {
 	private String _last_entry = null;
 	private PDVNode _uplink = null;
 	private List<PDVNode> _downlinks = new ArrayList<PDVNode>();
+	private Timer pull_timer;
 	final private Database _db;
 	final private DBCollection _coll;
 	final private PDCConfigStore _config = PDCConfigStore.get_instance();
@@ -207,5 +212,35 @@ public class DataStream {
 		record = (DataRecord) cur.next();
 		_last_entry = record.id.toStringMongod();
 		Log.debug("Last entry is: " + _last_entry);
+	}
+
+	public void periodicPullStart(long period)
+	{
+		if (pull_timer != null)
+			periodicPullStop();
+
+		pull_timer = new Timer(true);
+		pull_timer.schedule(new TimerTask() {
+			@Override
+			public void run()
+			{
+				try {
+					fetchDataFromUplink();
+				}
+				catch (PDCNoResponseException ex) {
+					Logger.getLogger(DataStream.class.getName()).log(Level.SEVERE, null,
+									ex);
+				}
+			}
+		}, 0, period);
+	}
+
+	public void periodicPullStop()
+	{
+		if (pull_timer == null)
+			return;
+
+		pull_timer.cancel();
+		pull_timer = null;
 	}
 }

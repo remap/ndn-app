@@ -5,14 +5,9 @@
 package pdc;
 
 import pdc.exceptions.PDCNoResponseException;
-import com.mongodb.DBCollection;
 import com.mongodb.MongoException;
-import com.mongodb.WriteConcern;
-import com.mongodb.util.JSON;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.config.ConfigurationException;
@@ -33,10 +28,11 @@ public class Main {
 	static void fillDatabase(DataStream ds)
 	{
 		try {
-			for (int i = 0; i < 10; i++) {
-				DataRecord dr = new DataRecord(1, new Date());
-				dr.put("lat", i);
-				dr.put("long", 123.3974);
+			for (double i = 0; i < 10; i++) {
+				DataRecord dr = new DataRecord(new Date());
+				dr.put("type", 1);
+				dr.put("latitude", i);
+				dr.put("longitude", 123.3974);
 
 				ds.insertRecord(dr);
 			}
@@ -109,12 +105,7 @@ public class Main {
 		test.startListening();
 
 		if (uri.equals(node2.uri.toURIString())) {
-			try {
-				n2_ds.fetchDataFromUplink();
-			}
-			catch (PDCNoResponseException ex) {
-				Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-			}
+			n2_ds.periodicPullStart(5000);
 		}
 	}
 }
