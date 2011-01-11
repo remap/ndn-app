@@ -1,0 +1,19 @@
+This is a draft description on how to use the NDN version of murmur.
+
+1. Go to the follow link to download the mumble client:
+http://mumble.sourceforge.net/
+
+2. Launch the ccnd and connect to the ccn hub near you.
+
+3. Set your local prefix by setting the LOCAL_PREFIX environment variable.
+E.g. export LOCAL_PREFIX="/ucla.edu/cs/zhenkai/"
+Note that local prefix MUST end with a slash ("/"). We will make the code smart in next release.
+
+4. Launch the murmurd in ./debug directory. If you are using prebuild binary, run murmurd.sh instead.
+
+5. Launch the Mumble client and start chatting! You can use any username you want when asked for.
+
+Footnote: current version of ndn murmur assumes that there is only one channel: root. That is, everyone
+using ndn murmur will appear in root.
+
+
