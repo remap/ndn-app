@@ -3,11 +3,11 @@ There is a draft instruction on compiling NDN murmur.
 The default setting now is to compile murmur only (server only, no client), without ice support.
 
 For Debain/Ubuntu user, the following command will make sure you have the needed libraries and dependencies:
-aptitude install qt4-dev-tools libqt4-dev libspeex1 libspeex-dev libboost-dev \
-				libasound2-dev libxevie-dev libxevie1 libssl-dev g++ libspeechd-dev \
-				libzeroc-ice-dev ice-slice libpulse-dev slice2cpp libcap-dev  \
-				libspeexdsp-dev libprotobuf-dev protobuf-compiler libogg-dev \
-				libavahi-compat-libdnssd-dev libsndfile1-dev libg15daemon-client-dev libxi-dev
+apt-get install qt4-dev-tools libqt4-dev libboost-dev \
+				libssl-dev g++ \
+				libpulse-dev libcap-dev  \
+				libprotobuf-dev protobuf-compiler  \
+				libavahi-compat-libdnssd-dev libsndfile1-dev libxi-dev
 
 And yes, some of them are not necessary as they are only for Mumble client. We will take them off in the next release.
 
