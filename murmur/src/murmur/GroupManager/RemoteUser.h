@@ -40,7 +40,7 @@ class RemoteUser: public QObject, public User {
         void checkLiveness();
 
     private:
-        static const int REFRESH_INTERVAL = 12;
+        static const int REFRESH_INTERVAL = 120;
         QString remoteUserPrefix;
         QTimer *refreshTimer;
         QDateTime lastRefreshTime;
