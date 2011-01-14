@@ -29,9 +29,10 @@ int RemoteUser::setLastRefreshTime() {
 }
 
 void RemoteUser::checkLiveness() {
-    int delta = QDateTime::currentDateTime().secsTo(lastRefreshTime);
-    fprintf(stderr, "RemoteUser<%s>::checkLiveness(): %d // %d\n", this->qsName.toLocal8Bit().constData(), delta, -1*delta);
-    if ((-1 * delta) >= REFRESH_INTERVAL) {
+    //int delta = QDateTime::currentDateTime().secsTo(lastRefreshTime);
+    int delta = lastRefreshTime.secsTo(QDateTime::currentDateTime());
+    fprintf(stderr, "RemoteUser<%s>::checkLiveness(): %d sec // %d\n", this->qsName.toLocal8Bit().constData(), delta, delta);
+    if ((delta) >= REFRESH_INTERVAL) {
         fprintf(stderr, "RemoteUser::emit userHasLeft()\n");
         emit userHasLeft(this->qsName);
     } else {

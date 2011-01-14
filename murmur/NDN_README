@@ -2,6 +2,8 @@ This is a draft description on how to use the NDN version of murmur.
 
 1. Go to the follow link to download the mumble client:
 http://mumble.sourceforge.net/
+If you are using Linux, you may want to look at this instead:
+http://mumble.sourceforge.net/Installing_Mumble
 
 2. Launch the ccnd and connect to the ccn hub near you.
 

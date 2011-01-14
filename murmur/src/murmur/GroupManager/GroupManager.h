@@ -151,7 +151,7 @@ class GroupManager: public QThread {
     public:
         static const int MAX_LENGTH = 400;
         static const char broadcastPrefix[MAX_LENGTH];
-        static const int REFRESH_INTERVAL = 4;
+        static const int REFRESH_INTERVAL = 10;
 
         // useful for localUser to notify other users in its lifetime
         QTimer *refreshTimer;

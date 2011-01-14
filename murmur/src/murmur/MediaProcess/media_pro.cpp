@@ -55,6 +55,7 @@ rtp_content_handler(struct ccn_closure *selfp,
 		    struct ccn_upcall_info *info)
 {
     UserDataBuf *userBuf  = (UserDataBuf *)selfp->data;
+	qWarning("<<<<>>>>>  Handling Incoming Voice Content\n");
 
     //
     if (userBuf == NULL || userBuf->iNeedDestroy) {
@@ -133,6 +134,10 @@ rtp_content_handler(struct ccn_closure *selfp,
                     ccn_name_append(pathbuf, temp->buf, temp->length);
                     ccn_express_interest(info->h, pathbuf,
                             &state->rtp_pipeline_callback, NULL);
+					
+					// debug
+					char * uri = ccn_charbuf_as_string(pathbuf);
+					qWarning("fetching the next segment: %s\n", uri);
                 }
                 ccn_charbuf_destroy(&temp);
             }
@@ -513,6 +518,8 @@ int NdnMediaProcess::ndnDataSend(UserDataBuf *userBuf, const void *buf, size_t l
             abort();
         }
     }
+
+	qWarning("ContentObject for voice data created");
     
     struct buf_list *p = NULL, *b = userBuf->data_buf.buflist;
     while (b != NULL) { p = b; b = b->link; }
@@ -547,6 +554,7 @@ int NdnMediaProcess::doPendingSend()
                 /*do not neet lock,beacause the ccn connection is just used by this mudule
                  * other module just set active to end this module*/
                 res = ccn_put(ndnState.ccn, b->buf, b->len);
+				qWarning("Just put a voice object to ccnd\n");
                 free(b->buf);
                 b->len = 0;
                 b->buf = NULL;
@@ -584,6 +592,7 @@ int NdnMediaProcess::checkInterest()
             if (res >= 0) {
                 if (it.value()->data_buf.callback->p == NULL) abort();
                 res = ccn_express_interest(ndnState.ccn, path, it.value()->data_buf.callback, templ);
+				qWarning("Expressing Interest %s\n", ccn_charbuf_as_string(path));
                 it.value()->interested = 1;
             }
             if (res < 0)
@@ -611,6 +620,7 @@ int NdnMediaProcess::ndn_wait_message(UserDataBuf *userBuf, char *buf, int len)
         if (b->len < len)
             len = b->len;
         memcpy(buf, b->buf, len);
+		qWarning("received data with length %d\n", len);
         free(b->buf);
         b->buf = NULL;
         b->len = 0;

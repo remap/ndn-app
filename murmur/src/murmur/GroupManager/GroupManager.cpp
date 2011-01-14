@@ -714,7 +714,9 @@ void NdnContext::sendRefreshInterest(QString channel, QString userName) {
     ccn_name_append_prefix(interest_path, GroupManager::broadcastPrefix);
     ccn_name_append_str(interest_path, channel.toLocal8Bit().constData());
     ccn_name_append_str(interest_path, "refresh");
+	ccn_name_append_str(interest_path, QDateTime::currentDateTime().toString().toLocal8Bit().constData());
     ccn_name_append_str(interest_path, userName.toLocal8Bit().constData());
+
 
 /*
     ccn_charbuf *templ = ccn_charbuf_create();
@@ -796,7 +798,7 @@ static enum ccn_upcall_res incoming_interest(ccn_closure *selfp,
          *   eg:
          *   /ndn/broadcast/confrence/root/thu.edu/cs/yangxu/<exclusive_filter>
          * 2. Refresh Interest
-         *   /ndn/broadcast/conference/conf-name/refresh/userName
+         *   /ndn/broadcast/conference/conf-name/refresh/Timestamp/userName
         */
 
         nameEnd = (info->interest_comps)->n - 2;
@@ -804,7 +806,7 @@ static enum ccn_upcall_res incoming_interest(ccn_closure *selfp,
         if ((pGroupManager->pNdnContext)->isRefreshInterest(info, (const char *)(channel))) { // Refresh Interest
 
             // need to check the refresher, due to the time crossing between enumeration and refresh
-            ccn_name_get_prefix(info, &refresher, 5, nameEnd);
+            ccn_name_get_prefix(info, &refresher, 6, nameEnd);
             QString tmp((const char *)refresher);
             QString user(tmp.section('/', -1));
             tmp.chop(user.size());
