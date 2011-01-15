@@ -1,4 +1,5 @@
 #include <cstring>
+#include <ctime>
 #include "murmur_pch.h"
 #include "GroupManager.h"
 #include "Server.h"
@@ -61,6 +62,23 @@ static const unsigned char *get_my_publisher_key_id();
 static ssize_t get_my_publisher_key_id_length();
 
 static int ccn_create_keylocator(ccn_charbuf *c, const ccn_pkey *k);
+
+static ccn_charbuf *create_passive_templ();
+
+static ccn_charbuf *create_passive_templ() {
+	ccn_charbuf *templ = ccn_charbuf_create();
+	ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG); // <interest>
+	ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG); // <name>
+	ccn_charbuf_append_closer(templ); // </name>
+	ccn_charbuf_append_tt(templ, CCN_DTAG_AnswerOriginKind, CCN_DTAG); // <AnswerOriginKind>
+	ccn_charbuf_append_tt(templ, 1, CCN_UDATA);
+	ccn_charbuf_append(templ, "1", 1);
+	ccn_charbuf_append_closer(templ); // </AnswerOriginKind>
+	ccn_charbuf_append_closer(templ); // </interest>
+	return (templ);
+}
+
+
 
 /*
  * set ccn_closure handler according HandlerType
@@ -196,6 +214,10 @@ GroupManager::GroupManager(NdnMediaProcess *pNdnMediaPro) {
     this->pNdnMediaPro = pNdnMediaPro;
     // fill localuser sharing prefix
     int len = strlen(LocalSharingPrefix);
+	if (LocalSharingPrefix[len - 1] != '/') {
+		LocalSharingPrefix[len++] = '/';
+		LocalSharingPrefix[len] = '\0';
+	}
     char *ptr = localPrefix;
     memcpy(ptr, LocalSharingPrefix, len);
     *(ptr + len) = '\0';
@@ -399,12 +421,21 @@ int GroupManager::addRemoteUser(QString prefix, QString userName) {
 }
 
 bool GroupManager::remoteUserExist(QString prefix, QString remoteUser) {
-    (void)prefix;
-    bool bExist = false;
+
+	bool bExist = true;
 
     RUserMutex.lock();
-    bExist = qhRemoteUsers.contains(remoteUser);
+	QHash<QString, RemoteUser *>::const_iterator it = qhRemoteUsers.find(remoteUser);
     RUserMutex.unlock();
+	
+	if (it == qhRemoteUsers.constEnd()) {
+		bExist = false;
+	}
+	else {
+		RemoteUser *u = it.value();
+		if (prefix != u->getPrefix())
+			bExist = false;
+	}
 
     return bExist;
 }
@@ -699,9 +730,9 @@ void NdnContext::sendEnumerationInterest(QString channel, QString userName) {
 /* Send refresh interest when timer goes off
  * Default Lifetime: 0x4000 <4 seconds>
  * Interest Format:
- *   /ndn/broadcast/conference/conf-name/refresh/UserName
+ *   /ndn/broadcast/conference/conf-name/refresh/UserPrefix/UserName
  * eg:
- *   /ndn/broadcast/conference/root/refresh/yangxu
+ *   /ndn/broadcast/conference/root/refresh/thu.edu/yangxu
  */
 void NdnContext::sendRefreshInterest(QString channel, QString userName) {
     ccn_charbuf *interest_path;
@@ -714,7 +745,7 @@ void NdnContext::sendRefreshInterest(QString channel, QString userName) {
     ccn_name_append_prefix(interest_path, GroupManager::broadcastPrefix);
     ccn_name_append_str(interest_path, channel.toLocal8Bit().constData());
     ccn_name_append_str(interest_path, "refresh");
-	ccn_name_append_str(interest_path, QDateTime::currentDateTime().toString().toLocal8Bit().constData());
+	ccn_name_append_prefix(interest_path, LocalSharingPrefix);
     ccn_name_append_str(interest_path, userName.toLocal8Bit().constData());
 
 
@@ -734,13 +765,17 @@ void NdnContext::sendRefreshInterest(QString channel, QString userName) {
         setClosureHandler(&refresh_closure, NONE);
     }
 
+	static ccn_charbuf *templ = NULL;
+	templ = create_passive_templ();
+
     pNdnMutex->lock();
-    ccn_express_interest(ccn, interest_path, refresh_closure, NULL);
-    // ccn_express_interest(ccn, interest_path, refresh_closure, templ);
+    //ccn_express_interest(ccn, interest_path, refresh_closure, NULL);
+    ccn_express_interest(ccn, interest_path, refresh_closure, templ);
     pNdnMutex->unlock();
 
     ccn_charbuf_destroy(&interest_path);
-    // ccn_charbuf_destroy(&templ);
+    ccn_charbuf_destroy(&templ);
+	templ = NULL;
 }
 
  /* process incoming interest;
@@ -798,7 +833,7 @@ static enum ccn_upcall_res incoming_interest(ccn_closure *selfp,
          *   eg:
          *   /ndn/broadcast/confrence/root/thu.edu/cs/yangxu/<exclusive_filter>
          * 2. Refresh Interest
-         *   /ndn/broadcast/conference/conf-name/refresh/Timestamp/userName
+         *   /ndn/broadcast/conference/conf-name/refresh/UserPrefix/userName
         */
 
         nameEnd = (info->interest_comps)->n - 2;
@@ -806,7 +841,7 @@ static enum ccn_upcall_res incoming_interest(ccn_closure *selfp,
         if ((pGroupManager->pNdnContext)->isRefreshInterest(info, (const char *)(channel))) { // Refresh Interest
 
             // need to check the refresher, due to the time crossing between enumeration and refresh
-            ccn_name_get_prefix(info, &refresher, 6, nameEnd);
+            ccn_name_get_prefix(info, &refresher, 5, nameEnd);
             QString tmp((const char *)refresher);
             QString user(tmp.section('/', -1));
             tmp.chop(user.size());

@@ -37,9 +37,9 @@ macx {
 	CONFIG *= dbus
 }
 
-!CONFIG(no-bonjour) {
-	CONFIG *= bonjour
-}
+#!CONFIG(no-bonjour) {
+#	CONFIG *= bonjour
+#}
 
 win32 {
   RC_FILE = murmur.rc
