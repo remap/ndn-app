@@ -31,7 +31,11 @@ public class WebClientServer
         context.addServlet(new ServletHolder(new LoginServlet()), "/*");
         context.addServlet(new ServletHolder(new HomeServlet()), "/home/*");
         context.addServlet(new ServletHolder(new ConfigureServlet()), "/home/configure/*");
+        context.addServlet(new ServletHolder(new AppServlet()), "/home/configure/app/*");
+        context.addServlet(new ServletHolder(new DataStreamServlet()), "/home/configure/app/dataStream/*");
         context.addServlet(new ServletHolder(new DownloadServlet()), "/home/download/*");
+        context.addServlet(new ServletHolder(new AppServlet()), "/home/download/app/*");
+        context.addServlet(new ServletHolder(new DataStreamServlet()), "/home/download/app/dataStream/*");
         context.addServlet(new ServletHolder(new UploadServlet()), "/home/upload/*");
 
         try
