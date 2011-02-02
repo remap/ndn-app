@@ -13,7 +13,11 @@ public class WebClientServer
 {
     public static void main(String[] args)
     {
-        int port = (new Integer(args[0])).intValue();
+        int port;
+        if(args.length < 1)
+            port = 8081;
+        else
+            port =  (new Integer(args[0])).intValue();
 
         //TODO print this in the log
         System.out.println("Starting new server on port " + port);
@@ -26,9 +30,9 @@ public class WebClientServer
         server.setHandler(context);
         context.addServlet(new ServletHolder(new LoginServlet()), "/*");
         context.addServlet(new ServletHolder(new HomeServlet()), "/home/*");
-        context.addServlet(new ServletHolder(new ConfigureServlet()), "/configure/*");
-        context.addServlet(new ServletHolder(new DownloadServlet()), "/download/*");
-        context.addServlet(new ServletHolder(new UploadServlet()), "/upload/*");
+        context.addServlet(new ServletHolder(new ConfigureServlet()), "/home/configure/*");
+        context.addServlet(new ServletHolder(new DownloadServlet()), "/home/download/*");
+        context.addServlet(new ServletHolder(new UploadServlet()), "/home/upload/*");
 
         try
         {

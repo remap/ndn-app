@@ -25,8 +25,8 @@ public class HomeServlet extends HttpServlet
         if(isAuthenticatedUser(request))
         {
             //configure link
-            response.getWriter().println("<a href=\"" + PageDirectory.CONFIGURE +
-                    "\"> Configure </a>");
+            response.getWriter().println("<a href=\"" + request.getRequestURL().toString()
+                    + PageDirectory.CONFIGURE + "\"> Configure </a>");
             response.getWriter().println("<br />");
 
             //download link
