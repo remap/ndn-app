@@ -38,6 +38,9 @@ public class HomeServlet extends HttpServlet
             response.getWriter().println("<a href=\"" + PageDirectory.UPLOAD +
                     "\"> Upload </a>");
             response.getWriter().println("<br />");
+
+            //test link
+            response.getWriter().println("<a href=\"" + "test/" + "\"> Test </a> <br />");
         }
         else
         {

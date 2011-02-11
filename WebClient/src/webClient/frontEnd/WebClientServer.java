@@ -4,6 +4,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import webClient.ndn.test.NDNTestServlet;
 
 /**
  *
@@ -37,6 +38,7 @@ public class WebClientServer
         context.addServlet(new ServletHolder(new AppServlet()), "/home/download/app/*");
         context.addServlet(new ServletHolder(new DataStreamServlet()), "/home/download/app/dataStream/*");
         context.addServlet(new ServletHolder(new UploadServlet()), "/home/upload/*");
+        context.addServlet(new ServletHolder(new NDNTestServlet()), "/home/test/*");
 
         try
         {
