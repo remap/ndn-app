@@ -76,7 +76,7 @@ public class Main {
 
 			n1_ds = new DataStream(n1_app, "myacl");
 			n1_ds.key = key.clone();
-			n1_ds.add_downlink(node2);
+			n1_ds.add_receiver(node2);
 			n1_app.data_stream_add(n1_ds);
 			config.add_application(n1_app);
 		} else if (uri.equals(node2.uri.toURIString())) {
@@ -85,7 +85,7 @@ public class Main {
 
 			n2_ds = new DataStream(n2_app, "myacl");
 			n2_ds.key = key.clone();
-			n2_ds.set_uplink(node1);
+			n2_ds.set_publisher(node1);
 			n2_app.data_stream_add(n2_ds);
 			config.add_application(n2_app);
 		} else if (uri.equals("database")) {

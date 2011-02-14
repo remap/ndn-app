@@ -73,7 +73,7 @@ public class PDCDataProvider extends PDCCommand {
 		datastream_id = postfix.stringComponent(0);
 		record_id = postfix.stringComponent(1);
 
-		Log.debug("Requested; app = " + app.name + " datastream = " + datastream_id
+		Log.debug("Requested; app = " + app._name + " datastream = " + datastream_id
 						+ ", record_id = " + record_id);
 
 		datastream = app.data_stream_get(datastream_id);
@@ -132,12 +132,12 @@ public class PDCDataProvider extends PDCCommand {
 		assert content_id != null;
 
 		try {
-			uri = pdv.append(app.name).append(COMMAND).
+			uri = pdv.append(app._name).append(COMMAND).
 							append(stream).append(content_id);
 		}
 		catch (MalformedContentNameStringException ex) {
 			Log.error(String.format("Unable to create proper URI (%s, %s, %s, %s)",
-							app.name, COMMAND, stream, content_id));
+							app._name, COMMAND, stream, content_id));
 			throw new Error(ex);
 		}
 

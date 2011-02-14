@@ -68,7 +68,7 @@ public class NDNetwork implements CCNFilterListener {
 
 		ContentName remain = postfix.subname(2, postfix.count() - 2);
 		PDCCommand cmd = _commands.get(command);
-		Log.info(String.format("Firing %s(%s, %s, %s)\n", cmd.getCommandName(), app.name,
+		Log.info(String.format("Firing %s(%s, %s, %s)\n", cmd.getCommandName(), app._name,
 						remain.toURIString(), interest));
 		return cmd.processCommand(app, remain, interest);
 	}

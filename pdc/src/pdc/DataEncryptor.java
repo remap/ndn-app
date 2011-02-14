@@ -149,6 +149,6 @@ public class DataEncryptor {
 
 	private byte[] generateIV(Application app, String data_stream)
 	{
-		return repeat(_cipher.getBlockSize(), data_stream.concat(app.name));
+		return repeat(_cipher.getBlockSize(), data_stream.concat(app._name));
 	}
 }

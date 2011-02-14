@@ -4,6 +4,7 @@
  */
 package pdc;
 
+import com.mongodb.DBCollection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,17 +15,22 @@ import java.util.Map;
  * @author Derek Kulinski
  */
 public class Application {
-	final String name;
+	/**
+	 * Identifier for the application
+	 */
+	final String _name;
+	/**
+	 * Database
+	 */
+	final Database _db;
 	//XXX: not thread safe
 	private Map<String, DataStream> _data_stream = new HashMap<String, DataStream>();
-	private Map<String, PDVNode> _nodes = new HashMap<String, PDVNode>();
-	private PDVNode _uplink = null;
-	private List<PDVNode> _downlinks = new ArrayList<PDVNode>();
 	//XXX: not thread safe
 
 	Application(String name)
 	{
-		this.name = name;
+		this._name = name;
+		_db = new Database(Database.db_type.DATA, name);
 	}
 
 	/**
@@ -45,5 +51,9 @@ public class Application {
 	DataStream data_stream_add(DataStream ds)
 	{
 		return _data_stream.put(ds.data_stream_id, ds);
+	}
+
+	DBCollection get_db_collection(String id) {
+		return _db.getDatabase().getCollection(id);
 	}
 }

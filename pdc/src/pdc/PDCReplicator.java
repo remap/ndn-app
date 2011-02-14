@@ -234,7 +234,7 @@ public class PDCReplicator extends PDCCommand {
 		assert data_stream != null;
 
 		try {
-			uri = pdv.append(data_stream.app.name).append(COMMAND).append("pull");
+			uri = pdv.append(data_stream.app._name).append(COMMAND).append("pull");
 
 			if (start == null)
 				uri = uri.append(String.format("%s",
@@ -248,7 +248,7 @@ public class PDCReplicator extends PDCCommand {
 		}
 		catch (MalformedContentNameStringException ex) {
 			Log.error(String.format("Unable to create proper URI (%s, %s, %s, %s, %s)",
-							data_stream.app.name, COMMAND, data_stream.data_stream_id, start,
+							data_stream.app._name, COMMAND, data_stream.data_stream_id, start,
 							end));
 			throw new Error(ex);
 		}

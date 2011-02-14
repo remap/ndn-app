@@ -45,10 +45,17 @@ public class DataStream {
 	 * id of last record in the database
 	 */
 	private String _last_entry = null;
-	private PDVNode _uplink = null;
-	private List<PDVNode> _downlinks = new ArrayList<PDVNode>();
+
+	/**
+	 * publisher of the DS
+	 */
+	private PDVNode _publisher = null;
+	/**
+	 * receivers of our DS
+	 */
+	private List<PDVNode> _receivers = new ArrayList<PDVNode>();
+
 	private Timer pull_timer;
-	final private Database _db;
 	final private DBCollection _coll;
 	final private PDCConfigStore _config = PDCConfigStore.get_instance();
 	final private PDCReplicator _replicator = PDCReplicator.get_instance();
@@ -63,29 +70,28 @@ public class DataStream {
 		this.app = app;
 		this.data_stream_id = data_stream_id;
 
-		_db = new Database(Database.db_type.DATA, app.name);
-		_coll = _db.getDatabase().getCollection(data_stream_id);
+		_coll = app.get_db_collection(data_stream_id);
 		_coll.setObjectClass(DataRecord.class);
 	}
 
-	PDVNode get_uplink()
+	PDVNode get_publisher()
 	{
-		return _uplink;
+		return _publisher;
 	}
 
-	void set_uplink(PDVNode node)
+	void set_publisher(PDVNode node)
 	{
-		_uplink = node;
+		_publisher = node;
 	}
 
-	void add_downlink(PDVNode node)
+	synchronized void add_receiver(PDVNode node)
 	{
-		_downlinks.add(node);
+		_receivers.add(node);
 	}
 
-	void del_downlink(PDVNode node)
+	synchronized void del_receiver(PDVNode node)
 	{
-		_downlinks.remove(node);
+		_receivers.remove(node);
 	}
 
 	/**
@@ -162,7 +168,7 @@ public class DataStream {
 		DataRecord record;
 		Collection<String> ids;
 
-		node = get_uplink();
+		node = get_publisher();
 		if (node == null) {
 			Log.warning("No uplink defined; fetching aborted");
 			return;
@@ -191,7 +197,7 @@ public class DataStream {
 		}
 	}
 
-	private void updateLastEntry()
+	synchronized private void updateLastEntry()
 	{
 		DataRecord record;
 		DBObject fields = new BasicDBObject("_id", 1);
