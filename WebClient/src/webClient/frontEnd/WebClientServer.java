@@ -12,16 +12,23 @@ import webClient.ndn.test.NDNTestServlet;
  */
 public class WebClientServer
 {
+    public static final long DEFAULT_TIMEOUT = 10000;
+
+    private static int port         = 8081;
+    private static String namespace = "/ucla.edu/webclient";
+
+    public static String getNDNNamespace()
+    {
+        return namespace;
+    }
+    
     public static void main(String[] args)
     {
-        int port;
-        if(args.length < 1)
-            port = 8081;
-        else
-            port =  (new Integer(args[0])).intValue();
+        processArgs(args);
 
         //TODO print this in the log
         System.out.println("Starting new server on port " + port);
+        System.out.println("Using NDN namespace: " + namespace);
 
         Server server = new Server(port);
 
@@ -29,7 +36,8 @@ public class WebClientServer
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS | ServletContextHandler.SECURITY);
         context.setContextPath("/");
         server.setHandler(context);
-        context.addServlet(new ServletHolder(new LoginServlet()), "/*");
+        context.addServlet(new ServletHolder(new PDVServlet()), "/*");
+        context.addServlet(new ServletHolder(new LoginServlet()), "/login/*");
         context.addServlet(new ServletHolder(new HomeServlet()), "/home/*");
         context.addServlet(new ServletHolder(new ConfigureServlet()), "/home/configure/*");
         context.addServlet(new ServletHolder(new AppServlet()), "/home/configure/app/*");
@@ -52,6 +60,45 @@ public class WebClientServer
         catch(Exception e)
         {
             //TODO
+        }
+    }
+
+    private static void usage()
+    {
+        System.out.println("Example usage:");
+        System.out.println("java -jar WebClient.jar -port:8081 -namespace:/ucla.edu/webclient");
+    }
+
+    private static void processArgs(String[] args)
+    {
+        String portArg = "-port";
+        String portArg2 = "-p";
+
+        String namespaceArg = "-namespace";
+        String namespaceArg2 = "-n";
+        for(String s : args)
+        {
+            if(s.equalsIgnoreCase("help"))
+            {
+                usage();
+                System.exit(0);
+            }
+
+            //make sure there are 2 components to the argument
+            String[] arg = s.split(":");
+            if(arg.length != 2)
+            {
+                usage();
+                System.exit(1);
+            }
+
+            //if it's the port arg
+            if(arg[0].equalsIgnoreCase(portArg) || arg[0].equalsIgnoreCase(portArg2))
+                WebClientServer.port = (new Integer(arg[1])).intValue();
+
+            //if it's the namespace arg
+            if(arg[0].equalsIgnoreCase(namespaceArg) || arg[0].equalsIgnoreCase(namespaceArg2))
+                WebClientServer.namespace = arg[1];
         }
     }
 }

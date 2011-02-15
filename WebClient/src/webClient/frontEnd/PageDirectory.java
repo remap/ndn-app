@@ -8,6 +8,7 @@ package webClient.frontEnd;
  */
 public class PageDirectory
 {
+    public static final String LOGIN        = "login/";
     public static final String HOME         = "home/";
     public static final String UPLOAD       = "upload/";
     public static final String DOWNLOAD     = "download/";

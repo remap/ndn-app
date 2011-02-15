@@ -13,19 +13,25 @@ import javax.servlet.http.HttpServletResponse;
 public class LoginServlet extends HttpServlet
 {
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException
     {
+        String pdv_uri = request.getParameter("pdvuri");
+        
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
-        
+
+        //index of where to end the substring of the current URL
+        int endIndex = request.getRequestURL().toString().length() - PageDirectory.LOGIN.length();
+
         String loginHtml = "<font face=\"verdana,arial\" size=-1>\n"
             + "<center><table cellpadding=2 cellspacing=0 border=0>\n"
             + "<tr><td bgcolor=\"blue\"><table cellpadding=0 cellspacing=0 border=0 width=100%><tr><td bgcolor=\"blue\" align=center style=\"padding:2;padding-bottom:4\"><b><font size=-1 color=\"white\" face=\"verdana,arial\"><b>Enter your login and password</b></font></th></tr>\n"
             + "<tr><td bgcolor=\"white\" style=\"padding:5\"><br>\n"
-            + "<form method=\"post\" action=\"" + request.getRequestURL().toString() + PageDirectory.HOME + "\" name=pform>\n"
+            + "<form method=\"post\" action=\"" + request.getRequestURL().substring(0, endIndex) + PageDirectory.HOME + "\" name=pform>\n"
             + "<input type=\"hidden\" name=\"action\" value=\"login\">\n"
             + "<input type=\"hidden\" name=\"hide\" value=\"\">\n"
+            + "<input type=\"hidden\" name=\"pdvuri\" value=\"" + pdv_uri + "\">\n"
             + "<center><table>\n"
             + "<tr><td><font face=\"verdana,arial\" size=-1>Login:</td><td><input type=\"text\" name=\"login\"></td></tr>\n"
             + "<tr><td><font face=\"verdana,arial\" size=-1>Password:</td><td><input type=\"password\" name=\"password\"></td></tr>\n"
