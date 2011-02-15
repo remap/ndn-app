@@ -17,7 +17,7 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  *
  * @author Derek Kulinski
  */
-abstract class PDCCommand {
+abstract class PublisherCommand {
 	protected final String COMMAND;
 	protected CCNHandle _ccn_handle;
 	protected KeyManager _keymanager;
@@ -25,7 +25,7 @@ abstract class PDCCommand {
 	protected PublisherPublicKeyDigest _publisher;
 	protected KeyLocator _locator;
 
-	public PDCCommand(CCNHandle handle, String name) {
+	public PublisherCommand(CCNHandle handle, String name) {
 		COMMAND = name;
 
 		_ccn_handle = handle;
@@ -35,7 +35,7 @@ abstract class PDCCommand {
 		this._locator = _keymanager.getKeyLocator(_signing_key);
 	}
 
-	abstract boolean processCommand(Application app, ContentName postfix, Interest interest);
+	abstract boolean processCommand(DataStream ds, ContentName postfix, Interest interest);
 
 	final String getCommandName() {
 		return COMMAND;

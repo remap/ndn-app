@@ -4,7 +4,6 @@
  */
 package pdc;
 
-import pdc.exceptions.PDCNoResponseException;
 import com.mongodb.MongoException;
 import java.io.IOException;
 import java.util.Date;
@@ -85,7 +84,7 @@ public class Main {
 
 			n2_ds = new DataStream(n2_app, "myacl");
 			n2_ds.key = key.clone();
-			n2_ds.set_publisher(node1);
+			n2_ds.set_publisher(node1, "myacl");
 			n2_app.data_stream_add(n2_ds);
 			config.add_application(n2_app);
 		} else if (uri.equals("database")) {

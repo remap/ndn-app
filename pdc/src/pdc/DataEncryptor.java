@@ -10,6 +10,7 @@ import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.engines.NullEngine;
 import org.bouncycastle.crypto.engines.TwofishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
@@ -116,21 +117,6 @@ public class DataEncryptor {
 		return null;
 	}
 
-	/**
-	 * @deprecated 
-	 * @param app
-	 * @param stream_id
-	 * @param cipherText
-	 * @return
-	 */
-	 byte[] decryptData(Application app, String stream_id, byte[] cipherText)
-	{
-		DataStream stream = app.data_stream_get(stream_id);
-		assert stream != null;
-
-		return decryptData(stream, cipherText);
-	}
-
 	private byte[] repeat(int size, String pattern)
 	{
 		byte[] result = new byte[size];
@@ -149,6 +135,6 @@ public class DataEncryptor {
 
 	private byte[] generateIV(Application app, String data_stream)
 	{
-		return repeat(_cipher.getBlockSize(), data_stream.concat(app._name));
+		return repeat(_cipher.getBlockSize(), data_stream.concat(app.name));
 	}
 }

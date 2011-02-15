@@ -4,6 +4,7 @@
  */
 package pdc;
 
+import com.mongodb.util.JSON;
 import pdc.exceptions.PDCNoResponseException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -15,6 +16,8 @@ import org.bson.BSONEncoder;
 import org.bson.BSONObject;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.SystemConfiguration;
+import org.ccnx.ccn.io.CCNOutputStream;
+import org.ccnx.ccn.io.CCNVersionedOutputStream;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
@@ -27,60 +30,55 @@ import pdc.util.Log;
  *
  * @author Derek Kulinski
  */
-public class PDCDataProvider extends PDCCommand {
-	private static PDCDataProvider _instance = null;
+public class PublisherDataCommand extends PublisherCommand {
+	private static PublisherDataCommand _instance = null;
 	private final int FRESHNESS = 5;
 	private DataEncryptor _encryptor;
 	private PDCConfigStore _config = PDCConfigStore.get_instance();
 
-	private PDCDataProvider(CCNHandle handle)
+	private PublisherDataCommand(CCNHandle handle)
 					throws MalformedContentNameStringException
 	{
-		super(handle, "share");
+		super(handle, "data");
 
 		this._encryptor = new DataEncryptor();
 	}
 
-	static PDCDataProvider get_instance()
+	static PublisherDataCommand get_instance()
 	{
 		assert _instance != null;
 		return _instance;
 	}
 
-	static PDCDataProvider get_instance(CCNHandle handle)
+	static PublisherDataCommand get_instance(CCNHandle handle)
 					throws MalformedContentNameStringException
 	{
 		if (_instance == null)
-			_instance = new PDCDataProvider(handle);
+			_instance = new PublisherDataCommand(handle);
 
 		return _instance;
 	}
 
 	@Override
-	boolean processCommand(Application app, ContentName postfix, Interest interest)
+	boolean processCommand(DataStream datastream, ContentName postfix,
+					Interest interest)
 	{
 		BSONEncoder encoder = new BSONEncoder();
-		String datastream_id, record_id;
-		DataStream datastream;
+		String record_id;
 		DataRecord record;
 		SignedInfo si;
 		byte[] cipher;
 		ContentObject co;
+		CCNOutputStream os;
 
-		if (postfix.count() != 2)
+		if (postfix.count() != 1)
 			return false;
 
-		datastream_id = postfix.stringComponent(0);
-		record_id = postfix.stringComponent(1);
+		record_id = postfix.stringComponent(0);
 
-		Log.debug("Requested; app = " + app._name + " datastream = " + datastream_id
-						+ ", record_id = " + record_id);
-
-		datastream = app.data_stream_get(datastream_id);
-		if (datastream == null) {
-			Log.debug("Unknown data stream");
-			return false;
-		}
+		Log.debug(String.format(
+						"Requested; app = %s, datastream = %s, record_id = %s",
+						datastream.app.name, datastream.data_stream_id, record_id));
 
 		record = datastream.getRecord(record_id);
 		if (record == null)
@@ -91,7 +89,8 @@ public class PDCDataProvider extends PDCCommand {
 
 		try {
 			cipher = _encryptor.encryptData(datastream, encoder.encode(record));
-//		cipher = _encryptor.encryptData(app, datastream_id, JSON.serialize(record).getBytes());
+//			cipher = _encryptor.encryptData(datastream,
+//							JSON.serialize(record).getBytes());
 			co = new ContentObject(interest.name(), si, cipher, _signing_key);
 			_ccn_handle.put(co);
 
@@ -101,43 +100,43 @@ public class PDCDataProvider extends PDCCommand {
 			throw new Error(ex);
 		}
 		catch (IOException ex) {
-			Logger.getLogger(PDCDataProvider.class.getName()).log(Level.SEVERE, null,
+			Logger.getLogger(PublisherDataCommand.class.getName()).log(Level.SEVERE,
+							null,
 							ex);
 		}
 		catch (InvalidKeyException ex) {
-			Logger.getLogger(PDCDataProvider.class.getName()).log(Level.SEVERE, null,
+			Logger.getLogger(PublisherDataCommand.class.getName()).log(Level.SEVERE,
+							null,
 							ex);
 		}
 		catch (SignatureException ex) {
-			Logger.getLogger(PDCDataProvider.class.getName()).log(Level.SEVERE, null,
+			Logger.getLogger(PublisherDataCommand.class.getName()).log(Level.SEVERE,
+							null,
 							ex);
 		}
 
 		return false;
 	}
 
-	DataRecord fetchRecord(ContentName pdv, Application app, String stream,
-					String content_id)
+	DataRecord fetchRecord(DataStream datastream, String content_id)
 					throws PDCNoResponseException
 	{
 		BSONDecoder decoder = new BSONDecoder();
-		ContentName uri;
+		ContentName publisher_ds, uri;
 		ContentObject response;
 		byte[] decrypted;
 		BSONObject content;
 
-		assert pdv != null;
-		assert app != null;
-		assert stream != null;
+		assert datastream != null;
 		assert content_id != null;
 
+		publisher_ds = datastream.get_publisher_ds();
 		try {
-			uri = pdv.append(app._name).append(COMMAND).
-							append(stream).append(content_id);
+			uri = publisher_ds.append(COMMAND).append(content_id);
 		}
 		catch (MalformedContentNameStringException ex) {
-			Log.error(String.format("Unable to create proper URI (%s, %s, %s, %s)",
-							app._name, COMMAND, stream, content_id));
+			Log.error(String.format("Unable to create proper URI (%s, %s, %s)",
+							publisher_ds, COMMAND, content_id));
 			throw new Error(ex);
 		}
 
@@ -148,15 +147,15 @@ public class PDCDataProvider extends PDCCommand {
 
 			//TODO: Check signature
 
-			decrypted = _encryptor.decryptData(app, stream, response.content());
+			decrypted = _encryptor.decryptData(datastream, response.content());
 			content = decoder.readObject(decrypted);
 			DataRecord record = new DataRecord(content.toMap());
 
 			return record;
 		}
 		catch (IOException ex) {
-			Logger.getLogger(PDCDataProvider.class.getName()).log(Level.SEVERE, null,
-							ex);
+			Logger.getLogger(PublisherDataCommand.class.getName()).log(Level.SEVERE,
+							null, ex);
 		}
 
 		return null;

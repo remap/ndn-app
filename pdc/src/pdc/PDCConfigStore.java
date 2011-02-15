@@ -30,7 +30,7 @@ public class PDCConfigStore {
 	 */
 	void add_application(Application app)
 	{
-		_applications.put(app._name, app);
+		_applications.put(app.name, app);
 	}
 
 	/**

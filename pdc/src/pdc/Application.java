@@ -18,18 +18,18 @@ public class Application {
 	/**
 	 * Identifier for the application
 	 */
-	final String _name;
+	final String name;
 	/**
 	 * Database
 	 */
-	final Database _db;
+	final private Database _db;
 	//XXX: not thread safe
 	private Map<String, DataStream> _data_stream = new HashMap<String, DataStream>();
 	//XXX: not thread safe
 
 	Application(String name)
 	{
-		this._name = name;
+		this.name = name;
 		_db = new Database(Database.db_type.DATA, name);
 	}
 
