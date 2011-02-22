@@ -81,8 +81,10 @@ public class PublisherDataCommand extends PublisherCommand {
 						datastream.app.name, datastream.data_stream_id, record_id));
 
 		record = datastream.getRecord(record_id);
-		if (record == null)
+		if (record == null) {
+			Log.debug("record not found");
 			return false;
+		}
 
 		si = new SignedInfo(_publisher, SignedInfo.ContentType.ENCR,
 						_locator, FRESHNESS, null);
