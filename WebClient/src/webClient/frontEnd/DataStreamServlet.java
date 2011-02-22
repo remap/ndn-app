@@ -16,6 +16,8 @@ import webClient.backEnd.PDCDataRecords;
 
 public class DataStreamServlet extends HttpServlet
 {
+    private String m_userHash;
+
      @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException
@@ -25,7 +27,8 @@ public class DataStreamServlet extends HttpServlet
 
         response.getWriter().println("<h1> Here are the data records for this stream. </h1>");
 
-
+        this.m_userHash = request.getParameter(VarNames.USER_HASH);
+        //TODO make sure this isn't null
      }
 
      private void printRecordsforDownload(HttpServletRequest request, HttpServletResponse response)
@@ -33,7 +36,7 @@ public class DataStreamServlet extends HttpServlet
          //TODO: actually get the stream name
          String temp_stream_name = "stream";
 
-         Collection<DataRecord> records = PDCDataRecords.getDataRecords(temp_stream_name, temp_stream_name);
+         Collection<DataRecord> records = PDCDataRecords.getDataRecords(this.m_userHash, temp_stream_name);
 
          for(DataRecord dr : records)
          {

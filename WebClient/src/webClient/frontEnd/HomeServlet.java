@@ -17,7 +17,7 @@ import webClient.session.SessionManager;
 
 public class HomeServlet extends HttpServlet
 {
-    private String userHash = "";
+    private String _userHash = null;
     
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -41,19 +41,22 @@ public class HomeServlet extends HttpServlet
 
         if(isAuthenticatedUser(request, pdcLogin))
         {
+            //get the user hash and pass it to the next page
+            String userHashVar = "?" + VarNames.USER_HASH + "=" + this._userHash;
+
             //configure link
             response.getWriter().println("<a href=\"" + request.getRequestURL().toString()
-                    + PageDirectory.CONFIGURE + "\"> Configure </a>");
+                    + PageDirectory.CONFIGURE + userHashVar + "\"> Configure </a>");
             response.getWriter().println("<br />");
 
             //download link
             response.getWriter().println("<a href=\"" + PageDirectory.DOWNLOAD +
-                    "\"> Download </a>");
+                    userHashVar + "\"> Download </a>");
             response.getWriter().println("<br />");
 
             //upload link
             response.getWriter().println("<a href=\"" + PageDirectory.UPLOAD +
-                    "\"> Upload </a>");
+                    userHashVar + "\"> Upload </a>");
             response.getWriter().println("<br />");
 
             //test link
@@ -78,9 +81,9 @@ public class HomeServlet extends HttpServlet
         //if the user is authenticated, register a new session 
         if(isAuthenticatedUser)
         {
-            userHash = md5Hash(pdv_uri, username, password);
-            SessionManager.registerSession(userHash);
-            SessionManager.getSession(userHash).setPdv_uri(pdv_uri);
+            _userHash = md5Hash(pdv_uri, username, password);
+            SessionManager.registerSession(_userHash);
+            SessionManager.getSession(_userHash).setPdv_uri(pdv_uri);
         }
 
         return isAuthenticatedUser;

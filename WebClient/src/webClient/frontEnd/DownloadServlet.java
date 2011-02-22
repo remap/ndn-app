@@ -21,12 +21,18 @@ import pdc.Application;
 
 public class DownloadServlet extends HttpServlet
 {
+    private String _userHash = null;
+
      @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException
     {
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
+
+        this._userHash = request.getParameter(VarNames.USER_HASH);
+        if(this._userHash == null)
+            response.getWriter().println("<h1> user hash not transferred. </h1>");
 
         response.getWriter().println("<h1> View and download your data. </h1>");
 

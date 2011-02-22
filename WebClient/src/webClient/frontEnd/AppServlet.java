@@ -1,10 +1,5 @@
 package webClient.frontEnd;
 
-/**
- *
- * @author Alexander Bonomo
- */
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -17,8 +12,14 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import pdc.DataStream;
 import webClient.backEnd.PDCDataStreams;
 
+/**
+ *
+ * @author Alexander Bonomo
+ */
 public class AppServlet extends HttpServlet
 {
+    private String m_userHash;
+    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException
@@ -27,7 +28,9 @@ public class AppServlet extends HttpServlet
         response.setStatus(HttpServletResponse.SC_OK);
 
         response.getWriter().println("<h1> Here are the data streams for this app. </h1>");
-    
+
+        this.m_userHash = request.getParameter(VarNames.USER_HASH);
+
         printDataStreams(request, response);
     }
 
@@ -40,7 +43,7 @@ public class AppServlet extends HttpServlet
         Collection<DataStream> dataStreams;
         try
         {
-            dataStreams = streamGetter.getDataStreams(appName, appName);
+            dataStreams = streamGetter.getDataStreams(this.m_userHash, appName);
         } 
         catch (IOException ex)
         {
