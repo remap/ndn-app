@@ -75,10 +75,12 @@ public class HomeServlet extends HttpServlet
 
         boolean isAuthenticatedUser = pdcLogin.isUserAuthenticated(pdv_uri, username, password);
 
+        //if the user is authenticated, register a new session 
         if(isAuthenticatedUser)
         {
             userHash = md5Hash(pdv_uri, username, password);
             SessionManager.registerSession(userHash);
+            SessionManager.getSession(userHash).setPdv_uri(pdv_uri);
         }
 
         return isAuthenticatedUser;

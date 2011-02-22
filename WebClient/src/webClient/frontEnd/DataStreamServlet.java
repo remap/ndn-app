@@ -33,7 +33,7 @@ public class DataStreamServlet extends HttpServlet
          //TODO: actually get the stream name
          String temp_stream_name = "stream";
 
-         Collection<DataRecord> records = PDCDataRecords.getDataRecords(temp_stream_name);
+         Collection<DataRecord> records = PDCDataRecords.getDataRecords(temp_stream_name, temp_stream_name);
 
          for(DataRecord dr : records)
          {

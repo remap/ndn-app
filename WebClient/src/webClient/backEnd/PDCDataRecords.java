@@ -14,34 +14,24 @@ import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import pdc.DataRecord;
+import webClient.session.SessionManager;
 
-public class PDCDataRecords implements CCNFilterListener
+public class PDCDataRecords 
 {
     private CCNHandle _ccnHandle;
-    private ContentName _namespace;
 
-    public PDCDataRecords(String namespace) throws MalformedContentNameStringException
+    public PDCDataRecords(String namespace)
     {
         //get a handle and a content name
         this._ccnHandle = CCNHandle.getHandle();
-        this._namespace = ContentName.fromURI(namespace);
     }
 
-    public void startListening() throws IOException
+    public static Collection<DataRecord> getDataRecords(String userHash, String streamName)
     {
-        _ccnHandle.registerFilter(this._namespace, this);
-    }
+        String pdv_uri = SessionManager.getSession(userHash).getPdv_uri();
 
-    public boolean handleInterest(Interest intrst)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-
-        //TODO
-    }
-    
-    public static Collection<DataRecord> getDataRecords(String streamName)
-    {
-        //TODO
+        //TODO get all data records at once or 1 at a time
+        
         return new LinkedList<DataRecord>();
     }
 }
