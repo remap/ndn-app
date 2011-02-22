@@ -9,10 +9,13 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.backEnd.PDCApps;
 import pdc.Application;
 
@@ -34,7 +37,22 @@ public class DownloadServlet extends HttpServlet
      {
          //TODO actually get username
         String temp_user = "abc";
-        Collection<Application> apps = PDCApps.getUserApps(temp_user);
+        Collection<Application> apps;
+        try
+        {
+            PDCApps appGetter = new PDCApps("blah");
+            apps = appGetter.getUserApps(temp_user);
+        }
+        catch (IOException ex)
+        {
+            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
+        catch (MalformedContentNameStringException ex)
+        {
+            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
 
         for(Application a : apps)
         {

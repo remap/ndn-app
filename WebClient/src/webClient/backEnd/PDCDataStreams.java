@@ -11,35 +11,35 @@ import java.util.LinkedList;
 import org.ccnx.ccn.CCNFilterListener;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import pdc.DataStream;
+import webClient.frontEnd.WebClientServer;
+import webClient.session.SessionManager;
 
-public class PDCDataStreams implements CCNFilterListener
+public class PDCDataStreams 
 {
     private CCNHandle _ccnHandle;
-    private ContentName _namespace;
 
-    public PDCDataStreams(String namespace) throws MalformedContentNameStringException
+    public PDCDataStreams()
     {
         //get a handle and a content name
         this._ccnHandle = CCNHandle.getHandle();
-        this._namespace = ContentName.fromURI(namespace);
     }
 
-    public void startListening() throws IOException
+    public Collection<DataStream> getDataStreams(String userHash, String appName) throws IOException, MalformedContentNameStringException
     {
-        _ccnHandle.registerFilter(this._namespace, this);
+        String pdv_uri = SessionManager.getSession(userHash).getPdv_uri();
+
+        //TODO correct the URI
+        ContentObject streams = this._ccnHandle.get(ContentName.fromURI(pdv_uri),
+                WebClientServer.DEFAULT_TIMEOUT);
+
+        return decodeStreamsCO(streams);
     }
 
-    public boolean handleInterest(Interest intrst)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-
-        //TODO
-    }
-
-    public static Collection<DataStream> getDataStreams(String appName)
+    private Collection<DataStream> decodeStreamsCO(ContentObject streams)
     {
         //TODO
         return new LinkedList<DataStream>();

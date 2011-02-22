@@ -1,6 +1,9 @@
 package webClient.backEnd;
 
 import java.io.IOException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.CCNFilterListener;
@@ -43,6 +46,7 @@ public class PDCLogin implements CCNFilterListener
         //TODO also need to generate and include my public key in this data packet
         byte[] bytes = this._usernamePassword.getBytes();
         ContentObject credentials = ContentObject.buildContentObject(_namespace, bytes);
+       
 
         //TODO may want to use CCNFlowControl instead
         try
@@ -94,5 +98,13 @@ public class PDCLogin implements CCNFilterListener
     {
         //TODO
         return true;
+    }
+
+    private void generateKeys() throws NoSuchAlgorithmException
+    {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(512);
+        KeyPair kp = kpg.generateKeyPair();
+
     }
 }

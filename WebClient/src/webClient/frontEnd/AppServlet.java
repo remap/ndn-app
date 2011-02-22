@@ -7,10 +7,13 @@ package webClient.frontEnd;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import pdc.DataStream;
 import webClient.backEnd.PDCDataStreams;
 
@@ -33,7 +36,22 @@ public class AppServlet extends HttpServlet
         //TODO actually get app name
         String appName = "app";
 
-        Collection<DataStream> dataStreams = PDCDataStreams.getDataStreams(appName);
+        PDCDataStreams streamGetter = new PDCDataStreams();
+        Collection<DataStream> dataStreams;
+        try
+        {
+            dataStreams = streamGetter.getDataStreams(appName, appName);
+        } 
+        catch (IOException ex)
+        {
+            Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        } 
+        catch (MalformedContentNameStringException ex)
+        {
+            Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
 
         for(DataStream ds : dataStreams)
         {
