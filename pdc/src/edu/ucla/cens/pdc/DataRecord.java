@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package pdc;
+package edu.ucla.cens.pdc;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;

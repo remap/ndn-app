@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package pdc;
+package edu.ucla.cens.pdc;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import pdc.util.Log;
+import edu.ucla.cens.pdc.util.Log;
 
 /**
  *

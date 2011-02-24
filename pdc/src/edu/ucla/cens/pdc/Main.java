@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package pdc;
+package edu.ucla.cens.pdc;
 
 import com.mongodb.MongoException;
 import java.io.IOException;
@@ -97,7 +97,7 @@ public class Main {
 			fillDatabase(ds);
 			System.exit(0);
 		} else {
-			pdc.util.Log.error("Unknown URI");
+			edu.ucla.cens.pdc.util.Log.error("Unknown URI");
 			System.exit(10);
 		}
 

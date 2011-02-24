@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package pdc;
+package edu.ucla.cens.pdc;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,8 +15,8 @@ import org.bouncycastle.crypto.engines.TwofishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
-import pdc.exceptions.PDCException;
-import pdc.util.Log;
+import edu.ucla.cens.pdc.exceptions.PDCException;
+import edu.ucla.cens.pdc.util.Log;
 
 /**
  *

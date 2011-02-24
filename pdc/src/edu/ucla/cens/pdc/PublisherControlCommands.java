@@ -2,9 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package pdc;
+package edu.ucla.cens.pdc;
 
-import pdc.exceptions.PDCNoResponseException;
+import edu.ucla.cens.pdc.exceptions.PDCNoResponseException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
@@ -21,9 +21,9 @@ import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.SignedInfo;
-import pdc.exceptions.PDCException;
-import pdc.util.Log;
-import pdc.util.StringUtil;
+import edu.ucla.cens.pdc.exceptions.PDCException;
+import edu.ucla.cens.pdc.util.Log;
+import edu.ucla.cens.pdc.util.StringUtil;
 
 /**
  *

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package pdc;
+package edu.ucla.cens.pdc;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -11,7 +11,7 @@ import java.security.cert.CertificateEncodingException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import pdc.exceptions.PDCNoResponseException;
+import edu.ucla.cens.pdc.exceptions.PDCNoResponseException;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -38,7 +38,7 @@ import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.PublisherID;
-import pdc.util.Log;
+import edu.ucla.cens.pdc.util.Log;
 
 /**
  *

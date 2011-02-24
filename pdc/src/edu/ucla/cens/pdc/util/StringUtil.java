@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package pdc.util;
+package edu.ucla.cens.pdc.util;
 
 import java.util.Collection;
 import java.util.Iterator;
