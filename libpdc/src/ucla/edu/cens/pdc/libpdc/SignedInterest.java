@@ -2,10 +2,14 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package pdc;
+package ucla.edu.cens.pdc.libpdc;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +28,7 @@ import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.util.encoders.Base64;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
@@ -32,17 +37,22 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski
  */
 public class SignedInterest {
+	private SecureRandom _random;
 	private Key _symmetricKey = null;
 	private BufferedBlockCipher _cipher;
 	private Set<String> _nonces = new LinkedHashSet<String>();
 
 	public SignedInterest()
+					throws NoSuchAlgorithmException
 	{
 		this(genKey());
 	}
 
 	public SignedInterest(Key key)
+					throws NoSuchAlgorithmException
 	{
+		_random = SecureRandom.getInstance("SHA1PRNG");
+
 		BlockCipher engine = new AESEngine();
 		BlockCipher mode = new CBCBlockCipher(engine);
 		_cipher = new PaddedBufferedBlockCipher(mode);
@@ -118,17 +128,10 @@ public class SignedInterest {
 	}
 
 	private static Key genKey()
+					throws NoSuchAlgorithmException
 	{
-		try {
-			KeyGenerator kg = KeyGenerator.getInstance("AES");
-			return kg.generateKey();
-		}
-		catch (NoSuchAlgorithmException ex) {
-			Logger.getLogger(SignedInterest.class.getName()).log(Level.SEVERE, null,
-							ex);
-		}
-
-		return null;
+		KeyGenerator kg = KeyGenerator.getInstance("AES");
+		return kg.generateKey();
 	}
 
 	private String genChecksum(String text)
@@ -138,12 +141,29 @@ public class SignedInterest {
 
 		cksum.reset();
 		cksum.update(input, 0, input.length);
-		return Long.toHexString(cksum.getValue());
+
+		// Generate base64 encoding
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(bos);
+		try {
+			dos.writeLong(cksum.getValue());
+			dos.flush();
+			return new String(Base64.encode(bos.toByteArray()));
+		}
+		catch (IOException ex) {
+			throw new Error("Unable to generate base64 encoding", ex);
+		}
+
+//		return Long.toHexString(cksum.getValue());
 	}
 
 	private String genNonce()
 	{
-		return "blah";
+		byte[] nonce = new byte[8];
+
+		_random.nextBytes(nonce);
+
+		return new String(nonce);
 	}
 
 	private byte[] encrypt(byte[] input)
