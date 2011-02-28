@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc;
 
+import edu.ucla.cens.pdc.libpdc.DataStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

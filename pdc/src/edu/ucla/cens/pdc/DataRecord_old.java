@@ -15,7 +15,7 @@ import org.bson.types.ObjectId;
  * Single data record stored in the database
  * @author Derek Kulinski
  */
-public final class DataRecord implements DBObject {
+public final class DataRecord_old implements DBObject {
 	private boolean _isPartialObject = false;
 	ObjectId id;
 	Date timestamp = null;
@@ -24,21 +24,21 @@ public final class DataRecord implements DBObject {
 	Double longitude;
 	DBObject data = new BasicDBObject();
 
-	public DataRecord()
+	public DataRecord_old()
 	{
 	}
 
-	public DataRecord(String id)
+	public DataRecord_old(String id)
 	{
 		this.id = new ObjectId(id);
 	}
 
-	public DataRecord(Date ts)
+	public DataRecord_old(Date ts)
 	{
 		this.timestamp = ts;
 	}
 
-	public DataRecord(Map data)
+	public DataRecord_old(Map data)
 	{
 		this.putAll(data);
 	}

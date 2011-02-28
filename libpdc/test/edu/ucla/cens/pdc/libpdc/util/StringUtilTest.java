@@ -2,9 +2,8 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc.util;
+package edu.ucla.cens.pdc.libpdc.util;
 
-import edu.ucla.cens.pdc.util.StringUtil;
 import java.util.LinkedList;
 import java.util.Collection;
 import org.junit.After;
@@ -16,35 +15,9 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author Derek Kulinski
+ * @author takeda
  */
 public class StringUtilTest {
-	public StringUtilTest()
-	{
-	}
-
-	@BeforeClass
-	public static void setUpClass()
-					throws Exception
-	{
-	}
-
-	@AfterClass
-	public static void tearDownClass()
-					throws Exception
-	{
-	}
-
-	@Before
-	public void setUp()
-	{
-	}
-
-	@After
-	public void tearDown()
-	{
-	}
-
 	/**
 	 * Test of join method, of class StringUtil.
 	 */

@@ -35,7 +35,7 @@ abstract class PublisherCommand {
 		this._locator = _keymanager.getKeyLocator(_signing_key);
 	}
 
-	abstract boolean processCommand(DataStream ds, ContentName postfix, Interest interest);
+	abstract boolean processCommand(DataStream_old ds, ContentName postfix, Interest interest);
 
 	final String getCommandName() {
 		return COMMAND;

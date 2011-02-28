@@ -22,6 +22,7 @@ import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.SignedInfo;
 import edu.ucla.cens.pdc.exceptions.PDCException;
+import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.util.Log;
 import edu.ucla.cens.pdc.util.StringUtil;
 

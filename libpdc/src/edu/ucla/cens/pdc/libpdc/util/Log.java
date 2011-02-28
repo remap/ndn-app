@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc.util;
+package edu.ucla.cens.pdc.libpdc.util;
 
 /**
  *

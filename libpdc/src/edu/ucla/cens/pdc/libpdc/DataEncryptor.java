@@ -2,21 +2,23 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc;
+package edu.ucla.cens.pdc.libpdc;
 
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
+import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.RuntimeCryptoException;
 import org.bouncycastle.crypto.engines.NullEngine;
 import org.bouncycastle.crypto.engines.TwofishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
-import edu.ucla.cens.pdc.exceptions.PDCException;
-import edu.ucla.cens.pdc.util.Log;
 
 /**
  *
@@ -24,6 +26,14 @@ import edu.ucla.cens.pdc.util.Log;
  */
 public class DataEncryptor {
 	private BufferedBlockCipher _cipher;
+
+	private byte[] _encrypt_key;
+
+	private byte[] _encrypt_iv;
+
+	private byte[] _decrypt_key;
+
+	private byte[] _decrypt_iv;
 
 	public DataEncryptor()
 	{
@@ -42,20 +52,34 @@ public class DataEncryptor {
 //		_cipher = new BufferedBlockCipher(engine);
 	}
 
-	byte[] encryptData(DataStream stream, byte[] data)
-					throws PDCException
+	public void setEncryptKey(byte[] key)
 	{
-		byte[] cipherText;
+		this._encrypt_key = key;
+	}
+
+	public void setDecryptKey(byte[] key)
+	{
+		this._decrypt_key = key;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public byte[] encryptData(iBSONExportable record)
+					throws PDCEncryptionException
+	{
+		byte[] data, cipherText;
 		int outputLen;
 
-		if (stream.key == null)
-			throw new PDCException("Data stream key is not set");
+		if (_encrypt_key == null)
+			throw new PDCEncryptionException("No encryption key set");
 
-		_cipher.init(true, new KeyParameter(stream.key));
+		_cipher.init(true, new KeyParameter(_encrypt_key));
+//		_cipher.reset();
 
 //		byte[] iv = generateIV(application, stream);
 //		Log.debug(new String(iv));
 //		_cipher.init(true, new ParametersWithIV(new KeyParameter(aclkey), iv));
+
+		data = record.toBSON();
 
 		cipherText = new byte[_cipher.getOutputSize(data.length)];
 		outputLen = _cipher.processBytes(data, 0, data.length, cipherText, 0);
@@ -64,30 +88,22 @@ public class DataEncryptor {
 			_cipher.doFinal(cipherText, outputLen);
 			return cipherText;
 		}
-		catch (DataLengthException ex) {
-			Logger.getLogger(DataEncryptor.class.getName()).log(Level.SEVERE, null, ex);
+		catch (Exception ex) {
+			throw new PDCEncryptionException("Unable to encrypt stream", ex);
 		}
-		catch (IllegalStateException ex) {
-			Logger.getLogger(DataEncryptor.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		catch (InvalidCipherTextException ex) {
-			Logger.getLogger(DataEncryptor.class.getName()).log(Level.SEVERE, null, ex);
-		}
-
-		return null;
 	}
 
-	byte[] decryptData(DataStream stream, byte[] cipherText)
+	@SuppressWarnings("rawtypes")
+	public DataRecord decryptData(byte[] cipherText)
+					throws PDCEncryptionException
 	{
 		byte[] buffer, decrypted;
 		int outputLen;
 
-		if (stream.key == null) {
-			Log.error("Data stream key is not set");
-			return null;
-		}
+		if (_decrypt_key == null)
+			throw new PDCEncryptionException("No decryption key set");
 
-		_cipher.init(false, new KeyParameter(stream.key));
+		_cipher.init(false, new KeyParameter(_decrypt_key));
 
 //		byte[] iv = generateIV(app, acl);
 //		_cipher.init(false, new ParametersWithIV(new KeyParameter(aclkey), iv));
@@ -102,19 +118,11 @@ public class DataEncryptor {
 			decrypted = new byte[outputLen];
 			System.arraycopy(buffer, 0, decrypted, 0, outputLen);
 
-			return decrypted;
+			return new DataRecord().fromBSON(decrypted);
 		}
-		catch (DataLengthException ex) {
-			Logger.getLogger(DataEncryptor.class.getName()).log(Level.SEVERE, null, ex);
+		catch (Exception ex) {
+			throw new PDCEncryptionException("Unable to decrypt stream", ex);
 		}
-		catch (IllegalStateException ex) {
-			Logger.getLogger(DataEncryptor.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		catch (InvalidCipherTextException ex) {
-			Logger.getLogger(DataEncryptor.class.getName()).log(Level.SEVERE, null, ex);
-		}
-
-		return null;
 	}
 
 	private byte[] repeat(int size, String pattern)
@@ -133,8 +141,8 @@ public class DataEncryptor {
 		return result;
 	}
 
-	private byte[] generateIV(Application app, String data_stream)
+	private byte[] generateIV(iApplication app, String data_stream)
 	{
-		return repeat(_cipher.getBlockSize(), data_stream.concat(app.name));
+		return repeat(_cipher.getBlockSize(), data_stream.concat(app.getAppName()));
 	}
 }

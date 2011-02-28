@@ -24,6 +24,7 @@ import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.SignedInfo;
 import edu.ucla.cens.pdc.exceptions.PDCException;
+import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.util.Log;
 
 /**
@@ -65,7 +66,7 @@ public class PublisherDataCommand extends PublisherCommand {
 	{
 		BSONEncoder encoder = new BSONEncoder();
 		String record_id;
-		DataRecord record;
+		DataRecord_old record;
 		SignedInfo si;
 		byte[] cipher;
 		ContentObject co;
@@ -120,7 +121,7 @@ public class PublisherDataCommand extends PublisherCommand {
 		return false;
 	}
 
-	DataRecord fetchRecord(DataStream datastream, String content_id)
+	DataRecord_old fetchRecord(DataStream datastream, String content_id)
 					throws PDCNoResponseException
 	{
 		BSONDecoder decoder = new BSONDecoder();
@@ -132,7 +133,7 @@ public class PublisherDataCommand extends PublisherCommand {
 		assert datastream != null;
 		assert content_id != null;
 
-		publisher_ds = datastream.get_publisher_ds();
+		publisher_ds = datastream.getPublisherStreamURI();
 		try {
 			uri = publisher_ds.append(COMMAND).append(content_id);
 		}
@@ -151,7 +152,7 @@ public class PublisherDataCommand extends PublisherCommand {
 
 			decrypted = _encryptor.decryptData(datastream, response.content());
 			content = decoder.readObject(decrypted);
-			DataRecord record = new DataRecord(content.toMap());
+			DataRecord_old record = new DataRecord_old(content.toMap());
 
 			return record;
 		}
