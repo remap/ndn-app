@@ -5,8 +5,12 @@ package webClient.frontEnd;
  * @author Alexander Bonomo
  */
 
-import java.io.IOException;import java.util.Map;
+import java.io.IOException;import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -91,6 +95,20 @@ public class HomeServlet extends HttpServlet
 
     private String md5Hash(String pdv_uri, String username, String password)
     {
-        return pdv_uri + username + password;
+        MessageDigest md;
+        try
+        {
+            md = MessageDigest.getInstance("MD5");
+        }
+        catch (NoSuchAlgorithmException ex)
+        {
+            //this should never happen...
+            Logger.getLogger(HomeServlet.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        String str = pdv_uri + username + password;
+        md.reset();
+        md.update(str.getBytes());
+        return new String(md.digest());
     }
 }

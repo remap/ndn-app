@@ -42,12 +42,11 @@ public class DownloadServlet extends HttpServlet
      private void printApps(HttpServletResponse response)
      {
          //TODO actually get username
-        String temp_user = "abc";
         Collection<Application> apps;
         try
         {
-            PDCApps appGetter = new PDCApps("blah");
-            apps = appGetter.getUserApps(temp_user);
+            PDCApps appGetter = new PDCApps();
+            apps = appGetter.getUserApps(this._userHash);
         }
         catch (IOException ex)
         {

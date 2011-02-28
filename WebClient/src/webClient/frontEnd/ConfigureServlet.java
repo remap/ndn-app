@@ -1,10 +1,5 @@
 package webClient.frontEnd;
 
-/**
- *
- * @author Alexander Bonomo
- */
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +7,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+/**
+ *
+ * @author Alexander Bonomo
+ */
 
 public class ConfigureServlet extends HttpServlet
 {

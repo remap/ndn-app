@@ -15,7 +15,8 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.frontEnd.WebClientServer;
 
 /**
- *
+ * This class handles the logging in sequence that occurs between the web client
+ * and the PDC/PDV instance.
  * @author Alexander Bonomo
  */
 public class PDCLogin implements CCNFilterListener
@@ -24,7 +25,14 @@ public class PDCLogin implements CCNFilterListener
     private ContentName _namespace;
 
     private String _usernamePassword;
-    
+
+    /**
+     * Constructor
+     *
+     * @param namespace - the namespace to use to put the user's credentials and
+     * the web client's public key
+     * @throws MalformedContentNameStringException
+     */
     public PDCLogin(String namespace) throws MalformedContentNameStringException
     {
         //get a handle and a content name
@@ -32,11 +40,21 @@ public class PDCLogin implements CCNFilterListener
         this._namespace = ContentName.fromURI(namespace);
     }
 
+    /**
+     * Begin listening for interests on the namespace specified in the constructor
+     * @throws IOException
+     */
     public void startListening() throws IOException
     {
         _ccnHandle.registerFilter(this._namespace, this);
     }
 
+    /**
+     * This function handles the interest for a user's credentials.
+     *
+     * @param interest - the interest for the user's credentials.
+     * @return
+     */
     public boolean handleInterest(Interest interest)
     {
         if(this._usernamePassword == null)
@@ -44,9 +62,10 @@ public class PDCLogin implements CCNFilterListener
 
         //TODO may want to set to correct encoding
         //TODO also need to generate and include my public key in this data packet
-        byte[] bytes = this._usernamePassword.getBytes();
+        byte[] bytes = this._usernamePassword.getBytes(); //maybe use a hash value instead?
         ContentObject credentials = ContentObject.buildContentObject(_namespace, bytes);
-       
+
+        //TODO sign and encrypt this content object as well
 
         //TODO may want to use CCNFlowControl instead
         try
@@ -62,6 +81,15 @@ public class PDCLogin implements CCNFilterListener
         return true;
     }
 
+    /**
+     * This function takes a pdv instance and a username/password combination
+     * and determines if the user is authenticated or not.
+     * @param pdv_uri - the uri of the pdv instance
+     * @param userName
+     * @param password
+     * @return - whether or not this username/password combination is valid for
+     * this pdv instance.
+     */
     public boolean isUserAuthenticated(String pdv_uri, String userName, String password)
     {
         try
@@ -94,12 +122,21 @@ public class PDCLogin implements CCNFilterListener
         }
     }
 
+    /**
+     * Takes a content object response from the PDV and converts it to a boolean value
+     * @param response - the PDV's response as a content object
+     * @return - the PDV's response as a boolean.
+     */
     private boolean decodeAuthorizationResponse(ContentObject response)
     {
         //TODO
         return true;
     }
 
+    /**
+     * Generates a public/private key combination.
+     * @throws NoSuchAlgorithmException
+     */
     private void generateKeys() throws NoSuchAlgorithmException
     {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");

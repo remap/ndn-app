@@ -1,22 +1,20 @@
 package webClient.backEnd;
 
-/**
- *
- * @author Alexander Bonomo
- */
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
-import org.ccnx.ccn.CCNFilterListener;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
-import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import pdc.DataStream;
 import webClient.frontEnd.WebClientServer;
 import webClient.session.SessionManager;
+
+/**
+ * This class grabs a list of all the data streams for a particular app.
+ * @author Alexander Bonomo
+ */
 
 public class PDCDataStreams 
 {
@@ -28,6 +26,14 @@ public class PDCDataStreams
         this._ccnHandle = CCNHandle.getHandle();
     }
 
+    /**
+     * Gets the list of data streams.
+     * @param userHash - the userHash value identifying the session
+     * @param appName - the app name
+     * @return - a collection of data streams
+     * @throws IOException
+     * @throws MalformedContentNameStringException
+     */
     public Collection<DataStream> getDataStreams(String userHash, String appName) throws IOException, MalformedContentNameStringException
     {
         String pdv_uri = SessionManager.getSession(userHash).getPdv_uri();
@@ -39,6 +45,11 @@ public class PDCDataStreams
         return decodeStreamsCO(streams);
     }
 
+    /**
+     * Decodes the returned ContentObject into a list of DataStreams
+     * @param streams - the content object returned by the PDV
+     * @return - the list of available data streams
+     */
     private Collection<DataStream> decodeStreamsCO(ContentObject streams)
     {
         //TODO

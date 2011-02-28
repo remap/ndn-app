@@ -13,7 +13,8 @@ import pdc.DataStream;
 import webClient.backEnd.PDCDataStreams;
 
 /**
- *
+ * This page displays the data streams for a particular app.
+ * 
  * @author Alexander Bonomo
  */
 public class AppServlet extends HttpServlet
@@ -34,6 +35,11 @@ public class AppServlet extends HttpServlet
         printDataStreams(request, response);
     }
 
+    /**
+     * Prints the data streams for this app
+     * @param request
+     * @param response
+     */
     private void printDataStreams(HttpServletRequest request, HttpServletResponse response)
     {
         //TODO actually get app name
