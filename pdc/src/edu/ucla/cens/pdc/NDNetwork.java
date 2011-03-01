@@ -5,6 +5,7 @@
 package edu.ucla.cens.pdc;
 
 import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,28 +15,26 @@ import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import edu.ucla.cens.pdc.util.Log;
 
 /**
  *
  * @author Derek Kulinski
  */
 public class NDNetwork implements CCNFilterListener {
-	private Map<String, PublisherCommand> _receiver_commands = new HashMap<String, PublisherCommand>(
+	final private Map<String, PublisherCommand> _receiver_commands = new HashMap<String, PublisherCommand>(
 					1);
-	private Map<String, PublisherCommand> _publisher_commands = new HashMap<String, PublisherCommand>(
+
+	final private Map<String, PublisherCommand> _publisher_commands = new HashMap<String, PublisherCommand>(
 					2);
-	final private PDCConfigStore _config = PDCConfigStore.get_instance();
+
+	final private PDCConfigStore _config = PDCConfigStore.getInstance();
+
 	final static CCNHandle ccn_handle = CCNHandle.getHandle();
-	final private ContentName _namespace;
 
 	public NDNetwork(String namespace)
 					throws IOException, ConfigurationException,
 					MalformedContentNameStringException
 	{
-//		_ccn_handle = CCNHandle.getHandle();
-		_namespace = ContentName.fromURI(namespace);
-
 		add_publisher_command(PublisherDataCommand.get_instance(ccn_handle));
 		add_publisher_command(PublisherControlCommands.get_instance(ccn_handle));
 	}
@@ -43,17 +42,34 @@ public class NDNetwork implements CCNFilterListener {
 	public void startListening()
 					throws MalformedContentNameStringException, IOException
 	{
-		ccn_handle.registerFilter(_namespace, this);
+		ContentName root = _config.getRoot();
+		ccn_handle.registerFilter(root, this);
 	}
 
 	public boolean handleInterest(Interest interest)
 	{
+		/*
+		 * <root>/<app_id>/<stream_id>
+		 *
+		 * Stream commands:
+		 * <stream_id>/data/<data_id>
+		 * <stream_id>/control/authenticator/<receiver>
+		 * <stream_id>/control/stream_info/<receiver>
+		 * <stream_id>/control/list[/<last_data_id>]
+		 *
+		 * Receiver commands:
+		 * <app_id>/control/setup/<stream>
+		 * <app_id>/control/pull/<stream>
+		 */
+
+		ContentName root, name, postfix;
 		String app_name, ds_name, command_name;
 		Application app;
 		DataStream ds;
 
-		ContentName name = interest.name();
-		ContentName postfix = name.postfix(_namespace);
+		root = _config.getRoot();
+		name = interest.name();
+		postfix = name.postfix(root);
 
 		Log.debug("Got interest: " + name + ", postfix: " + postfix);
 
@@ -61,7 +77,7 @@ public class NDNetwork implements CCNFilterListener {
 			return false;
 
 		app_name = postfix.stringComponent(0);
-		app = _config.get_application(app_name);
+		app = _config.getApplication(app_name);
 		if (app == null) {
 			Log.warning("Application " + app_name + " doesn't exist.");
 			return false;

@@ -63,14 +63,21 @@ public class DataEncryptor {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public byte[] encryptData(iBSONExportable record)
+	public byte[] encryptRecord(iBSONExportable record)
 					throws PDCEncryptionException
 	{
-		byte[] data, cipherText;
+		return encryptData(record.toBSON());
+	}
+
+	public byte[] encryptData(byte[] data)
+					throws PDCEncryptionException
+	{
+		byte[] cipherText;
 		int outputLen;
 
 		if (_encrypt_key == null)
 			throw new PDCEncryptionException("No encryption key set");
+
 
 		_cipher.init(true, new KeyParameter(_encrypt_key));
 //		_cipher.reset();
@@ -78,8 +85,6 @@ public class DataEncryptor {
 //		byte[] iv = generateIV(application, stream);
 //		Log.debug(new String(iv));
 //		_cipher.init(true, new ParametersWithIV(new KeyParameter(aclkey), iv));
-
-		data = record.toBSON();
 
 		cipherText = new byte[_cipher.getOutputSize(data.length)];
 		outputLen = _cipher.processBytes(data, 0, data.length, cipherText, 0);
@@ -93,8 +98,17 @@ public class DataEncryptor {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
-	public DataRecord decryptData(byte[] cipherText)
+	public DataRecord decryptRecord(byte[] cipherText)
+					throws PDCEncryptionException
+	{
+		byte[] decrypted;
+
+		decrypted = decryptData(cipherText);
+
+		return new DataRecord().fromBSON(decrypted);
+	}
+
+	public byte[] decryptData(byte[] cipherText)
 					throws PDCEncryptionException
 	{
 		byte[] buffer, decrypted;
@@ -118,10 +132,10 @@ public class DataEncryptor {
 			decrypted = new byte[outputLen];
 			System.arraycopy(buffer, 0, decrypted, 0, outputLen);
 
-			return new DataRecord().fromBSON(decrypted);
+			return decrypted;
 		}
 		catch (Exception ex) {
-			throw new PDCEncryptionException("Unable to decrypt stream", ex);
+			throw new PDCEncryptionException("Unable to decrypt the data", ex);
 		}
 	}
 

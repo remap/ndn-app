@@ -9,6 +9,10 @@ import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
  * Stores information about applications that PDV handles
@@ -20,6 +24,8 @@ public class Application implements iApplication {
 	 */
 	final String name;
 
+	final private ContentName _base_name;
+
 	/**
 	 * Database
 	 */
@@ -29,13 +35,26 @@ public class Application implements iApplication {
 
 	Application(String name)
 	{
+		PDCConfigStore config = PDCConfigStore.getInstance();
+
 		this.name = name;
-		_db = new Database(Database.db_type.DATA, name);
+		try {
+			_base_name = config.getRoot().append(name);
+			_db = new Database(Database.db_type.DATA, name);
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to set base name", ex);
+		}
 	}
 
 	public String getAppName()
 	{
 		return name;
+	}
+
+	public ContentName getBaseName()
+	{
+		return _base_name;
 	}
 
 	/**

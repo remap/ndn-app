@@ -11,9 +11,27 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski
  */
 public class PDCPublisher extends PDCNode {
+	private String _stream_id;
+
 	public PDCPublisher(String uri)
 					throws MalformedContentNameStringException
 	{
 		super(uri);
+	}
+
+	/**
+	 * @return the _stream_id
+	 */
+	public String getStream_id()
+	{
+		return _stream_id;
+	}
+
+	/**
+	 * @param stream_id the _stream_id to set
+	 */
+	public void setStream_id(String stream_id)
+	{
+		this._stream_id = stream_id;
 	}
 }

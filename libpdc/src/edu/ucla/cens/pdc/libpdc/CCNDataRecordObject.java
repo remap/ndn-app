@@ -45,7 +45,7 @@ public class CCNDataRecordObject extends CCNNetworkObject<DataRecord> {
 			throw new ContentNotReadyException("No content available to save for object "
 							+ getBaseName());
 		try {
-			out = _encryptor.encryptData(data());
+			out = _encryptor.encryptRecord(data());
 			output.write(out);
 		}
 		catch (PDCException ex) {
@@ -62,7 +62,7 @@ public class CCNDataRecordObject extends CCNNetworkObject<DataRecord> {
 
 		in = DataUtils.getBytesFromStream(input);
 		try {
-			return _encryptor.decryptData(in);
+			return _encryptor.decryptRecord(in);
 		}
 		catch (PDCEncryptionException ex) {
 			throw new ContentDecodingException("Unable to decrypt the data", ex);

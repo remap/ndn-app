@@ -4,27 +4,20 @@
  */
 package edu.ucla.cens.pdc;
 
-import edu.ucla.cens.pdc.exceptions.PDCNoResponseException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCNoResponseException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
-import org.ccnx.ccn.config.SystemConfiguration;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.SignedInfo;
-import edu.ucla.cens.pdc.exceptions.PDCException;
+import edu.ucla.cens.pdc.libpdc.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.DataStream;
-import edu.ucla.cens.pdc.util.Log;
-import edu.ucla.cens.pdc.util.StringUtil;
+import edu.ucla.cens.pdc.libpdc.util.Log;
+import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 
 /**
  *
@@ -32,7 +25,9 @@ import edu.ucla.cens.pdc.util.StringUtil;
  */
 public class PublisherControlCommands extends PublisherCommand {
 	private static PublisherControlCommands _instance = null;
+
 	private final int FRESHNESS = 1;
+
 	private DataEncryptor _encryptor;
 
 	private PublisherControlCommands(CCNHandle handle)
@@ -104,49 +99,6 @@ public class PublisherControlCommands extends PublisherCommand {
 		return false;
 	}
 
-	private boolean handleList(Interest interest, DataStream datastream,
-					ContentName name)
-					throws InvalidKeyException, SignatureException, IOException
-	{
-		Collection<String> ids;
-		String data;
-		SignedInfo si;
-
-		byte[] cipher;
-		ContentObject co;
-
-		assert interest != null;
-		assert datastream != null;
-		assert name != null;
-
-		Log.debug("Got list request for: " + name.toURIString());
-
-		// Content of the data packet
-		if (name.count() == 0)
-			ids = datastream.getRangeIds();
-		else if (name.count() == 1)
-			ids = datastream.getRangeIds(name.stringComponent(0));
-		else
-			ids = datastream.getRangeIds(name.stringComponent(0), name.stringComponent(
-							1));
-
-		data = StringUtil.join(ids, "\n");
-
-		si = new SignedInfo(_publisher, SignedInfo.ContentType.ENCR, _locator,
-						FRESHNESS, null);
-
-		try {
-			cipher = _encryptor.encryptData(datastream, data.getBytes());
-			co = new ContentObject(interest.name(), si, cipher, _signing_key);
-			_ccn_handle.put(co);
-		}
-		catch (PDCException ex) {
-			throw new Error("Unable to encrypt data", ex);
-		}
-
-		return true;
-	}
-
 	@Override
 	boolean processCommand(DataStream ds, ContentName postfix, Interest interest)
 	{
@@ -164,7 +116,8 @@ public class PublisherControlCommands extends PublisherCommand {
 			if (command.matches("push"))
 				return handlePush(interest, ds, postfix.subname(1, postfix.count() - 1));
 			else if (command.matches("list"))
-				return handleList(interest, ds, postfix.subname(1, postfix.count() - 1));
+				return ds.getTransport().publishRecordList(interest, postfix.subname(
+								1, postfix.count() - 1));
 			else {
 				ContentObject co = ContentObject.buildContentObject(interest.name(),
 								"invalid request!".getBytes());
@@ -173,18 +126,11 @@ public class PublisherControlCommands extends PublisherCommand {
 				return true;
 			}
 		}
-		catch (InvalidKeyException ex) {
-			Logger.getLogger(PublisherControlCommands.class.getName()).log(
-							Level.SEVERE, null, ex);
+		catch (Exception ex) {
+			Log.error("Got problem: " + ex);
+			ex.printStackTrace();
 		}
-		catch (SignatureException ex) {
-			Logger.getLogger(PublisherControlCommands.class.getName()).log(
-							Level.SEVERE, null, ex);
-		}
-		catch (IOException ex) {
-			Logger.getLogger(PublisherControlCommands.class.getName()).log(
-							Level.SEVERE, null, ex);
-		}
+
 
 		return false;
 	}

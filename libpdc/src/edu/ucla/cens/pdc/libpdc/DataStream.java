@@ -5,6 +5,7 @@
 package edu.ucla.cens.pdc.libpdc;
 
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.transport.StreamTransport;
@@ -27,7 +28,7 @@ public class DataStream {
 	/**
 	 * application associated with the DS
 	 */
-	final iApplication app;
+	final public iApplication app;
 
 	/**
 	 * id of the data stream
@@ -97,7 +98,27 @@ public class DataStream {
 		}
 
 		this._encryptor = new DataEncryptor();
-		this._transport = new StreamTransport(handle, this);
+
+		try {
+			this._transport = new StreamTransport(handle, this);
+		} catch (PDCTransmissionException ex) {
+			throw new Error("Unable to instantiate transmission class", ex);
+		}
+	}
+
+	public Storage getStorage()
+	{
+		return _store;
+	}
+
+	public DataEncryptor getEncryptor()
+	{
+		return _encryptor;
+	}
+
+	public StreamTransport getTransport()
+	{
+		return _transport;
 	}
 
 	public ContentName getPublisherStreamURI()
@@ -122,21 +143,6 @@ public class DataStream {
 		}
 	}
 
-	public Storage getStorage()
-	{
-		return _store;
-	}
-
-	public DataEncryptor getEncryptor()
-	{
-		return _encryptor;
-	}
-
-	public StreamTransport getTransport()
-	{
-		return _transport;
-	}
-
 	public PublisherPublicKeyDigest getKeyDigest()
 	{
 		//TODO: don't generate this every time
@@ -155,18 +161,23 @@ public class DataStream {
 		return CCNHandle.getHandle().keyManager().getDefaultKeyLocator();
 	}
 
-	public void set_publisher(PDCPublisher node, String ds_id)
+	public void setPublisher(PDCPublisher node, String ds_id)
 	{
 		_publisher = node;
 		_publisher_data_stream_id = ds_id;
 	}
 
-	public synchronized void add_receiver(PDCReceiver node)
+	public PDCPublisher getPublisher()
+	{
+		return _publisher;
+	}
+
+	public synchronized void addReceiver(PDCReceiver node)
 	{
 		_receivers.add(node);
 	}
 
-	public synchronized void del_receiver(PDCReceiver node)
+	public synchronized void delReceiver(PDCReceiver node)
 	{
 		_receivers.remove(node);
 	}

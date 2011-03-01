@@ -7,7 +7,6 @@ package edu.ucla.cens.pdc;
 import edu.ucla.cens.pdc.libpdc.DataRecord;
 import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
-import edu.ucla.cens.pdc.libpdc.transport.PDCNode;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import java.io.IOException;
@@ -61,7 +60,7 @@ public class Main {
 			usage();
 
 		String uri = args[0];
-		PDCConfigStore config = PDCConfigStore.get_instance();
+		PDCConfigStore config = PDCConfigStore.getInstance();
 
 		PDCPublisher node1 = new PDCPublisher("ccnx:/pdv1");
 		PDCReceiver node2 = new PDCReceiver("ccnx:/pdv2");
@@ -75,32 +74,34 @@ public class Main {
 			test = new NDNetwork(args[0]);
 
 		if (uri.equals(node1.uri.toURIString())) {
+			config.setRoot(node1.uri);
 			Database.setPrefix("pdv1_");
-			n1_app = new Application("myapp");
 
+			n1_app = new Application("myapp");
 			n1_ds = new MongoDataStream(n1_app, "myacl");
 			n1_ds.getEncryptor().setEncryptKey(key.clone());
-			n1_ds.add_receiver(node2);
+			n1_ds.addReceiver(node2);
 
 			n1_app.data_stream_add(n1_ds);
-			config.add_application(n1_app);
+			config.addApplication(n1_app);
 		} else if (uri.equals(node2.uri.toURIString())) {
+			config.setRoot(node2.uri);
 			Database.setPrefix("pdv2_");
-			n2_app = new Application("myapp");
 
+			n2_app = new Application("myapp");
 			n2_ds = new MongoDataStream(n2_app, "myacl");
 			n2_ds.getEncryptor().setDecryptKey(key.clone());
-			n2_ds.set_publisher(node1, "myacl");
+			n2_ds.setPublisher(node1, "myacl");
 
 			n2_app.data_stream_add(n2_ds);
-			config.add_application(n2_app);
+			config.addApplication(n2_app);
 		} else if (uri.equals("database")) {
 			Database.setPrefix("pdv1_");
 			Application app = new Application("myapp");
 			DataStream ds = new MongoDataStream(app, "myacl");
 //			ds.key = key.clone();
 			app.data_stream_add(ds);
-			config.add_application(app);
+			config.addApplication(app);
 			fillDatabase(ds);
 			System.exit(0);
 		} else {
