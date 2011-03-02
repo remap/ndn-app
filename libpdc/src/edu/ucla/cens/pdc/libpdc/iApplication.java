@@ -13,7 +13,7 @@ import org.ccnx.ccn.protocol.ContentName;
 public interface iApplication {
 	String getAppName();
 	ContentName getBaseName();
-	boolean data_stream_exists(String id);
-	DataStream data_stream_get(String id);
-	DataStream data_stream_add(DataStream ds);
+	boolean isDataStream(String id);
+	DataStream getDataStream(String id);
+	DataStream addDataStream(DataStream ds);
 }

@@ -2,8 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package edu.ucla.cens.pdc.libpdc;
+
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 
 /**
  *
@@ -19,7 +20,8 @@ public interface iBSONExportable {
 	/**
 	 * Generate new DataRecord instance from BSON input
 	 * @param data array of bytes representing a BSON object
-	 * @return new instance of DataRecord
+	 * @return new instance of iBSONExportable
 	 */
-	public DataRecord fromBSON(byte[] data);
+	public iBSONExportable fromBSON(byte[] data)
+					throws PDCParseException;
 }

@@ -6,6 +6,7 @@ package edu.ucla.cens.pdc.libpdc;
 
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -105,7 +106,12 @@ public class DataEncryptor {
 
 		decrypted = decryptData(cipherText);
 
-		return new DataRecord().fromBSON(decrypted);
+		try {
+			return new DataRecord().fromBSON(decrypted);
+		}
+		catch (PDCParseException ex) {
+			throw new PDCEncryptionException("Got invalid BSON", ex);
+		}
 	}
 
 	public byte[] decryptData(byte[] cipherText)

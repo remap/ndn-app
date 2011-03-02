@@ -7,6 +7,8 @@ package edu.ucla.cens.pdc.libpdc;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
+import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -47,7 +49,8 @@ public class DataRecord implements DBObject, iBSONExportable {
 		data.putAll(m);
 	}
 
-	public ObjectId getId() {
+	public ObjectId getId()
+	{
 		return id;
 	}
 
@@ -164,20 +167,43 @@ public class DataRecord implements DBObject, iBSONExportable {
 
 	/**
 	 * Generate new DataRecord instance from BSON input
+	 * Note that this call doesn't erase existing data stored
+	 * in the object
 	 * @param data array of bytes representing a BSON object
 	 * @return new instance of DataRecord
 	 */
 	public DataRecord fromBSON(byte[] data)
+					throws PDCParseException
 	{
 		BSONDecoder decoder = new BSONDecoder();
 		BSONObject content;
 
-		//XXX: does this ever return an error? what if BSON is damaged?
-		content = decoder.readObject(data);
+		try {
+			content = decoder.readObject(data);
+		}
+		catch (RuntimeException ex) {
+			throw new PDCParseException("Unable to parse BSON string", ex);
+		}
 
 		putAll(content);
 
 		return this;
+	}
+
+	public DataRecord fromJSON(String json_data)
+					throws PDCParseException
+	{
+		DBObject result;
+
+		try {
+			result = (DBObject) JSON.parse(json_data);
+		}
+		catch (RuntimeException ex) {
+			throw new PDCParseException(
+							"Unable to convert JSON to DataRecord object", ex);
+		}
+
+		return new DataRecord(result.toMap());
 	}
 
 	@Override
