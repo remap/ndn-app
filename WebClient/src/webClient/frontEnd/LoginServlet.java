@@ -1,15 +1,16 @@
 package webClient.frontEnd;
 
-/**
- *
- * @author Alexander Bonomo
- */
-
 import java.io.IOException;import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * This class displays the login page to the user then passes the login credentials
+ * to the homepage.
+ * 
+ * @author Alexander Bonomo
+ */
 public class LoginServlet extends HttpServlet
 {
     @Override

@@ -31,7 +31,7 @@ public class PDCLogin implements CCNFilterListener
      *
      * @param namespace - the namespace to use to put the user's credentials and
      * the web client's public key
-     * @throws MalformedContentNameStringException
+     * @throws MalformedContentNameStringException - if the namespace given is no good
      */
     public PDCLogin(String namespace) throws MalformedContentNameStringException
     {

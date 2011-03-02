@@ -43,7 +43,7 @@ public class PDCApps
      */
     public Collection<Application> getUserApps(String userHash) throws IOException, MalformedContentNameStringException
     {
-        String pdv_uri = SessionManager.getSession(userHash).getPdv_uri();
+        String pdv_uri = SessionManager.getSession(userHash).getPDV_URI();
 
         //TODO correct the URI
         ContentObject apps = this._ccnHandle.get(ContentName.fromURI(pdv_uri),

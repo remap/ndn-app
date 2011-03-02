@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- *
+ * This class allows a user to enter the URI of a PDV instance to connect to
  * @author Alexander Bonomo
  */
 public class PDVServlet extends HttpServlet

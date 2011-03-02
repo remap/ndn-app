@@ -1,14 +1,7 @@
 package webClient.frontEnd;
 
-/**
- *
- * @author Alexander Bonomo
- */
-
 import java.io.IOException;import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -19,6 +12,11 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.backEnd.PDCLogin;
 import webClient.session.SessionManager;
 
+/**
+ * This class displays the home page to the user.  This is the main page where
+ * the user can select what to do.
+ * @author Alexander Bonomo
+ */
 public class HomeServlet extends HttpServlet
 {
     private String _userHash = null;
@@ -65,8 +63,6 @@ public class HomeServlet extends HttpServlet
 
             //test link
             response.getWriter().println("<a href=\"" + "test/" + "\"> Test </a> <br />");
-
-            //TODO pass userHash to next page
         }
         else
         {
@@ -74,6 +70,12 @@ public class HomeServlet extends HttpServlet
         }
     }
 
+    /**
+     * Checks to see if the username and password are valid
+     * @param request
+     * @param pdcLogin
+     * @return
+     */
     private boolean isAuthenticatedUser(HttpServletRequest request, PDCLogin pdcLogin)
     {
         String pdv_uri = request.getParameter("pdvuri");
@@ -87,12 +89,19 @@ public class HomeServlet extends HttpServlet
         {
             _userHash = md5Hash(pdv_uri, username, password);
             SessionManager.registerSession(_userHash);
-            SessionManager.getSession(_userHash).setPdv_uri(pdv_uri);
+            SessionManager.getSession(_userHash).setPDV_URI(pdv_uri);
         }
 
         return isAuthenticatedUser;
     }
 
+    /**
+     * Produces an MD5 hash of the pdv_uri
+     * @param pdv_uri
+     * @param username
+     * @param password
+     * @return
+     */
     private String md5Hash(String pdv_uri, String username, String password)
     {
         MessageDigest md;

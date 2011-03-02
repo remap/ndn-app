@@ -36,7 +36,7 @@ public class PDCDataStreams
      */
     public Collection<DataStream> getDataStreams(String userHash, String appName) throws IOException, MalformedContentNameStringException
     {
-        String pdv_uri = SessionManager.getSession(userHash).getPdv_uri();
+        String pdv_uri = SessionManager.getSession(userHash).getPDV_URI();
 
         //TODO correct the URI
         ContentObject streams = this._ccnHandle.get(ContentName.fromURI(pdv_uri),

@@ -1,10 +1,5 @@
 package webClient.frontEnd;
 
-/**
- *
- * @author Alexander Bonomo
- */
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -14,51 +9,64 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import pdc.DataRecord;
-import webClient.backEnd.PDCDataRecords;
+import pdc.DataStream;
+import webClient.backEnd.PDCDataStreams;
 
+/**
+ * This page displays the data streams for a particular app.
+ * 
+ * @author Alexander Bonomo
+ */
 public class DataStreamServlet extends HttpServlet
 {
     private String m_userHash;
-
-     @Override
+    private String m_hashParam; //the parameter passed to the next page
+    
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException
     {
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
 
-        response.getWriter().println("<h1> Here are the data records for this stream. </h1>");
+        response.getWriter().println("<h1> Here are the data streams for this app. </h1>");
 
         this.m_userHash = request.getParameter(VarNames.USER_HASH);
-        //TODO make sure this isn't null
-     }
+        this.m_hashParam = "?" + VarNames.USER_HASH + "=" + this.m_userHash;
 
-     private void printRecordsforDownload(HttpServletRequest request, HttpServletResponse response)
-     {
-         //TODO: actually get the stream name
-         String temp_stream_name = "stream";
+        printDataStreams(request, response);
+    }
 
-         Collection<DataRecord> records;
-         try
-         {
-             PDCDataRecords pdcdr = new PDCDataRecords();
-             records = pdcdr.getDataRecords(this.m_userHash, temp_stream_name);
-         }
-         catch (IOException ex)
-         {
+    /**
+     * Prints the data streams for this app
+     * @param request
+     * @param response
+     */
+    private void printDataStreams(HttpServletRequest request, HttpServletResponse response)
+    {
+        //TODO actually get app name
+        String appName = "app";
+
+        PDCDataStreams streamGetter = new PDCDataStreams();
+        Collection<DataStream> dataStreams;
+        try
+        {
+            dataStreams = streamGetter.getDataStreams(this.m_userHash, appName);
+        } 
+
+        catch (IOException ex)
+        {
             Logger.getLogger(DataStreamServlet.class.getName()).log(Level.SEVERE, null, ex);
             return;
-         }
-         catch (MalformedContentNameStringException ex)
-         {
+        }        catch (MalformedContentNameStringException ex)
+        {
             Logger.getLogger(DataStreamServlet.class.getName()).log(Level.SEVERE, null, ex);
             return;
-         }
-         
-         for(DataRecord dr : records)
-         {
-             //TODO print links for download
-         }
-     }
+        }
+
+        for(DataStream ds : dataStreams)
+        {
+            //TODO print link for each data stream
+        }
+    }
 }
