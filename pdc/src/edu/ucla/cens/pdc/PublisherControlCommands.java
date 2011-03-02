@@ -5,16 +5,18 @@
 package edu.ucla.cens.pdc;
 
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCNoResponseException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.SignedInfo;
-import edu.ucla.cens.pdc.libpdc.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
@@ -28,14 +30,10 @@ public class PublisherControlCommands extends PublisherCommand {
 
 	private final int FRESHNESS = 1;
 
-	private DataEncryptor _encryptor;
-
 	private PublisherControlCommands(CCNHandle handle)
 					throws MalformedContentNameStringException
 	{
 		super(handle, "control");
-
-		_encryptor = new DataEncryptor();
 	}
 
 	static PublisherControlCommands get_instance()
@@ -79,9 +77,12 @@ public class PublisherControlCommands extends PublisherCommand {
 			_ccn_handle.put(co);
 
 			//TODO: handle situation when argument is given
-			stream.fetchDataFromUplink();
+			stream.getTransport().fetchDataFromUplink();
 
 			return true;
+		}
+		catch (PDCTransmissionException ex) {
+			throw new RuntimeException("Error while trying to fetch data", ex);
 		}
 		catch (InvalidKeyException ex) {
 			throw new RuntimeException("Unable to sign content object", ex);
@@ -92,11 +93,6 @@ public class PublisherControlCommands extends PublisherCommand {
 		catch (IOException ex) {
 			throw new RuntimeException("Unable to send response", ex);
 		}
-		catch (PDCNoResponseException ex) {
-			Log.error("Uplink didin't respond");
-		}
-
-		return false;
 	}
 
 	@Override

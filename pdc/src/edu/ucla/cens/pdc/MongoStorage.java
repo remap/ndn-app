@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -25,6 +26,8 @@ import org.bson.types.ObjectId;
 final public class MongoStorage extends Storage {
 	final private DBCollection _coll;
 
+	private String _last_entry = null;
+
 	public MongoStorage(Application app, String data_stream_id)
 	{
 		super(app, data_stream_id);
@@ -34,15 +37,22 @@ final public class MongoStorage extends Storage {
 	}
 
 	@Override
-	public String getLastEntry()
+	synchronized public String getLastEntry()
+					throws PDCDatabaseException
 	{
 		DataRecord record;
-		DBObject fields = new BasicDBObject("_id", 1);
-		DBObject sort = new BasicDBObject("$natural", -1);
+		DBObject fields, sort;
+		DBCursor cur;
 		String last_entry;
 
+		if (_last_entry != null)
+			return _last_entry;
+
+		fields = new BasicDBObject("_id", 1);
+		sort = new BasicDBObject("$natural", -1);
+
 		// Get _id of the first newest row
-		DBCursor cur = _coll.find(null, fields);
+		cur = _coll.find(null, fields);
 		cur.sort(sort);
 		cur.limit(1);
 
@@ -52,15 +62,23 @@ final public class MongoStorage extends Storage {
 			return null;
 		}
 
-		record = (DataRecord) cur.next();
+		try {
+			record = (DataRecord) cur.next();
+		}
+		catch (RuntimeException ex) {
+			throw new PDCDatabaseException("Unable to fetch record", ex);
+		}
 		last_entry = record.getId().toStringMongod();
 		Log.debug("Last entry is: " + last_entry);
+
+		_last_entry = last_entry;
 
 		return last_entry;
 	}
 
 	@Override
 	public List<String> getRangeIds()
+					throws PDCDatabaseException
 	{
 		DBCursor cur = _coll.find();
 
@@ -108,12 +126,19 @@ final public class MongoStorage extends Storage {
 	}
 
 	private List<String> getRangeIds(DBCursor cur)
+					throws PDCDatabaseException
 	{
 		List<String> result = new LinkedList<String>();
 
-		while (cur.hasNext()) {
-			ObjectId obj = (ObjectId) cur.next().get("_id");
-			result.add(obj.toStringMongod());
+		try {
+			while (cur.hasNext()) {
+				ObjectId obj = (ObjectId) cur.next().get("_id");
+				result.add(obj.toStringMongod());
+			}
+		}
+		catch (RuntimeException ex) {
+			throw new PDCDatabaseException("Unable to fetch data from the database",
+							ex);
 		}
 
 		return result;
@@ -140,10 +165,13 @@ final public class MongoStorage extends Storage {
 	}
 
 	@Override
-	public boolean insertRecord(DataRecord record)
+	synchronized public boolean insertRecord(DataRecord record)
 					throws PDCDatabaseException
 	{
 //		WriteResult result;
+
+		_last_entry = null;
+
 		try {
 			_coll.insert(record, WriteConcern.NORMAL);
 		}

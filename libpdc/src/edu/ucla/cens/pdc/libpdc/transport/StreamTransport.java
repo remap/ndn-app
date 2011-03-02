@@ -4,9 +4,12 @@
  */
 package edu.ucla.cens.pdc.libpdc.transport;
 
+import com.mongodb.util.JSON;
 import edu.ucla.cens.pdc.libpdc.Constants;
+import edu.ucla.cens.pdc.libpdc.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.DataRecord;
 import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.Storage;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCNoResponseException;
@@ -14,13 +17,21 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.SystemConfiguration;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
+import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 import org.ccnx.ccn.protocol.SignedInfo;
 
 /**
@@ -32,6 +43,8 @@ public class StreamTransport {
 
 	final private DataStream _stream;
 
+	final private DataEncryptor _encryptor;
+
 	final private CCNHandle _ccn_handle;
 
 	public StreamTransport(CCNHandle handle, DataStream stream)
@@ -40,8 +53,9 @@ public class StreamTransport {
 		assert handle != null;
 		assert stream != null;
 
-		this._ccn_handle = handle;
 		this._stream = stream;
+		this._encryptor = new DataEncryptor();
+		this._ccn_handle = handle;
 
 		try {
 			this.base_name = _stream.app.getBaseName().append(_stream.data_stream_id);
@@ -50,6 +64,32 @@ public class StreamTransport {
 			throw new PDCTransmissionException(
 							"Unable to create base name for the data stream", ex);
 		}
+	}
+
+	/**
+	 * @return the _encryptor
+	 */
+	public DataEncryptor getEncryptor()
+	{
+		return _encryptor;
+	}
+
+	public PublisherPublicKeyDigest getKeyDigest()
+	{
+		//TODO: don't generate this every time
+//		return new PublisherPublicKeyDigest(_stream_keys.getPublic());
+//		return null;
+		return _ccn_handle.getDefaultPublisher();
+	}
+
+	public KeyLocator getKeyLocator()
+	{
+//		//TODO: this is obviously wrong
+//		KeyLocator locator = new KeyLocator(_stream_keys.getPublic());
+//
+//		return locator;
+//		return null;
+		return _ccn_handle.keyManager().getDefaultKeyLocator();
 	}
 
 	public boolean publishDataRecord(Interest interest, String data_id)
@@ -66,7 +106,7 @@ public class StreamTransport {
 				return false;
 			}
 
-			data = _stream.getEncryptor().encryptRecord(record);
+			data = _encryptor.encryptRecord(record);
 			return publishData(interest, data, 1);
 		}
 		catch (PDCEncryptionException ex) {
@@ -78,7 +118,8 @@ public class StreamTransport {
 	}
 
 	public boolean publishRecordList(Interest interest, ContentName arguments)
-					throws PDCDatabaseException, PDCEncryptionException, PDCTransmissionException
+					throws PDCDatabaseException, PDCEncryptionException,
+					PDCTransmissionException
 	{
 		Collection<String> ids;
 		String data;
@@ -100,7 +141,7 @@ public class StreamTransport {
 
 		data = StringUtil.join(ids, "\n");
 
-		cipher = _stream.getEncryptor().encryptData(data.getBytes());
+		cipher = _encryptor.encryptData(data.getBytes());
 
 		return publishData(interest, cipher, 1);
 	}
@@ -115,8 +156,8 @@ public class StreamTransport {
 		assert data != null;
 
 		try {
-			si = new SignedInfo(_stream.getKeyDigest(), SignedInfo.ContentType.ENCR,
-							_stream.getKeyLocator(), freshness, null);
+			si = new SignedInfo(getKeyDigest(), SignedInfo.ContentType.ENCR,
+							getKeyLocator(), freshness, null);
 			co = new ContentObject(interest.name(), si, data,
 							_ccn_handle.keyManager().getDefaultSigningKey());
 
@@ -129,9 +170,70 @@ public class StreamTransport {
 		}
 	}
 
-	DataRecord fetchRecord(String content_id)
-					throws PDCTransmissionException, PDCNoResponseException,
-					PDCEncryptionException
+	public List<String> fetchList()
+					throws PDCTransmissionException
+	{
+		return fetchList(null, null);
+	}
+
+	public List<String> fetchList(String start)
+					throws PDCTransmissionException
+	{
+		return fetchList(start, null);
+	}
+
+	public List<String> fetchList(String start, String end)
+					throws PDCTransmissionException
+	{
+		ContentName uri = null;
+		ContentObject response;
+
+		byte[] decoded;
+		List<String> result = new LinkedList<String>();
+
+		try {
+			uri = _stream.getPublisherStreamURI().append(Constants.STR_COMMAND).append(
+							"list");
+
+			if (start != null) {
+				uri = uri.append(start);
+				if (end != null)
+					uri = uri.append(end);
+			} else if (end != null)
+				throw new Error("Start is null, but end is not null???");
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error(String.format(
+							"Unable to create proper URI (%s, %s, %s, %s)", _stream.app.
+							getAppName(), _stream.data_stream_id, start, end));
+		}
+
+		Log.debug("Requesting: " + uri.toURIString());
+
+		try {
+			response = _ccn_handle.get(uri, SystemConfiguration.LONG_TIMEOUT);
+		}
+		catch (IOException ex) {
+			throw new PDCTransmissionException("Unable to get the data", ex);
+		}
+
+		if (response == null)
+			return null;
+
+		try {
+			decoded = _encryptor.decryptData(response.content());
+		}
+		catch (PDCEncryptionException ex) {
+			throw new PDCTransmissionException("Unable to decrypt the message", ex);
+		}
+
+		result = Arrays.asList(new String(decoded).split("\\\n"));
+
+		return result;
+	}
+
+	public DataRecord fetchRecord(String content_id)
+					throws PDCTransmissionException
 	{
 		DataRecord record;
 		ContentName publisher_ds, data_uri;
@@ -153,11 +255,14 @@ public class StreamTransport {
 			}
 
 			if (response == null)
-				throw new PDCNoResponseException();
+				return null;
 
-			//TODO: Check signature
-
-			record = _stream.getEncryptor().decryptRecord(response.content());
+			try {
+				record = _encryptor.decryptRecord(response.content());
+			}
+			catch (PDCEncryptionException ex) {
+				throw new PDCTransmissionException("Unable to decrypt message", ex);
+			}
 
 			return record;
 		}
@@ -166,5 +271,63 @@ public class StreamTransport {
 							"Unable to create proper URI (%s, %s, %s)",
 							publisher_ds, Constants.STR_COMMAND, content_id), ex);
 		}
+	}
+
+	public boolean fetchDataFromUplink()
+					throws PDCTransmissionException
+	{
+		PDCPublisher publisher;
+		String last_entry;
+		DataRecord record;
+		Collection<String> ids;
+		Storage storage;
+
+		storage = _stream.getStorage();
+
+		publisher = _stream.getPublisher();
+		if (publisher == null) {
+			Log.warning("No uplink defined; fetching aborted");
+			return true;
+		}
+		try {
+			last_entry = storage.getLastEntry();
+		}
+		catch (PDCDatabaseException ex) {
+			throw new PDCTransmissionException(
+							"Unable to fetch id of last record from the database", ex);
+		}
+
+		if (last_entry == null)
+			ids = fetchList();
+		else
+			ids = fetchList(last_entry);
+
+		if (ids == null) {
+			Log.warning("No response when fetching ids");
+			return false;
+		}
+
+		Iterator<String> iter = ids.iterator();
+
+		try {
+			while (iter.hasNext()) {
+				String data_id = iter.next();
+
+				Log.debug("pulling: " + data_id);
+				record = fetchRecord(data_id);
+				if (record == null) {
+					Log.warning("No response when fetching record " + data_id);
+					return false;
+				}
+
+				Log.debug("got: " + JSON.serialize(record));
+				storage.insertRecord(record);
+			}
+		}
+		catch (PDCDatabaseException ex) {
+			throw new Error("Unable to insert entry to the database", ex);
+		}
+
+		return true;
 	}
 }

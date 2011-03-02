@@ -62,17 +62,17 @@ public class Application implements iApplication {
 	 * @param id
 	 * @return
 	 */
-	synchronized public boolean data_stream_exists(String id)
+	synchronized public boolean isDataStream(String id)
 	{
 		return _data_stream.containsKey(id);
 	}
 
-	synchronized public DataStream data_stream_get(String id)
+	synchronized public DataStream getDataStream(String id)
 	{
 		return _data_stream.get(id);
 	}
 
-	synchronized public DataStream data_stream_add(DataStream ds)
+	synchronized public DataStream addDataStream(DataStream ds)
 	{
 		return _data_stream.put(ds.data_stream_id, ds);
 	}

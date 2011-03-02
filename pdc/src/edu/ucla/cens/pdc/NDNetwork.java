@@ -91,7 +91,7 @@ public class NDNetwork implements CCNFilterListener {
 			return false;
 
 		ds_name = postfix.stringComponent(1);
-		ds = app.data_stream_get(ds_name);
+		ds = app.getDataStream(ds_name);
 		if (ds == null) {
 			Log.warning("Stream " + ds_name + " doesn't exist.");
 			return false;

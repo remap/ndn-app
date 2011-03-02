@@ -62,7 +62,7 @@ public class Main {
 		String uri = args[0];
 		PDCConfigStore config = PDCConfigStore.getInstance();
 
-		PDCPublisher node1 = new PDCPublisher("ccnx:/pdv1");
+		PDCPublisher node1 = new PDCPublisher("ccnx:/pdv1", "myacl");
 		PDCReceiver node2 = new PDCReceiver("ccnx:/pdv2");
 
 		//Disable annoying ccnx debug messages
@@ -79,10 +79,10 @@ public class Main {
 
 			n1_app = new Application("myapp");
 			n1_ds = new MongoDataStream(n1_app, "myacl");
-			n1_ds.getEncryptor().setEncryptKey(key.clone());
+			n1_ds.getTransport().getEncryptor().setEncryptKey(key.clone());
 			n1_ds.addReceiver(node2);
 
-			n1_app.data_stream_add(n1_ds);
+			n1_app.addDataStream(n1_ds);
 			config.addApplication(n1_app);
 		} else if (uri.equals(node2.uri.toURIString())) {
 			config.setRoot(node2.uri);
@@ -90,17 +90,17 @@ public class Main {
 
 			n2_app = new Application("myapp");
 			n2_ds = new MongoDataStream(n2_app, "myacl");
-			n2_ds.getEncryptor().setDecryptKey(key.clone());
-			n2_ds.setPublisher(node1, "myacl");
+			n2_ds.getTransport().getEncryptor().setDecryptKey(key.clone());
+			n2_ds.setPublisher(node1);
 
-			n2_app.data_stream_add(n2_ds);
+			n2_app.addDataStream(n2_ds);
 			config.addApplication(n2_app);
 		} else if (uri.equals("database")) {
 			Database.setPrefix("pdv1_");
 			Application app = new Application("myapp");
 			DataStream ds = new MongoDataStream(app, "myacl");
 //			ds.key = key.clone();
-			app.data_stream_add(ds);
+			app.addDataStream(ds);
 			config.addApplication(app);
 			fillDatabase(ds);
 			System.exit(0);
