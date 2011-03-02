@@ -7,7 +7,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import webClient.ndn.test.NDNTestServlet;
 
 /**
- *
+ * This class holds the main function of the web client and set up all the servlets
  * @author Alexander Bonomo
  */
 public class WebClientServer
@@ -32,19 +32,24 @@ public class WebClientServer
 
         Server server = new Server(port);
 
-        //TODO: figure out what these options mean / how they work
+        //set up the servlets
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS | ServletContextHandler.SECURITY);
         context.setContextPath("/");
         server.setHandler(context);
         context.addServlet(new ServletHolder(new PDVServlet()), "/*");
         context.addServlet(new ServletHolder(new LoginServlet()), "/login/*");
         context.addServlet(new ServletHolder(new HomeServlet()), "/home/*");
-        context.addServlet(new ServletHolder(new ConfigureServlet()), "/home/configure/*");
-        context.addServlet(new ServletHolder(new AppServlet()), "/home/configure/app/*");
-        context.addServlet(new ServletHolder(new DataStreamServlet()), "/home/configure/app/dataStream/*");
-        context.addServlet(new ServletHolder(new DownloadServlet()), "/home/download/*");
-        context.addServlet(new ServletHolder(new AppServlet()), "/home/download/app/*");
-        context.addServlet(new ServletHolder(new DataStreamServlet()), "/home/download/app/dataStream/*");
+
+        //configure servlets
+        context.addServlet(new ServletHolder(new AppServlet()), "/home/configure/*");
+        context.addServlet(new ServletHolder(new DataStreamServlet()), "/home/configure/app/*");
+        context.addServlet(new ServletHolder(new ConfigureServlet()), "/home/configure/app/dataStream/*");
+        
+        //download servlets
+        context.addServlet(new ServletHolder(new AppServlet()), "/home/download/*");
+        context.addServlet(new ServletHolder(new DataStreamServlet()), "/home/download/app/*");
+        context.addServlet(new ServletHolder(new DownloadServlet()), "/home/download/app/dataStream/*");
+
         context.addServlet(new ServletHolder(new UploadServlet()), "/home/upload/*");
         context.addServlet(new ServletHolder(new NDNTestServlet()), "/home/test/*");
 

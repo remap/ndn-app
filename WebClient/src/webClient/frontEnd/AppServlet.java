@@ -9,56 +9,64 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import pdc.DataStream;
-import webClient.backEnd.PDCDataStreams;
+import webClient.backEnd.PDCApps;
+import pdc.Application;
 
 /**
- *
+ * This class prints the apps available this user on this PDV instance
+ * 
  * @author Alexander Bonomo
  */
+
 public class AppServlet extends HttpServlet
 {
-    private String m_userHash;
-    
-    @Override
+    private String _userHash = null;
+
+     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException
     {
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
 
-        response.getWriter().println("<h1> Here are the data streams for this app. </h1>");
+        this._userHash = request.getParameter(VarNames.USER_HASH);
+        if(this._userHash == null)
+            response.getWriter().println("<h1> user hash not transferred. </h1>");
 
-        this.m_userHash = request.getParameter(VarNames.USER_HASH);
+        response.getWriter().println("<h1> View and download your data. </h1>");
 
-        printDataStreams(request, response);
+        printApps(response);
     }
 
-    private void printDataStreams(HttpServletRequest request, HttpServletResponse response)
-    {
-        //TODO actually get app name
-        String appName = "app";
-
-        PDCDataStreams streamGetter = new PDCDataStreams();
-        Collection<DataStream> dataStreams;
+     /**
+      * Prints the apps
+      * 
+      * @param response
+      */
+     private void printApps(HttpServletResponse response)
+     {
+         //TODO actually get username
+        Collection<Application> apps;
         try
         {
-            dataStreams = streamGetter.getDataStreams(this.m_userHash, appName);
-        } 
+            PDCApps appGetter = new PDCApps();
+            apps = appGetter.getUserApps(this._userHash);
+        }
+
         catch (IOException ex)
         {
             Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
             return;
-        } 
+        }
         catch (MalformedContentNameStringException ex)
         {
             Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
 
-        for(DataStream ds : dataStreams)
+        for(Application a : apps)
         {
-            //TODO print link for each data stream
+            //TODO print a hyperlink for the app on a new line
         }
-    }
+     }
 }
