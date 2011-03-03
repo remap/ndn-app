@@ -1,5 +1,6 @@
 package webClient.frontEnd;
 
+import edu.ucla.cens.pdc.libpdc.DataStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -9,7 +10,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import pdc.DataStream;
 import webClient.backEnd.PDCDataStreams;
 
 /**

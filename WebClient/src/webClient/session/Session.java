@@ -1,7 +1,10 @@
 package webClient.session;
 
-import pdc.Application;
-import pdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.iApplication;
+import java.security.KeyPair;
+import java.security.PublicKey;
+import webClient.lib.Security;
 
 /**
  *
@@ -9,6 +12,13 @@ import pdc.DataStream;
  */
 public class Session
 {
+    public Session()
+    {
+        this.keyPair = Security.generateKeyPair(512);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
     /**
      * The URI of the PDV instance
      */
@@ -83,13 +93,13 @@ public class Session
     /**
      * The current application the user has selected
      */
-    private Application currentApp;
+    private iApplication currentApp;
 
     /**
      * Gets the current application the user has selected
      * @return - the current app
      */
-    public Application getCurrentApp()
+    public iApplication getCurrentApp()
     {
         return this.currentApp;
     }
@@ -98,7 +108,7 @@ public class Session
      * Sets the current app to what the user has selected
      * @param currentApp - the selected app
      */
-    public void setCurrentApp(Application currentApp)
+    public void setCurrentApp(iApplication currentApp)
     {
         this.currentApp = currentApp;
     }
@@ -119,6 +129,22 @@ public class Session
     {
         this.currentDS = ds;
     }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * The public / private key pair for the session
+     */
+    private KeyPair keyPair;
+
+    public PublicKey getPublicKey()
+    {
+        return this.keyPair.getPublic();
+    }
+
+    //TODO function to sign a packet w/ private key
+
+    //TODO function to decrypt with private key
 
     ////////////////////////////////////////////////////////////////////////////
 }

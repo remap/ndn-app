@@ -1,5 +1,6 @@
 package webClient.frontEnd;
 
+import edu.ucla.cens.pdc.libpdc.iApplication;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -10,7 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.backEnd.PDCApps;
-import pdc.Application;
 
 /**
  * This class prints the apps available this user on this PDV instance
@@ -46,7 +46,7 @@ public class AppServlet extends HttpServlet
      private void printApps(HttpServletResponse response)
      {
          //TODO actually get username
-        Collection<Application> apps;
+        Collection<iApplication> apps;
         try
         {
             PDCApps appGetter = new PDCApps();
@@ -64,7 +64,7 @@ public class AppServlet extends HttpServlet
             return;
         }
 
-        for(Application a : apps)
+        for(iApplication a : apps)
         {
             //TODO print a hyperlink for the app on a new line
         }

@@ -1,9 +1,11 @@
 package webClient.backEnd;
 
+import edu.ucla.cens.pdc.libpdc.DataEncryptor;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.CCNFilterListener;
@@ -13,6 +15,8 @@ import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.frontEnd.WebClientServer;
+import webClient.lib.Credentials;
+import webClient.lib.Security;
 
 /**
  * This class handles the logging in sequence that occurs between the web client
@@ -24,8 +28,10 @@ public class PDCLogin implements CCNFilterListener
     private CCNHandle _ccnHandle;
     private ContentName _namespace;
 
-    private String _usernamePassword;
+    private KeyPair _keys;
 
+    private Credentials _credentials;
+    
     /**
      * Constructor
      *
@@ -38,6 +44,9 @@ public class PDCLogin implements CCNFilterListener
         //get a handle and a content name
         this._ccnHandle = CCNHandle.getHandle();
         this._namespace = ContentName.fromURI(namespace);
+
+        //get public/private key pairs
+        this._keys = Security.generateKeyPair(512);
     }
 
     /**
@@ -57,20 +66,41 @@ public class PDCLogin implements CCNFilterListener
      */
     public boolean handleInterest(Interest interest)
     {
-        if(this._usernamePassword == null)
+        if(this._credentials == null)
             return false; //TODO correct return value?
 
-        //TODO may want to set to correct encoding
-        //TODO also need to generate and include my public key in this data packet
-        byte[] bytes = this._usernamePassword.getBytes(); //maybe use a hash value instead?
-        ContentObject credentials = ContentObject.buildContentObject(_namespace, bytes);
+        ContentObject coCredentials;
+        try
+        {
+            //encrypt data
+            DataEncryptor encryptor = new DataEncryptor();
+            encryptor.setEncryptKey(null /* TODO: use PDV public key */);
+            byte[] encryptedBytes = encryptor.encryptRecord(this._credentials);
+            coCredentials = ContentObject.buildContentObject(_namespace, encryptedBytes);
 
-        //TODO sign and encrypt this content object as well
+            //sign data
+            coCredentials.sign(this._keys.getPrivate());
+        }
+        catch (PDCEncryptionException ex)
+        {
+            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+        catch (InvalidKeyException ex)
+        {
+            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+        catch (SignatureException ex)
+        {
+            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
 
         //TODO may want to use CCNFlowControl instead
         try
         {
-            this._ccnHandle.put(credentials);
+            this._ccnHandle.put(coCredentials);
         }
         catch (IOException ex)
         {
@@ -94,7 +124,8 @@ public class PDCLogin implements CCNFilterListener
     {
         try
         {
-            this._usernamePassword = userName + " " + password;
+            //create the credentials
+            this._credentials = new Credentials(userName, password, this._keys.getPublic());
 
             //start listening before we send just in case
             this.startListening();
@@ -102,7 +133,7 @@ public class PDCLogin implements CCNFilterListener
             ContentObject ack = this._ccnHandle.get(ContentName.fromURI(pdv_uri +
                     "/<" + WebClientServer.getNDNNamespace() + ">"), WebClientServer.DEFAULT_TIMEOUT);
 
-            //TODO check for null ack
+            //TODO check for null ack also verify ack
 
             ContentObject coIsAuthenticated = this._ccnHandle.get(
                     ContentName.fromURI(pdv_uri + "/isAuthenticated"),
@@ -131,17 +162,5 @@ public class PDCLogin implements CCNFilterListener
     {
         //TODO
         return true;
-    }
-
-    /**
-     * Generates a public/private key combination.
-     * @throws NoSuchAlgorithmException
-     */
-    private void generateKeys() throws NoSuchAlgorithmException
-    {
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-        kpg.initialize(512);
-        KeyPair kp = kpg.generateKeyPair();
-
     }
 }
