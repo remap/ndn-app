@@ -33,6 +33,7 @@ import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 import org.ccnx.ccn.protocol.SignedInfo;
+import org.omg.CORBA.ByteHolder;
 
 /**
  *
@@ -189,10 +190,10 @@ public class StreamTransport {
 		ContentObject response;
 
 		byte[] decoded;
-		List<String> result = new LinkedList<String>();
+		List<String> result;
 
 		try {
-			uri = _stream.getPublisherStreamURI().append(Constants.STR_COMMAND).append(
+			uri = _stream.getPublisherStreamURI().append(Constants.STR_CONTROL).append(
 							"list");
 
 			if (start != null) {
@@ -226,6 +227,10 @@ public class StreamTransport {
 		catch (PDCEncryptionException ex) {
 			throw new PDCTransmissionException("Unable to decrypt the message", ex);
 		}
+
+		//Special case (empty list returned)
+		if (decoded.length == 0)
+			return new LinkedList<String>();
 
 		result = Arrays.asList(new String(decoded).split("\\\n"));
 
@@ -269,7 +274,7 @@ public class StreamTransport {
 		catch (MalformedContentNameStringException ex) {
 			throw new PDCTransmissionException(String.format(
 							"Unable to create proper URI (%s, %s, %s)",
-							publisher_ds, Constants.STR_COMMAND, content_id), ex);
+							publisher_ds, Constants.STR_CONTROL, content_id), ex);
 		}
 	}
 
@@ -305,6 +310,11 @@ public class StreamTransport {
 		if (ids == null) {
 			Log.warning("No response when fetching ids");
 			return false;
+		}
+
+		if (ids.isEmpty()) {
+			Log.info("No more records to pull");
+			return true;
 		}
 
 		Iterator<String> iter = ids.iterator();

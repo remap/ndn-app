@@ -63,7 +63,6 @@ public class DataEncryptor {
 		this._decrypt_key = key;
 	}
 
-	@SuppressWarnings("rawtypes")
 	public byte[] encryptRecord(iBSONExportable record)
 					throws PDCEncryptionException
 	{
