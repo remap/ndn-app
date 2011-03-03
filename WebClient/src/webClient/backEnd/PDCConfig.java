@@ -9,6 +9,7 @@ import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import webClient.lib.ConfigurationSettings;
 
 /**
  * This class grabs the current configuration settings for a datastream and allows
@@ -18,20 +19,10 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  */
 public class PDCConfig implements CCNFilterListener
 {
-    /**
-     * this class is just here to prevent compilation errors. It should probably
-     * be implemented in the PDC itself.
-     * 
-     */
-    public class ConfigSettings
-    {
-
-    }
-
     private CCNHandle _ccnHandle;
     private ContentName _namespace;
 
-    private ConfigSettings _settings;
+    private ConfigurationSettings _settings;
     
     /**
      * Constructor
@@ -83,13 +74,13 @@ public class PDCConfig implements CCNFilterListener
      * gets the current configuration settings for the data stream
      * @return - the current configuration settings
      */
-    public ConfigSettings getCurrentConfigSettings()
+    public ConfigurationSettings getCurrentConfigSettings()
     {
         //TODO
-        return new ConfigSettings();
+        return new ConfigurationSettings();
     }
 
-    private byte[] convertSettingsToBytes(ConfigSettings settings)
+    private byte[] convertSettingsToBytes(ConfigurationSettings settings)
     {
         //TODO
         return null;

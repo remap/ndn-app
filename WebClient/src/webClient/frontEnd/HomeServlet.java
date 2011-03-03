@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.backEnd.PDCLogin;
+import webClient.lib.Algorithms;
 import webClient.session.SessionManager;
 
 /**
@@ -87,7 +88,7 @@ public class HomeServlet extends HttpServlet
         //if the user is authenticated, register a new session 
         if(isAuthenticatedUser)
         {
-            _userHash = md5Hash(pdv_uri, username, password);
+            _userHash = Algorithms.md5HashStr(pdv_uri + username + password);
             SessionManager.registerSession(_userHash);
             SessionManager.getSession(_userHash).setPDV_URI(pdv_uri);
         }
@@ -95,29 +96,5 @@ public class HomeServlet extends HttpServlet
         return isAuthenticatedUser;
     }
 
-    /**
-     * Produces an MD5 hash of the pdv_uri
-     * @param pdv_uri
-     * @param username
-     * @param password
-     * @return
-     */
-    private String md5Hash(String pdv_uri, String username, String password)
-    {
-        MessageDigest md;
-        try
-        {
-            md = MessageDigest.getInstance("MD5");
-        }
-        catch (NoSuchAlgorithmException ex)
-        {
-            //this should never happen...
-            Logger.getLogger(HomeServlet.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
-        String str = pdv_uri + username + password;
-        md.reset();
-        md.update(str.getBytes());
-        return new String(md.digest());
-    }
+    
 }

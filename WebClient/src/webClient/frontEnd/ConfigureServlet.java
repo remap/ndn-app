@@ -5,7 +5,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import webClient.backEnd.PDCConfig.ConfigSettings;
+import webClient.lib.ConfigurationSettings;
 
 /**
  * This page allows a user to modify the configuration settings for a datastream
@@ -28,16 +28,16 @@ public class ConfigureServlet extends HttpServlet
 
         response.getWriter().println("<h1> Configure your settings. </h1>");
 
-        ConfigSettings currentSettings = getCurrentSettings();
+        ConfigurationSettings currentSettings = getCurrentSettings();
 
     }
 
-    private ConfigSettings getCurrentSettings()
+    private ConfigurationSettings getCurrentSettings()
     {
         return null;
     }
     
-    private void displayCurrentSettings(ConfigSettings settings)
+    private void displayCurrentSettings(ConfigurationSettings settings)
     {
         //TODO
     }

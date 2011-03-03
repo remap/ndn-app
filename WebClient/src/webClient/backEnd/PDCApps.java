@@ -3,15 +3,13 @@ package webClient.backEnd;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
-import org.ccnx.ccn.CCNFilterListener;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
-import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import pdc.Application;
 import webClient.frontEnd.WebClientServer;
 import webClient.session.SessionManager;
+import edu.ucla.cens.pdc.libpdc.iApplication;
 
 /**
  *
@@ -41,7 +39,7 @@ public class PDCApps
      * @throws IOException
      * @throws MalformedContentNameStringException
      */
-    public Collection<Application> getUserApps(String userHash) throws IOException, MalformedContentNameStringException
+    public Collection<iApplication> getUserApps(String userHash) throws IOException, MalformedContentNameStringException
     {
         String pdv_uri = SessionManager.getSession(userHash).getPDV_URI();
 
@@ -57,9 +55,9 @@ public class PDCApps
      * @param apps - the content object to decode
      * @return - the collection of Apps
      */
-    private Collection<Application> decodeAppCO(ContentObject apps)
+    private Collection<iApplication> decodeAppCO(ContentObject apps)
     {
         //TODO
-        return new LinkedList<Application>();
+        return new LinkedList<iApplication>();
     }
 }
