@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc;
 
+import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
@@ -26,7 +27,7 @@ public class PublisherDataCommand extends PublisherCommand {
 	private PublisherDataCommand(CCNHandle handle)
 					throws MalformedContentNameStringException
 	{
-		super(handle, "data");
+		super(handle, Constants.STR_DATA);
 	}
 
 	static PublisherDataCommand get_instance()

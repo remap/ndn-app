@@ -7,6 +7,7 @@ package edu.ucla.cens.pdc;
 import edu.ucla.cens.pdc.libpdc.DataRecord;
 import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import java.io.IOException;
@@ -49,7 +50,7 @@ public class Main {
 	 */
 	public static void main(String[] args)
 					throws MalformedContentNameStringException, IOException,
-					ConfigurationException
+					ConfigurationException, PDCTransmissionException
 	{
 		byte[] key = new byte[]{'t', 'e', 's', 't', 'k', 'e', 'y', 0};
 		Application n1_app, n2_app = null;
@@ -110,6 +111,9 @@ public class Main {
 		}
 
 		test.startListening();
+
+		if (uri.equals(node2.uri.toURIString()))
+			n2_ds.getTransport().fetchDataFromUplink();
 
 //		if (uri.equals(node2.uri.toURIString()))
 //			n2_ds.periodicPullStart(5000);

@@ -9,7 +9,7 @@ package edu.ucla.cens.pdc.libpdc;
  * @author Derek Kulinski
  */
 public class Constants {
-	final static public String STR_COMMAND = "command";
+	final static public String STR_CONTROL = "control";
 
 	final static public String STR_DATA = "data";
 

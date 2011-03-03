@@ -4,13 +4,11 @@
  */
 package edu.ucla.cens.pdc;
 
-import edu.ucla.cens.pdc.libpdc.exceptions.PDCNoResponseException;
+import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
@@ -33,7 +31,7 @@ public class PublisherControlCommands extends PublisherCommand {
 	private PublisherControlCommands(CCNHandle handle)
 					throws MalformedContentNameStringException
 	{
-		super(handle, "control");
+		super(handle, Constants.STR_CONTROL);
 	}
 
 	static PublisherControlCommands get_instance()
