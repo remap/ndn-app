@@ -63,8 +63,8 @@ public class Main {
 		String uri = args[0];
 		PDCConfigStore config = PDCConfigStore.getInstance();
 
-		PDCPublisher node1 = new PDCPublisher("ccnx:/pdv1", "myacl");
-		PDCReceiver node2 = new PDCReceiver("ccnx:/pdv2");
+		PDCPublisher node1 = new PDCPublisher("ccnx:/ucla.edu/apps/pdv1", "myacl");
+		PDCReceiver node2 = new PDCReceiver("ccnx:/ucla.edu/apps/pdv2");
 
 		//Disable annoying ccnx debug messages
 		Log.setDefaultLevel(Log.FAC_ALL, Level.WARNING);

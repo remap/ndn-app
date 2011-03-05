@@ -12,11 +12,11 @@ JAVA_CLASSPATH=$(CCNX_LIB):$(MONGODB_LIB):$(BOUNCYCASTLE_LIB):$(LIBPDC_LIB):$(PD
 
 #java -cp "/home/takeda/3rd_party/ccnx/lib/ccn.jar:/home/takeda/3rd_party/mongo-2.4.jar:/home/takeda/3rd_party/ccnx/lib/bcprov-jdk16-143.jar:/home/takeda/ndn-app/libpdc/dist/libpdc.jar:/home/takeda/ndn-app/pdc/dist/pdc.jar" edu.ucla.cens.pdc.Main
 
-all: pdc/dist/pdc.jar
-run: pdc/dist/pdc.jar
+all: pdc.jar
+run: pdc.jar
 	java -ea -cp "$(JAVA_CLASSPATH)" $(PDC_MAIN) $(ARGS)
 
-pdc/dist/pdc.jar:
+pdc.jar:
 	cd pdc && ant $(ANT_CLASSPATH) jar
 
-
+.DUMMY: all run pdc.jar
