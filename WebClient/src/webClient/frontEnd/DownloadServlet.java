@@ -26,13 +26,21 @@ public class DownloadServlet extends HttpServlet
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException
     {
+         this.m_userHash = request.getParameter(VarNames.USER_HASH);
+         //TODO make sure this isn't null
+
+        //check to see if a download was requested
+         String record = request.getParameter(VarNames.DATA_RECORD);
+         if(record != null)
+         {
+             //TODO start download
+         }
+
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
 
         response.getWriter().println("<h1> Here are the data records for this stream. </h1>");
 
-        this.m_userHash = request.getParameter(VarNames.USER_HASH);
-        //TODO make sure this isn't null
      }
 
      /**
@@ -44,11 +52,12 @@ public class DownloadServlet extends HttpServlet
       */
      private void printRecordsforDownload(HttpServletRequest request, HttpServletResponse response)
      {
-         Collection<DataRecord> records;
+         //get the list of records
+         Collection<String> records;
          try
          {
              PDCDataRecords pdcdr = new PDCDataRecords();
-             records = pdcdr.getDataRecords(this.m_userHash);
+             records = pdcdr.getDataRecordList(this.m_userHash);
          }
 
          catch (IOException ex)
@@ -61,10 +70,20 @@ public class DownloadServlet extends HttpServlet
             Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
             return;
          }
-         
-         for(DataRecord dr : records)
+
+         //print links for download
+         for(String dr : records)
          {
-             //TODO print links for download
+            try 
+            {
+                response.getWriter().println("<a href=\"" + request.getRequestURL().toString()
+                        + "?" + VarNames.DATA_RECORD + "=" + dr + "\"> " + dr
+                        + "</a> <br />");
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
          }
      }
 }

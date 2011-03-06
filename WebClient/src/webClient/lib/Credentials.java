@@ -53,26 +53,35 @@ public class Credentials implements iBSONExportable, BSONObject
     {
         return (PublicKey) this.credentialsAndKey.get(Credentials.pubkeyKey);
     }
+    
     public byte[] toBSON()
     {
-        BSONEncoder encoder;
         try
         {
-            encoder = new BSONEncoder();
+            BSONEncoder encoder = new BSONEncoder();
+            return encoder.encode(this);
         }
         catch(RuntimeException re)
         {
+            //TODO
             return null;
         }
-        return encoder.encode(this);
     }
 
     public Credentials fromBSON(byte[] data)
     {
-        BSONDecoder decoder = new BSONDecoder();
-        this.putAll(decoder.readObject(data));
+        try
+        {
+            BSONDecoder decoder = new BSONDecoder();
+            this.putAll(decoder.readObject(data));
 
-        return this;
+            return this;
+        }
+        catch(RuntimeException e)
+        {
+            //TODO
+            return null;
+        }
     }
 
     public Object put(String string, Object o)

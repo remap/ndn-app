@@ -10,6 +10,7 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.frontEnd.WebClientServer;
 import webClient.session.SessionManager;
 import edu.ucla.cens.pdc.libpdc.iApplication;
+import webClient.lib.CollectionTransport;
 
 /**
  *
@@ -39,11 +40,11 @@ public class PDCApps
      * @throws IOException
      * @throws MalformedContentNameStringException
      */
-    public Collection<iApplication> getUserApps(String userHash) throws IOException, MalformedContentNameStringException
+    public Collection<String> getUserApps(String userHash) throws IOException, MalformedContentNameStringException
     {
-        String pdv_uri = SessionManager.getSession(userHash).getPDV_URI();
+        //TODO add WC hash to URI
+        String pdv_uri = SessionManager.getSession(userHash).getPDV_URI() + "/apps";
 
-        //TODO correct the URI
         ContentObject apps = this._ccnHandle.get(ContentName.fromURI(pdv_uri),
                 WebClientServer.DEFAULT_TIMEOUT);
 
@@ -55,9 +56,11 @@ public class PDCApps
      * @param apps - the content object to decode
      * @return - the collection of Apps
      */
-    private Collection<iApplication> decodeAppCO(ContentObject apps)
+    private Collection<String> decodeAppCO(ContentObject apps)
     {
-        //TODO
-        return new LinkedList<iApplication>();
+        CollectionTransport<String> ctApps = new CollectionTransport<String>();
+        ctApps.fromBSON(apps.content());
+        
+        return ctApps.toCollection();
     }
 }

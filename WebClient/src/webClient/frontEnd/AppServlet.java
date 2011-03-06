@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.backEnd.PDCApps;
+import webClient.ndn.test.PDCAppsTest;
 
 /**
  * This class prints the apps available this user on this PDV instance
@@ -35,7 +36,7 @@ public class AppServlet extends HttpServlet
 
         response.getWriter().println("<h1> View and download your data. </h1>");
 
-        printApps(response);
+        printApps(request, response);
     }
 
      /**
@@ -43,10 +44,10 @@ public class AppServlet extends HttpServlet
       * 
       * @param response
       */
-     private void printApps(HttpServletResponse response)
+     private void printApps(HttpServletRequest request, HttpServletResponse response)
      {
-         //TODO actually get username
-        Collection<iApplication> apps;
+        Collection<String> apps;
+        //apps = PDCAppsTest.listApps();
         try
         {
             PDCApps appGetter = new PDCApps();
@@ -64,9 +65,17 @@ public class AppServlet extends HttpServlet
             return;
         }
 
-        for(iApplication a : apps)
+        for(String a : apps)
         {
-            //TODO print a hyperlink for the app on a new line
+            try
+            {
+                response.getWriter().println("<a href=\"" + request.getRequestURL().toString()
+                        + "/app?" + VarNames.APPLICATION + "=" + a + "\"> " + a + "</a> <br />");
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
      }
 }

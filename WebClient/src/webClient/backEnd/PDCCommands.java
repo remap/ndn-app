@@ -8,5 +8,5 @@ package webClient.backEnd;
  */
 public class PDCCommands
 {
-    public static final String PULL_REQUEST = "/replicate/pull";
+    public static final String DATA_RECORD_LIST = "/control/list";
 }

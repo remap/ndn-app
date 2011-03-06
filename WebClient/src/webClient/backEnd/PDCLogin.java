@@ -122,6 +122,8 @@ public class PDCLogin implements CCNFilterListener
      */
     public boolean isUserAuthenticated(String pdv_uri, String userName, String password)
     {
+        return true;
+        /*
         try
         {
             //create the credentials
@@ -151,6 +153,7 @@ public class PDCLogin implements CCNFilterListener
             Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
+        */
     }
 
     /**

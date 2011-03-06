@@ -7,7 +7,7 @@ import java.security.PublicKey;
 import webClient.lib.Security;
 
 /**
- *
+ * This class represents the user's session once they have successfully logged in
  * @author Alexander Bonomo
  */
 public class Session

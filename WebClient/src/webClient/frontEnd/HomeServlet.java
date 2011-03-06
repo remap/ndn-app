@@ -1,9 +1,6 @@
 package webClient.frontEnd;
 
-import java.io.IOException;import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -79,7 +76,7 @@ public class HomeServlet extends HttpServlet
      */
     private boolean isAuthenticatedUser(HttpServletRequest request, PDCLogin pdcLogin)
     {
-        String pdv_uri = request.getParameter("pdvuri");
+        String pdv_uri = request.getParameter(VarNames.PDV_URI);
         String username = request.getParameter("login");
         String password = request.getParameter("password");
 
@@ -88,7 +85,7 @@ public class HomeServlet extends HttpServlet
         //if the user is authenticated, register a new session 
         if(isAuthenticatedUser)
         {
-            _userHash = Algorithms.md5HashStr(pdv_uri + username + password);
+            _userHash = username;//Algorithms.md5HashStr(pdv_uri + username + password);
             SessionManager.registerSession(_userHash);
             SessionManager.getSession(_userHash).setPDV_URI(pdv_uri);
         }
