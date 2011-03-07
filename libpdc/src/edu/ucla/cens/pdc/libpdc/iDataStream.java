@@ -14,7 +14,7 @@ import org.ccnx.ccn.protocol.ContentName;
  *
  * @author Derek Kulinski
  */
-interface iDataStream {
+public interface iDataStream {
 	/**
 	 * Get instance of class responsible for storing the data in a database
 	 * @return

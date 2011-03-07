@@ -33,7 +33,7 @@ public class Application implements iApplication {
 
 	private Map<String, DataStream> _data_stream = new HashMap<String, DataStream>();
 
-	Application(String name)
+	public Application(String name)
 	{
 		PDCConfigStore config = PDCConfigStore.getInstance();
 

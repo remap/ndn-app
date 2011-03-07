@@ -84,7 +84,7 @@ public class Session
     public void resetCurrentAction()
     {
         this.currentAction = null;
-        this.currentApp = null;
+        this.appID = null;
         this.currentDS = null;
     }
 
@@ -93,24 +93,24 @@ public class Session
     /**
      * The current application the user has selected
      */
-    private iApplication currentApp;
+    private String appID;
 
     /**
      * Gets the current application the user has selected
      * @return - the current app
      */
-    public iApplication getCurrentApp()
+    public String getCurrentApp()
     {
-        return this.currentApp;
+        return this.appID;
     }
 
     /**
      * Sets the current app to what the user has selected
-     * @param currentApp - the selected app
+     * @param appID - the selected app
      */
-    public void setCurrentApp(iApplication currentApp)
+    public void setCurrentApp(String appID)
     {
-        this.currentApp = currentApp;
+        this.appID = appID;
     }
 
     ////////////////////////////////////////////////////////////////////////////

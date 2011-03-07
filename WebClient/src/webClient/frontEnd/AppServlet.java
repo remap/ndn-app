@@ -70,7 +70,8 @@ public class AppServlet extends HttpServlet
             try
             {
                 response.getWriter().println("<a href=\"" + request.getRequestURL().toString()
-                        + "/app?" + VarNames.APPLICATION + "=" + a + "\"> " + a + "</a> <br />");
+                        + "app?" + VarNames.USER_HASH + "=" + this._userHash + "&"
+                        + VarNames.APPLICATION + "=" + a + "\"> " + a + "</a> <br />");
             }
             catch (IOException ex)
             {

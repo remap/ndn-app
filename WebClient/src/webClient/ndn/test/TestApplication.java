@@ -1,5 +1,7 @@
 package webClient.ndn.test;
 
+import com.mongodb.DBCollection;
+import edu.ucla.cens.pdc.Database;
 import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import java.util.Collection;
@@ -19,6 +21,8 @@ public class TestApplication implements iApplication
 
     private LinkedHashMap<String, DataStream> m_dataStreams = new LinkedHashMap<String, DataStream>();
 
+    private Database m_db;
+
     /**
      * Constructor
      * @param appName - the name for the app
@@ -29,6 +33,7 @@ public class TestApplication implements iApplication
     {
         this.m_appName = appName;
         this.m_namespace = ContentName.fromURI(namespace);
+        //this.m_db = new Database(Database.db_type.DATA, appName);
     }
 
     public String getAppName()
@@ -75,4 +80,8 @@ public class TestApplication implements iApplication
         return streams;
     }
 
+    public DBCollection get_db_collection(String id)
+    {
+		return this.m_db.getDatabase().getCollection(id);
+    }
 }

@@ -9,6 +9,7 @@ import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.frontEnd.WebClientServer;
+import webClient.lib.CollectionTransport;
 import webClient.session.SessionManager;
 
 /**
@@ -34,12 +35,12 @@ public class PDCDataStreams
      * @throws IOException
      * @throws MalformedContentNameStringException
      */
-    public Collection<DataStream> getDataStreams(String userHash, String appName) throws IOException, MalformedContentNameStringException
+    public Collection<String> getDataStreams(String userHash, String appID) throws IOException, MalformedContentNameStringException
     {
         String pdv_uri = SessionManager.getSession(userHash).getPDV_URI();
 
-        //TODO correct the URI
-        ContentObject streams = this._ccnHandle.get(ContentName.fromURI(pdv_uri),
+        //TODO add wc public key hash to the URI
+        ContentObject streams = this._ccnHandle.get(ContentName.fromURI(pdv_uri + "/" + appID),
                 WebClientServer.DEFAULT_TIMEOUT);
 
         return decodeStreamsCO(streams);
@@ -50,9 +51,10 @@ public class PDCDataStreams
      * @param streams - the content object returned by the PDV
      * @return - the list of available data streams
      */
-    private Collection<DataStream> decodeStreamsCO(ContentObject streams)
+    private Collection<String> decodeStreamsCO(ContentObject streams)
     {
-        //TODO
-        return new LinkedList<DataStream>();
+        CollectionTransport<String> ctDataStreams = new CollectionTransport<String>();
+        ctDataStreams.fromBSON(streams.content());
+        return ctDataStreams.toCollection();
     }
 }

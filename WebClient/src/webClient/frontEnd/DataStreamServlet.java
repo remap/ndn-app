@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.backEnd.PDCDataStreams;
+import webClient.session.SessionManager;
 
 /**
  * This page displays the data streams for a particular app.
@@ -44,14 +45,13 @@ public class DataStreamServlet extends HttpServlet
      */
     private void printDataStreams(HttpServletRequest request, HttpServletResponse response)
     {
-        //TODO actually get app name
-        String appName = "app";
+        String appID = request.getParameter(VarNames.APPLICATION);
 
         PDCDataStreams streamGetter = new PDCDataStreams();
-        Collection<DataStream> dataStreams;
+        Collection<String> dataStreams;
         try
         {
-            dataStreams = streamGetter.getDataStreams(this.m_userHash, appName);
+            dataStreams = streamGetter.getDataStreams(this.m_userHash, appID);
         } 
 
         catch (IOException ex)
@@ -64,9 +64,18 @@ public class DataStreamServlet extends HttpServlet
             return;
         }
 
-        for(DataStream ds : dataStreams)
+        for(String ds : dataStreams)
         {
-            //TODO print link for each data stream
+            try
+            {
+                response.getWriter().println("<a href=\"" + request.getRequestURL().toString()
+                        + "dataStream?" + VarNames.USER_HASH + "=" + this.m_userHash + "&"
+                        + VarNames.DATA_RECORD + "=" + ds + "\"> " + ds + "</a> <br />");
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 }
