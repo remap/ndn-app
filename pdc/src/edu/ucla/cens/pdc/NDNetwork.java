@@ -21,7 +21,7 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski
  */
 public class NDNetwork implements CCNFilterListener {
-	final private Map<String, PublisherCommand> _receiver_commands = new HashMap<String, PublisherCommand>(
+	final private Map<String, ReceiverCommand> _receiver_commands = new HashMap<String, ReceiverCommand>(
 					1);
 
 	final private Map<String, PublisherCommand> _publisher_commands = new HashMap<String, PublisherCommand>(
@@ -37,6 +37,7 @@ public class NDNetwork implements CCNFilterListener {
 	{
 		add_publisher_command(PublisherDataCommand.get_instance(ccn_handle));
 		add_publisher_command(PublisherControlCommands.get_instance(ccn_handle));
+		add_receiver_command(new ReceiverControlCommands());
 	}
 
 	public void startListening()
@@ -116,7 +117,7 @@ public class NDNetwork implements CCNFilterListener {
 		_publisher_commands.put(command.getCommandName(), command);
 	}
 
-	private void add_receiver_command(PublisherCommand command)
+	private void add_receiver_command(ReceiverCommand command)
 	{
 		_receiver_commands.put(command.getCommandName(), command);
 	}

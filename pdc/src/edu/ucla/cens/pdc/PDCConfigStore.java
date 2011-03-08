@@ -4,9 +4,13 @@
  */
 package edu.ucla.cens.pdc;
 
+import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
  *
@@ -16,6 +20,7 @@ public class PDCConfigStore {
 	private static PDCConfigStore _instance;
 
 	private Map<String, Application> _applications;
+	private Map<String, DataStream> _stream_lookup_cache;
 
 	private ContentName _root = null;
 
@@ -25,6 +30,7 @@ public class PDCConfigStore {
 	private PDCConfigStore()
 	{
 		_applications = new HashMap<String, Application>();
+		_stream_lookup_cache = new HashMap<String, DataStream>();
 	}
 
 	void setRoot(ContentName root)
@@ -66,6 +72,49 @@ public class PDCConfigStore {
 			return _applications.get(name);
 
 		return null;
+	}
+
+	synchronized DataStream uri2dataStream(ContentName stream)
+	{
+		DataStream ds, result = null;
+		Application app;
+		String app_id, ds_id;
+		Iterator<DataStream> dsi;
+		PDCPublisher publisher;
+		int components;
+		ContentName publisher_uri;
+
+		//The URI should be like this: ccnx:/some/path/to/pdv/<app>/<ds>
+		components = stream.count();
+		if (components < 2)
+			return null;
+
+		ds_id = stream.stringComponent(--components);
+		app_id = stream.stringComponent(--components);
+		publisher_uri = stream.cut(components);
+
+		app = getApplication(app_id);
+		if (app == null)
+			return null;
+
+		dsi = app.getDataStreamsIterator();
+		while (dsi.hasNext()) {
+			ds = dsi.next();
+			publisher = ds.getPublisher();
+
+			if (publisher == null)
+				continue;
+
+			if (!publisher.uri.equals(publisher_uri))
+				continue;
+
+			if (!publisher.getStream_id().equals(ds_id))
+				continue;
+
+			result = ds;
+		}
+
+		return result;
 	}
 
 	/**
