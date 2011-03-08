@@ -4,6 +4,9 @@
  */
 package edu.ucla.cens.pdc;
 
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.Mongo;
 import edu.ucla.cens.pdc.libpdc.DataRecord;
 import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
@@ -53,8 +56,8 @@ public class Main {
 					ConfigurationException, PDCTransmissionException
 	{
 		byte[] key = new byte[]{'t', 'e', 's', 't', 'k', 'e', 'y', 0};
-		Application n1_app, n2_app = null;
-		DataStream n1_ds, n2_ds = null;
+		Application n1_app = null, n2_app = null;
+		DataStream n1_ds = null, n2_ds = null;
 		NDNetwork test = null;
 
 		if (args.length != 1)
@@ -110,12 +113,19 @@ public class Main {
 			System.exit(10);
 		}
 
-		test.startListening();
+		Mongo mongo = new Mongo();
+		DB db = mongo.getDB("settings");
+		DBCollection collection = db.getCollection(n1_app.getCollectionName());
+		collection.insert(n1_app);
 
-		if (uri.equals(node2.uri.toURIString()))
-			n2_ds.getTransport().fetchDataFromUplink();
-
+//		test.startListening();
+//
+//		edu.ucla.cens.pdc.libpdc.util.Log.debug("Listening");
+//
 //		if (uri.equals(node2.uri.toURIString()))
-//			n2_ds.periodicPullStart(5000);
+//			n2_ds.getTransport().fetchDataFromUplink();
+//
+////		if (uri.equals(node2.uri.toURIString()))
+////			n2_ds.periodicPullStart(5000);
 	}
 }

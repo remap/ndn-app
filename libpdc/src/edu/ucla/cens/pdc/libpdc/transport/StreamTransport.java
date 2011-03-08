@@ -12,7 +12,6 @@ import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.Storage;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
-import edu.ucla.cens.pdc.libpdc.exceptions.PDCNoResponseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
@@ -22,8 +21,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.SystemConfiguration;
 import org.ccnx.ccn.protocol.ContentName;
@@ -33,7 +30,6 @@ import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 import org.ccnx.ccn.protocol.SignedInfo;
-import org.omg.CORBA.ByteHolder;
 
 /**
  *
@@ -145,6 +141,14 @@ public class StreamTransport {
 		cipher = _encryptor.encryptData(data.getBytes());
 
 		return publishData(interest, cipher, 1);
+	}
+
+	public boolean publishACK(Interest interest)
+					throws PDCTransmissionException
+	{
+		String answer = "ACK";
+
+		return publishData(interest, answer.getBytes(), 1);
 	}
 
 	private boolean publishData(Interest interest, byte[] data, int freshness)
