@@ -28,6 +28,8 @@ final public class MongoStorage extends Storage {
 
 	private String _last_entry = null;
 
+	public boolean insert_caching = false;
+
 	public MongoStorage(Application app, String data_stream_id)
 	{
 		super(app, data_stream_id);
@@ -45,7 +47,7 @@ final public class MongoStorage extends Storage {
 		DBCursor cur;
 		String last_entry;
 
-		if (_last_entry != null)
+		if (insert_caching && _last_entry != null)
 			return _last_entry;
 
 		fields = new BasicDBObject("_id", 1);

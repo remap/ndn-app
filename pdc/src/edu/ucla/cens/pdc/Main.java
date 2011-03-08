@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.impl.support.Log;
+import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
@@ -100,6 +101,7 @@ public class Main {
 			n2_app.addDataStream(n2_ds);
 			config.addApplication(n2_app);
 		} else if (uri.equals("database")) {
+			config.setRoot(node1.uri);
 			Database.setPrefix("pdv1_");
 			Application app = new Application("myapp");
 			DataStream ds = new MongoDataStream(app, "myacl");
@@ -113,19 +115,19 @@ public class Main {
 			System.exit(10);
 		}
 
-		Mongo mongo = new Mongo();
-		DB db = mongo.getDB("settings");
-		DBCollection collection = db.getCollection(n1_app.getCollectionName());
-		collection.insert(n1_app);
+//		Mongo mongo = new Mongo();
+//		DB db = mongo.getDB("settings");
+//		DBCollection collection = db.getCollection(n1_app.getCollectionName());
+//		collection.insert(n1_app);
 
-//		test.startListening();
-//
-//		edu.ucla.cens.pdc.libpdc.util.Log.debug("Listening");
-//
+		test.startListening();
+
+		edu.ucla.cens.pdc.libpdc.util.Log.debug("Listening");
+
 //		if (uri.equals(node2.uri.toURIString()))
 //			n2_ds.getTransport().fetchDataFromUplink();
-//
-////		if (uri.equals(node2.uri.toURIString()))
-////			n2_ds.periodicPullStart(5000);
+
+		if (uri.equals(node2.uri.toURIString()))
+			n2_app.periodicPullStart(5000);
 	}
 }

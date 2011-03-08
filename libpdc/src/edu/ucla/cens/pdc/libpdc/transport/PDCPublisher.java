@@ -4,7 +4,6 @@
  */
 package edu.ucla.cens.pdc.libpdc.transport;
 
-import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
