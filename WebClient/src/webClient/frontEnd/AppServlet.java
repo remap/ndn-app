@@ -1,5 +1,6 @@
 package webClient.frontEnd;
 
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import java.io.IOException;
 import java.util.Collection;
@@ -11,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.backEnd.PDCApps;
+import webClient.exceptions.NoSuchUserHashException;
 import webClient.ndn.test.PDCAppsTest;
 
 /**
@@ -53,13 +55,17 @@ public class AppServlet extends HttpServlet
             PDCApps appGetter = new PDCApps();
             apps = appGetter.getUserApps(this._userHash);
         }
-
-        catch (IOException ex)
+        catch (NoSuchUserHashException ex)
         {
             Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
-        catch (MalformedContentNameStringException ex)
+        catch (PDCEncryptionException ex)
+        {
+            Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
+        catch (IOException ex)
         {
             Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
             return;

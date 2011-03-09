@@ -42,7 +42,7 @@ public class TestPDVInstance
         try
         {
             appsTest    = new PDCAppsTest       (namespace + "/apps");
-            dsTest      = new PDCDataStreamTest (namespace);
+            dsTest      = new PDCDataStreamTest (namespace + "/datastreams");
         }
         catch (MalformedContentNameStringException ex)
         {

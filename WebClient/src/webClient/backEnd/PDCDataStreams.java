@@ -11,6 +11,7 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.frontEnd.WebClientServer;
 import webClient.lib.CollectionTransport;
 import webClient.session.SessionManager;
+import webClient.ndn.test.PDCDataStreamTest;
 
 /**
  * This class grabs a list of all the data streams for a particular app.
@@ -39,10 +40,11 @@ public class PDCDataStreams
     {
         String pdv_uri = SessionManager.getSession(userHash).getPDV_URI();
 
-        //TODO add wc public key hash to the URI
-        ContentObject streams = this._ccnHandle.get(ContentName.fromURI(pdv_uri + "/" + appID),
+        ContentObject streams = this._ccnHandle.get(ContentName.fromURI(pdv_uri + "/datastreams"),// + appID),
                 WebClientServer.DEFAULT_TIMEOUT);
 
+        if(streams == null)
+            streams = PDCDataStreamTest.getDataStreams(ContentName.fromURI(pdv_uri));
         return decodeStreamsCO(streams);
     }
 
