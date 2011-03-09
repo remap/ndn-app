@@ -4,12 +4,10 @@
  */
 package edu.ucla.cens.pdc.libpdc;
 
-import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.transport.StreamTransport;
-import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.lang.reflect.Constructor;
 import java.security.KeyPair;
 import java.util.ArrayList;
