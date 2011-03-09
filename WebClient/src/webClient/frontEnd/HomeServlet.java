@@ -1,6 +1,9 @@
 package webClient.frontEnd;
 
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -38,32 +41,33 @@ public class HomeServlet extends HttpServlet
 
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
-
-        if(isAuthenticatedUser(request, pdcLogin))
+        try 
         {
-            //get the user hash and pass it to the next page
-            String userHashVar = "?" + VarNames.USER_HASH + "=" + this._userHash;
-
-            //configure link
-            response.getWriter().println("<a href=\"" + request.getRequestURL().toString()
-                    + PageDirectory.CONFIGURE + userHashVar + "\"> Configure </a>");
-            response.getWriter().println("<br />");
-
-            //download link
-            response.getWriter().println("<a href=\"" + PageDirectory.DOWNLOAD +
-                    userHashVar + "\"> Download </a>");
-            response.getWriter().println("<br />");
-
-            //upload link
-            response.getWriter().println("<a href=\"" + PageDirectory.UPLOAD +
-                    userHashVar + "\"> Upload </a>");
-            response.getWriter().println("<br />");
-
-            //test link
-            response.getWriter().println("<a href=\"" + "test/" + "\"> Test </a> <br />");
+            if (isAuthenticatedUser(request, pdcLogin))
+            {
+                //get the user hash and pass it to the next page
+                String userHashVar = "?" + VarNames.USER_HASH + "=" + this._userHash;
+                //configure link
+                response.getWriter().println("<a href=\"" + request.getRequestURL().toString() + PageDirectory.CONFIGURE + userHashVar + "\"> Configure </a>");
+                response.getWriter().println("<br />");
+                //download link
+                response.getWriter().println("<a href=\"" + PageDirectory.DOWNLOAD + userHashVar + "\"> Download </a>");
+                response.getWriter().println("<br />");
+                //upload link
+                response.getWriter().println("<a href=\"" + PageDirectory.UPLOAD + userHashVar + "\"> Upload </a>");
+                response.getWriter().println("<br />");
+                //test link
+                response.getWriter().println("<a href=\"" + "test/" + "\"> Test </a> <br />");
+            }
+            else
+            {
+                //TODO redirect to login page to try again
+            }
         }
-        else
+        catch (PDCEncryptionException ex)
         {
+            Logger.getLogger(HomeServlet.class.getName()).log(Level.SEVERE, null, ex);
+            response.getWriter().println("Encryption Error: Try again.");
             //TODO redirect to login page to try again
         }
     }
@@ -74,7 +78,7 @@ public class HomeServlet extends HttpServlet
      * @param pdcLogin
      * @return
      */
-    private boolean isAuthenticatedUser(HttpServletRequest request, PDCLogin pdcLogin)
+    private boolean isAuthenticatedUser(HttpServletRequest request, PDCLogin pdcLogin) throws PDCEncryptionException
     {
         String pdv_uri = request.getParameter(VarNames.PDV_URI);
         String username = request.getParameter("login");

@@ -82,7 +82,6 @@ public class PDCConfig implements CCNFilterListener
 
     private byte[] convertSettingsToBytes(ConfigurationSettings settings)
     {
-        //TODO
-        return null;
+        return this._settings.toBSON();
     }
 }

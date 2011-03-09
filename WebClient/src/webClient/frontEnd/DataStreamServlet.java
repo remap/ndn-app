@@ -69,8 +69,8 @@ public class DataStreamServlet extends HttpServlet
             try
             {
                 response.getWriter().println("<a href=\"" + request.getRequestURL().toString()
-                        + "dataStream?" + VarNames.USER_HASH + "=" + this.m_userHash + "&"
-                        + VarNames.DATA_RECORD + "=" + ds + "\"> " + ds + "</a> <br />");
+                        + "/dataStream?" + VarNames.USER_HASH + "=" + this.m_userHash + "&"
+                        + VarNames.DATA_STREAM + "=" + ds + "\"> " + ds + "</a> <br />");
             }
             catch (IOException ex)
             {

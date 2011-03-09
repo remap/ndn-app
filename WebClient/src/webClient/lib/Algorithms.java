@@ -33,4 +33,22 @@ public class Algorithms
         md.update(str.getBytes());
         return new String(md.digest());
     }
+
+    public static byte[] md5Hash(byte[] bytes)
+    {
+        MessageDigest md;
+        try
+        {
+            md = MessageDigest.getInstance("MD5");
+        }
+        catch (NoSuchAlgorithmException ex)
+        {
+            //this should never happen ..
+            java.util.logging.Logger.getLogger(Algorithms.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        md.reset();;
+        md.update(bytes);
+        return md.digest();
+    }
 }

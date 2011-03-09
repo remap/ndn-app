@@ -1,6 +1,8 @@
 package webClient.frontEnd;
 
 import edu.ucla.cens.pdc.libpdc.DataRecord;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -11,6 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.backEnd.PDCDataRecords;
+import webClient.exceptions.NoSuchUserHashException;
+import webClient.session.SessionManager;
 
 /**
  * This class displays the data records in a stream and allows the user to
@@ -29,10 +33,14 @@ public class DownloadServlet extends HttpServlet
          this.m_userHash = request.getParameter(VarNames.USER_HASH);
          //TODO make sure this isn't null
 
-        //check to see if a download was requested
+         String dataStream = request.getParameter(VarNames.DATA_STREAM);
+         SessionManager.getSession(m_userHash).setCurrentDataStream(dataStream);
+
+         //check to see if a download was requested
          String record = request.getParameter(VarNames.DATA_RECORD);
          if(record != null)
          {
+             DataRecord theRecord = this.getDataRecord(record, response);
              //TODO start download
          }
 
@@ -40,7 +48,7 @@ public class DownloadServlet extends HttpServlet
         response.setStatus(HttpServletResponse.SC_OK);
 
         response.getWriter().println("<h1> Here are the data records for this stream. </h1>");
-
+        printRecordsforDownload(request, response);
      }
 
      /**
@@ -58,8 +66,22 @@ public class DownloadServlet extends HttpServlet
          {
              PDCDataRecords pdcdr = new PDCDataRecords();
              records = pdcdr.getDataRecordList(this.m_userHash);
+             if(records == null)
+             {
+                 response.getWriter().println("There are no records in this data stream");
+                 return;
+             }
          }
-
+         catch (NoSuchUserHashException ex)
+         {
+            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+         }
+         catch (PDCEncryptionException ex)
+         {
+            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+         }
          catch (IOException ex)
          {
             Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
@@ -85,5 +107,34 @@ public class DownloadServlet extends HttpServlet
                 Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
          }
+     }
+
+     private DataRecord getDataRecord(String dataRecord, HttpServletResponse response)
+     {
+        PDCDataRecords pdcdr = new PDCDataRecords();
+        try
+        {
+            try
+            {
+                return pdcdr.getDataRecord(m_userHash, dataRecord);
+            }
+            catch (PDCEncryptionException ex)
+            {
+                Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        catch (IOException ex)
+        {
+            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        catch (MalformedContentNameStringException ex)
+        {
+            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        catch (PDCParseException ex)
+        {
+            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
      }
 }

@@ -30,6 +30,12 @@ public class AuthenticationResponse implements iBSONExportable, BSONObject
     private static final String isAuthenticatedKey  = "isAuthenticated";
     private static final String symkeyKey           = "symkey";
 
+
+    public AuthenticationResponse()
+    {
+        //empty constructor...
+    }
+
     /**
      * Constructor
      * @param isAuthenticated - whether or not the user was authenticated

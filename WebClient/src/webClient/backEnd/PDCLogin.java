@@ -15,8 +15,10 @@ import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.frontEnd.WebClientServer;
+import webClient.lib.AuthenticationResponse;
 import webClient.lib.Credentials;
 import webClient.lib.Security;
+import webClient.session.SessionManager;
 
 /**
  * This class handles the logging in sequence that occurs between the web client
@@ -97,7 +99,6 @@ public class PDCLogin implements CCNFilterListener
             return false;
         }
 
-        //TODO may want to use CCNFlowControl instead
         try
         {
             this._ccnHandle.put(coCredentials);
@@ -120,10 +121,10 @@ public class PDCLogin implements CCNFilterListener
      * @return - whether or not this username/password combination is valid for
      * this pdv instance.
      */
-    public boolean isUserAuthenticated(String pdv_uri, String userName, String password)
+    public boolean isUserAuthenticated(String pdv_uri, String userName, String password) throws PDCEncryptionException
     {
         return true;
-        /*
+        /* commented out until login functionality is implemented in the PDC
         try
         {
             //create the credentials
@@ -141,7 +142,17 @@ public class PDCLogin implements CCNFilterListener
                     ContentName.fromURI(pdv_uri + "/isAuthenticated"),
                     WebClientServer.DEFAULT_TIMEOUT);
 
-            return decodeAuthorizationResponse(coIsAuthenticated);
+            AuthenticationResponse ar = decodeAuthorizationResponse(coIsAuthenticated);
+
+            if(!ar.isAuthenticated())
+                return false;
+
+            //register a new session
+            String userHash = userName;//Algorithms.md5HashStr(pdv_uri + username + password);
+            SessionManager.registerSession(userHash);
+            SessionManager.getSession(userHash).setPDV_URI(pdv_uri);
+
+            return true;
         }
         catch (MalformedContentNameStringException ex)
         {
@@ -153,7 +164,7 @@ public class PDCLogin implements CCNFilterListener
             Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
-        */
+        //*/
     }
 
     /**
@@ -161,9 +172,16 @@ public class PDCLogin implements CCNFilterListener
      * @param response - the PDV's response as a content object
      * @return - the PDV's response as a boolean.
      */
-    private boolean decodeAuthorizationResponse(ContentObject response)
+    private AuthenticationResponse decodeAuthorizationResponse(ContentObject response) throws PDCEncryptionException
     {
-        //TODO
-        return true;
+        //decrypt response
+        DataEncryptor decryptor = new DataEncryptor();
+        decryptor.setDecryptKey(this._keys.getPrivate().getEncoded());
+        byte[] bytes = decryptor.decryptData(response.content());
+
+        AuthenticationResponse ar = new AuthenticationResponse();
+        ar.fromBSON(bytes);
+
+        return ar;
     }
 }
