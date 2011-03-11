@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc;
 
+import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
@@ -27,7 +28,7 @@ public class ReceiverControlCommands extends ReceiverCommand {
 	@Override
 	boolean processCommand(ContentName postfix, Interest interest)
 	{
-		PDCConfigStore config = PDCConfigStore.getInstance();
+		GlobalConfig config = GlobalConfig.getInstance();
 		int components;
 		String command;
 		ContentName stream_uri;

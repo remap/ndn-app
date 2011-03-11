@@ -1,0 +1,238 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package edu.ucla.cens.pdc.libpdc;
+
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
+import edu.ucla.cens.pdc.libpdc.util.Log;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+
+/**
+ * Stores information about applications that PDV handles
+ * @author Derek Kulinski
+ */
+public class Application implements iApplication, iState {
+	private static final long serialVersionUID = -5652787850695477611L;
+
+	/**
+	 * Identifier for the application
+	 */
+	public final String name;
+
+	private transient ContentName _base_uri;
+
+	private transient Map<String, DataStream> _data_stream;
+
+	private transient Set<String> _to_pull;
+
+	private transient Timer _pull_timer = null;
+
+	public Application(String name)
+	{
+		this.name = name;
+		setupObject();
+	}
+
+	private void setupObject()
+	{
+		GlobalConfig config = GlobalConfig.getInstance();
+
+		try {
+			_base_uri = config.getRoot().append(name);
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to set base name", ex);
+		}
+
+		_data_stream = new HashMap<String, DataStream>();
+		_to_pull = new LinkedHashSet<String>();
+	}
+
+	public String getAppName()
+	{
+		return name;
+	}
+
+	public ContentName getBaseName()
+	{
+		return _base_uri;
+	}
+
+	/**
+	 * Check if given data stream exists
+	 * @param id
+	 * @return
+	 */
+	synchronized public boolean isDataStream(String id)
+	{
+		return _data_stream.containsKey(id);
+	}
+
+	synchronized public DataStream getDataStream(String id)
+	{
+		return _data_stream.get(id);
+	}
+
+	synchronized public DataStream addDataStream(DataStream ds)
+	{
+		return _data_stream.put(ds.data_stream_id, ds);
+	}
+
+	synchronized Iterator<DataStream> getDataStreamsIterator()
+	{
+		return _data_stream.values().iterator();
+	}
+
+	synchronized private boolean performPull()
+	{
+		Iterator<String> iter;
+		String ds_id;
+		DataStream ds;
+
+		if (_to_pull.isEmpty())
+			_to_pull.addAll(_data_stream.keySet());
+
+		Log.debug("Calling pull; iterating through " + _to_pull.size()
+						+ " entries ...");
+
+		iter = _to_pull.iterator();
+		while (iter.hasNext()) {
+			ds_id = iter.next();
+
+			ds = _data_stream.get(ds_id);
+			if (ds == null)
+				continue;
+
+			if (ds.getPublisher() == null)
+				continue;
+
+			iter.remove();
+
+			try {
+				Log.debug("Making " + ds.data_stream_id + " fetch data from the uplink");
+				return ds.getTransport().fetchDataFromUplink();
+			}
+			catch (PDCTransmissionException ex) {
+				Log.error("Unable to fetch data from uplink: " + ex.getMessage());
+			}
+		}
+
+		return false;
+	}
+
+	synchronized public void periodicPullStart(long period)
+	{
+		if (_pull_timer != null)
+			periodicPullStop();
+
+		_pull_timer = new Timer(true);
+		_pull_timer.schedule(new TimerTask() {
+			@Override
+			public void run()
+			{
+				performPull();
+			}
+		}, 0, period);
+	}
+
+	synchronized public void periodicPullStop()
+	{
+		if (_pull_timer == null)
+			return;
+
+		_pull_timer.cancel();
+		_pull_timer = null;
+	}
+
+	private void writeObject(ObjectOutputStream out)
+					throws IOException
+	{
+		int ds_count;
+
+		out.writeUTF(name);
+
+		ds_count = _data_stream.size();
+		out.writeInt(ds_count);
+
+		for (String ds_name : _data_stream.keySet())
+			out.writeUTF(ds_name);
+	}
+
+	private void readObject(ObjectInputStream in)
+					throws IOException, ClassNotFoundException
+	{
+		int ds_count;
+
+		try {
+			Field fld = Application.class.getDeclaredField("name");
+			fld.setAccessible(true);
+			fld.set(this, in.readUTF());
+		}
+		catch (Exception ex) {
+			throw new IOException("Unable to assign name", ex);
+		}
+
+		setupObject();
+
+		ds_count = in.readInt();
+
+		for (int i = 0; i < ds_count; i++) {
+			String ds_name = in.readUTF();
+			DataStream stream = DataStream.loadState(name, ds_name);
+			assert stream != null;
+
+			_data_stream.put(ds_name, stream);
+		}
+	}
+
+	public String getStateGroupName()
+	{
+		return "applications";
+	}
+
+	public String getStateKey()
+	{
+		return name;
+	}
+
+	public void storeState()
+					throws IOException
+	{
+		GlobalConfig config = GlobalConfig.getInstance();
+
+		config.saveConfig(this);
+	}
+
+	public void storeStateRecursive()
+					throws IOException
+	{
+		for (DataStream ds : _data_stream.values())
+			ds.storeStateRecursive();
+
+		storeState();
+	}
+
+	public static Application loadState(String name)
+					throws IOException
+	{
+		Application app;
+		GlobalConfig config = GlobalConfig.getInstance();
+
+		app = (Application) config.loadConfig("applications", name);
+
+		return app;
+	}
+}

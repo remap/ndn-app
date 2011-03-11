@@ -8,7 +8,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
-import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
