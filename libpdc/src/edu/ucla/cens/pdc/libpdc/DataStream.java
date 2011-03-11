@@ -8,6 +8,9 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.transport.StreamTransport;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.security.KeyPair;
 import java.util.ArrayList;
@@ -21,7 +24,9 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  *
  * @author Derek Kulinski
  */
-public class DataStream implements iDataStream {
+public class DataStream implements iDataStream, iState {
+	private static final long serialVersionUID = 4028445614659553162L;
+
 	/**
 	 * application associated with the DS
 	 */
@@ -142,5 +147,42 @@ public class DataStream implements iDataStream {
 	public synchronized Collection<PDCReceiver> getReceivers()
 	{
 		return _receivers;
+	}
+
+	private void writeObject(ObjectOutputStream out)
+					throws IOException
+	{
+	}
+
+	private void readObject(ObjectInputStream in)
+					throws IOException, ClassNotFoundException
+	{
+	}
+
+	public String getStateGroupName()
+	{
+		return "datastream/" + app.getAppName();
+	}
+
+	public String getStateKey()
+	{
+		return data_stream_id;
+	}
+
+	public void storeState()
+					throws IOException
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void storeStateRecursive()
+					throws IOException
+	{
+//		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public static DataStream loadState(String app_name, String ds_name)
+	{
+		return null;
 	}
 }

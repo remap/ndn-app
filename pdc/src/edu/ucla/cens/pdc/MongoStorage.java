@@ -4,7 +4,7 @@
  */
 package edu.ucla.cens.pdc;
 
-import com.mongodb.BasicDBList;
+import edu.ucla.cens.pdc.libpdc.Application;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -34,7 +34,9 @@ final public class MongoStorage extends Storage {
 	{
 		super(app, data_stream_id);
 
-		_coll = app.get_db_collection(data_stream_id);
+		_coll = Database.getDBCollection(Database.db_type.DATA, app.name,
+						data_stream_id);
+		
 		_coll.setObjectClass(DataRecord.class);
 	}
 

@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc;
 
+import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import org.ccnx.ccn.CCNHandle;
@@ -22,7 +23,7 @@ public class PublisherDataCommand extends PublisherCommand {
 
 	private final int FRESHNESS = 5;
 
-	private PDCConfigStore _config = PDCConfigStore.getInstance();
+	private GlobalConfig _config = GlobalConfig.getInstance();
 
 	private PublisherDataCommand(CCNHandle handle)
 					throws MalformedContentNameStringException

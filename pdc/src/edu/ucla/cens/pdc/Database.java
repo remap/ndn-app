@@ -6,10 +6,10 @@ package edu.ucla.cens.pdc;
 
 import com.mongodb.Mongo;
 import com.mongodb.DB;
-import com.mongodb.MongoException;
+import com.mongodb.DBCollection;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Interface between PDV and database
@@ -21,37 +21,54 @@ public class Database {
 	 * (useful when multiple PDVs run with one database; mostly for testing)
 	 */
 	private static String _prefix = null;
+
 	private static Mongo _connection;
-	private DB _database;
+
+	private final static Map<String, DB> _dbs = new HashMap<String, DB>();
 
 	public enum db_type {
+		/**
+		 * Application data
+		 */
 		DATA
+
 	}
 
-	public DB getDatabase()
+	public static DB getDatabase(db_type type, String db_name)
 	{
-		return _database;
-	}
+		DB result;
+		String name;
 
-	public Database(db_type type, String app)
-					throws MongoException
-	{
-		String name = type2name(type) + "_" + app;
+		name = type2name(type) + "_" + db_name;
+		if (_prefix != null)
+			name = _prefix.concat(name);
 
 		try {
 			if (_connection == null)
 				_connection = new Mongo();
 
-			if (_prefix != null)
-				name = _prefix.concat(name);
-
-			_database = _connection.getDB(name);
-		} catch (UnknownHostException ex) {
-			Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
+			result = _dbs.get(name);
+			if (result == null)
+				result = _connection.getDB(name);
 		}
+		catch (UnknownHostException ex) {
+			throw new Error("Unable to make connection with MongoDB", ex);
+		}
+
+		return result;
 	}
 
-	private String type2name(db_type type)
+	public static DBCollection getDBCollection(db_type type, String db_name,
+					String collection_id)
+	{
+		DB db;
+
+		db = getDatabase(type, db_name);
+
+		return db.getCollection(collection_id);
+	}
+
+	private static String type2name(db_type type)
 	{
 		switch (type) {
 		case DATA:
