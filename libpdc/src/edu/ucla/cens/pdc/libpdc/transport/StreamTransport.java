@@ -16,6 +16,8 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -35,14 +37,16 @@ import org.ccnx.ccn.protocol.SignedInfo;
  *
  * @author Derek Kulinski
  */
-public class StreamTransport {
+public class StreamTransport implements Serializable {
+	private static final long serialVersionUID = -178853391793959411L;
+
 	final public ContentName base_name;
 
 	final private DataStream _stream;
 
 	final private DataEncryptor _encryptor;
 
-	final private CCNHandle _ccn_handle;
+	private transient CCNHandle _ccn_handle;
 
 	public StreamTransport(CCNHandle handle, DataStream stream)
 					throws PDCTransmissionException
@@ -343,5 +347,31 @@ public class StreamTransport {
 		}
 
 		return true;
+	}
+
+	@Override
+	public String toString()
+	{
+		List<String> data = new LinkedList<String>();
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(this.getClass().getSimpleName());
+		sb.append('[');
+		data.add(base_name.toString());
+		data.add(_stream.data_stream_id);
+		data.add(_encryptor.toString());
+		data.add(_ccn_handle.toString());
+		sb.append(StringUtil.join(data, "; "));
+		sb.append(']');
+
+		return sb.toString();
+	}
+
+	private void readObject(ObjectInputStream in)
+					throws IOException, ClassNotFoundException
+	{
+		in.defaultReadObject();
+
+		_ccn_handle = CCNHandle.getHandle();
 	}
 }
