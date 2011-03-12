@@ -49,9 +49,9 @@ public class AppServlet extends HttpServlet
      private void printApps(HttpServletRequest request, HttpServletResponse response)
      {
         Collection<String> apps;
-        //apps = PDCAppsTest.listApps();
         try
         {
+            //get the list of apps
             PDCApps appGetter = new PDCApps();
             apps = appGetter.getUserApps(this._userHash);
         }
@@ -71,6 +71,7 @@ public class AppServlet extends HttpServlet
             return;
         }
 
+        //print a link for each app
         for(String a : apps)
         {
             try

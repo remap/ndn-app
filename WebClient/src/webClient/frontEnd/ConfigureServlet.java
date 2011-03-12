@@ -39,6 +39,6 @@ public class ConfigureServlet extends HttpServlet
     
     private void displayCurrentSettings(ConfigurationSettings settings)
     {
-        //TODO
+        //TODO can't display anything until data streams have some notion of ACL/settings
     }
 }

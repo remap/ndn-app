@@ -1,7 +1,7 @@
 package webClient.frontEnd;
 
 /**
- *
+ * This class holds the variable names of variables passed between pages
  * @author Alexander Bonomo
  */
 public class VarNames

@@ -8,7 +8,7 @@ import org.bson.BSONObject;
 /**
  * The configuration settings for a data stream
  *
- * TODO maybe this should be implemented in the pdc instead
+ * TODO this should be implemented in the pdc
  * 
  * @author Alexander Bonomo
  */

@@ -28,7 +28,6 @@ public class BasicBSONExportableImpl implements iBSONExportable,BSONObject
         }
         catch(RuntimeException e)
         {
-            //TODO
             return null;
         }
     }
@@ -44,7 +43,6 @@ public class BasicBSONExportableImpl implements iBSONExportable,BSONObject
         }
         catch(RuntimeException e)
         {
-            //TODO
             return null;
         }
     }

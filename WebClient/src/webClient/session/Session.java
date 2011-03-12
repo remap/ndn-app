@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.SecretKey;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.lib.Security;
@@ -20,9 +21,31 @@ import webClient.lib.Security;
  */
 public class Session
 {
-    public Session()
+    public Session(SecretKey symmetricKey)
     {
         this.keyPair = Security.generateKeyPair(512);
+        this.symmetricKey = symmetricKey;
+        this.symmetricEncryptor = new DataEncryptor();
+        this.symmetricEncryptor.setDecryptKey(this.symmetricKey.getEncoded());
+        this.symmetricEncryptor.setEncryptKey(this.symmetricKey.getEncoded());
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * the symmetric key and data encryptor
+     */
+    private SecretKey symmetricKey;
+    private DataEncryptor symmetricEncryptor;
+
+    public byte[] encryptData(byte[] data) throws PDCEncryptionException
+    {
+        return this.symmetricEncryptor.encryptData(data);
+    }
+
+    public byte[] decryptData(byte[] data) throws PDCEncryptionException
+    {
+        return this.symmetricEncryptor.decryptData(data);
     }
 
     ////////////////////////////////////////////////////////////////////////////

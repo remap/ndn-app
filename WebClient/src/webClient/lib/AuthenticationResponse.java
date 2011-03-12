@@ -49,8 +49,7 @@ public class AuthenticationResponse implements iBSONExportable, BSONObject
         {
             try
             {
-                KeyGenerator keygen = KeyGenerator.getInstance("DES");
-                SecretKey key = keygen.generateKey();
+                SecretKey key = Security.generateSymmKey("DES");
                 this.classVars.put(AuthenticationResponse.symkeyKey, key);
             }
             catch (NoSuchAlgorithmException ex)
@@ -90,7 +89,6 @@ public class AuthenticationResponse implements iBSONExportable, BSONObject
         }
         catch(RuntimeException e)
         {
-            //TODO
             return null;
         }
     }
@@ -106,7 +104,6 @@ public class AuthenticationResponse implements iBSONExportable, BSONObject
         }
         catch(RuntimeException e)
         {
-            //TODO
             return null;
         }
     }
