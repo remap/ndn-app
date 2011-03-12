@@ -5,6 +5,8 @@
 package edu.ucla.cens.pdc.libpdc;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
@@ -24,10 +26,16 @@ public interface iState extends Serializable {
 	 */
 	public String getStateKey();
 
+	public void postLoadState(ObjectInputStream in)
+					throws IOException, ClassNotFoundException;
+
 	public void storeState()
 					throws IOException;
 
 	public void storeStateRecursive()
+					throws IOException;
+
+	public void postStoreState(ObjectOutputStream out)
 					throws IOException;
 
 	/*

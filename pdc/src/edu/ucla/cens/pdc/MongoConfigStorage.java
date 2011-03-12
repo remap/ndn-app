@@ -77,7 +77,7 @@ final public class MongoConfigStorage implements iConfigStorage {
 		DBObject db_response;
 		ByteArrayInputStream byte_in;
 		ObjectInputStream obj_in;
-		Object result;
+		iState result;
 
 		exists = _db.collectionExists(group);
 		coll = _db.getCollection(group);
@@ -85,7 +85,6 @@ final public class MongoConfigStorage implements iConfigStorage {
 			coll.ensureIndex("name");
 
 		query.put("name", name);
-		Log.debug(JSON.serialize(query));
 
 		try {
 			db_response = coll.findOne(query);
@@ -101,7 +100,8 @@ final public class MongoConfigStorage implements iConfigStorage {
 		try {
 			obj_in = new ObjectInputStream(byte_in);
 			byte_in.close();
-			result = obj_in.readObject();
+			result = (iState) obj_in.readObject();
+			result.postLoadState(obj_in);
 			obj_in.close();
 
 			return result;
@@ -132,6 +132,7 @@ final public class MongoConfigStorage implements iConfigStorage {
 		byte_out = new ByteArrayOutputStream(1024);
 		obj_out = new ObjectOutputStream(byte_out);
 		obj_out.writeObject(object);
+		object.postStoreState(obj_out);
 		obj_out.close();
 
 		query.put("name", object.getStateKey());

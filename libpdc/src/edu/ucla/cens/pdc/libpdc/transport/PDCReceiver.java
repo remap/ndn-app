@@ -11,6 +11,8 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski
  */
 public class PDCReceiver extends PDCNode {
+	private static final long serialVersionUID = -2708593542096598873L;
+	
 	public PDCReceiver(String uri)
 					throws MalformedContentNameStringException
 	{

@@ -6,12 +6,16 @@ package edu.ucla.cens.pdc.libpdc;
 
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.util.Log;
+import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
@@ -47,6 +51,25 @@ public class GlobalConfig implements iState {
 			throw new Error("You shouldn't change data storage type");
 
 		_data_storage_class = name;
+	}
+
+	public static Storage setupDataStorage(iApplication app, String data_stream_id)
+	{
+		Constructor<? extends Storage> constructor;
+		Storage store;
+
+		assert _data_storage_class != null;
+
+		try {
+			constructor = _data_storage_class.getConstructor(app.getClass(),
+							String.class);
+			store = constructor.newInstance(app, data_stream_id);
+		}
+		catch (Exception ex) {
+			throw new Error("Unable instantiate the storage class", ex);
+		}
+
+		return store;
 	}
 
 	public static void setConfigStorage(Class<? extends iConfigStorage> name)
@@ -184,16 +207,35 @@ public class GlobalConfig implements iState {
 		return _instance;
 	}
 
+	@Override
+	public String toString()
+	{
+		List<String> data = new LinkedList<String>();
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(this.getClass().getSimpleName());
+		sb.append('[');
+		data.add(_root == null ? null : _root.toURIString());
+		data.add(_applications.toString());
+		sb.append(StringUtil.join(data, "; "));
+		sb.append(']');
+
+		return sb.toString();
+	}
+
 	private void writeObject(ObjectOutputStream out)
 					throws IOException
 	{
-		int app_count;
-
-//		out.defaultWriteObject();
+		out.defaultWriteObject();
 
 		out.writeUTF(_root.toURIString());
+	}
 
-		app_count = _applications.size();
+	public void postStoreState(ObjectOutputStream out)
+					throws IOException
+	{
+		int app_count = _applications.size();
+
 		out.writeInt(app_count);
 		for (String name : _applications.keySet()) {
 			Log.debug("Saving app: " + name);
@@ -206,7 +248,7 @@ public class GlobalConfig implements iState {
 	{
 		int app_count;
 
-//		in.defaultReadObject();
+		in.defaultReadObject();
 
 		try {
 			_root = ContentName.fromURI(in.readUTF());
@@ -216,27 +258,31 @@ public class GlobalConfig implements iState {
 		}
 
 		_instance = this;
+		_config_storage = setupConfigStorage();
 
 		// Ugh! Force the compiler to do what we want.
 		try {
 			Field fld = GlobalConfig.class.getDeclaredField("_applications");
 			fld.setAccessible(true);
 			fld.set(this, new HashMap<String, Application>());
-//			fld.setAccessible(false);
 		}
 		catch (Exception ex) {
 			throw new Error("Unable to override access restrictions.", ex);
 		}
+	}
 
-		app_count = in.readInt();
+	public void postLoadState(ObjectInputStream in)
+					throws IOException
+	{
+		int app_count = in.readInt();
+
 		for (int i = 0; i < app_count; i++) {
 			String name = in.readUTF();
 			Log.debug("app: " + name);
 
-			Application app = Application.loadState(name);
-			assert app != null : "Application returned is null";
-
-			_applications.put(name, app);
+			// the loadState should also add applications to our list at
+			// the right time
+			Application.loadState(name);
 		}
 	}
 
@@ -265,19 +311,12 @@ public class GlobalConfig implements iState {
 		storeState();
 	}
 
-	protected static GlobalConfig loadState()
+	public static GlobalConfig loadState()
 					throws IOException
 	{
-		iConfigStorage storage;
-		GlobalConfig config;
-
-		storage = GlobalConfig.setupConfigStorage();
-		config = (GlobalConfig) storage.loadEntry("main", "global");
-
-		if (config == null)
-			return null;
-
-		config._config_storage = storage;
+		// Bootstrapping the process
+		iConfigStorage storage = GlobalConfig.setupConfigStorage();
+		GlobalConfig config = (GlobalConfig) storage.loadEntry("main", "global");
 
 		return config;
 	}

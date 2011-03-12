@@ -4,18 +4,17 @@
  */
 package edu.ucla.cens.pdc.libpdc;
 
+import com.sun.corba.se.pept.encoding.InputObject;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
-import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
-import edu.ucla.cens.pdc.libpdc.util.Log;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import edu.ucla.cens.pdc.libpdc.util.StringUtil;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.List;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
-import org.bouncycastle.crypto.RuntimeCryptoException;
-import org.bouncycastle.crypto.engines.NullEngine;
 import org.bouncycastle.crypto.engines.TwofishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
@@ -25,18 +24,25 @@ import org.bouncycastle.crypto.params.KeyParameter;
  *
  * @author Derek Kulinski
  */
-public class DataEncryptor {
-	private BufferedBlockCipher _cipher;
+public class DataEncryptor implements Serializable {
+	private static final long serialVersionUID = -8548399076599734736L;
+
+	private transient BufferedBlockCipher _cipher;
 
 	private byte[] _encrypt_key;
 
-	private byte[] _encrypt_iv;
+	private transient byte[] _encrypt_iv;
 
 	private byte[] _decrypt_key;
 
-	private byte[] _decrypt_iv;
+	private transient byte[] _decrypt_iv;
 
 	public DataEncryptor()
+	{
+		classSetup();
+	}
+
+	private void classSetup()
 	{
 		BlockCipher engine = new TwofishEngine();
 
@@ -163,5 +169,31 @@ public class DataEncryptor {
 	private byte[] generateIV(iApplication app, String data_stream)
 	{
 		return repeat(_cipher.getBlockSize(), data_stream.concat(app.getAppName()));
+	}
+
+	private void readObject(ObjectInputStream in)
+					throws IOException, ClassNotFoundException
+	{
+		in.defaultReadObject();
+		classSetup();
+	}
+
+	@Override
+	public String toString()
+	{
+		List<String> data = new LinkedList<String>();
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(this.getClass().getSimpleName());
+		sb.append('[');
+		data.add(_cipher.toString());
+		data.add(_decrypt_iv == null ? null : "set");
+		data.add(_decrypt_key == null ? null : "set");
+		data.add(_encrypt_iv == null ? null : "set");
+		data.add(_encrypt_key == null ? null : "set");
+		sb.append(StringUtil.join(data, "; "));
+		sb.append(']');
+
+		return sb.toString();
 	}
 }

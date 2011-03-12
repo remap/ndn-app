@@ -6,6 +6,7 @@ package edu.ucla.cens.pdc.libpdc;
 
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
+import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -13,6 +14,8 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -157,14 +160,33 @@ public class Application implements iApplication, iState {
 		_pull_timer = null;
 	}
 
+	@Override
+	public String toString()
+	{
+		List<String> data = new LinkedList<String>();
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(this.getClass().getSimpleName());
+		sb.append('[');
+		data.add(name);
+		data.add(_base_uri.toURIString());
+		data.add(_data_stream.toString());
+		sb.append(StringUtil.join(data, "; "));
+		sb.append(']');
+
+		return sb.toString();
+	}
+
 	private void writeObject(ObjectOutputStream out)
 					throws IOException
 	{
-		int ds_count;
+		out.defaultWriteObject();
+	}
 
-		out.writeUTF(name);
-
-		ds_count = _data_stream.size();
+	public void postStoreState(ObjectOutputStream out)
+					throws IOException
+	{
+		int ds_count = _data_stream.size();
 		out.writeInt(ds_count);
 
 		for (String ds_name : _data_stream.keySet())
@@ -174,18 +196,18 @@ public class Application implements iApplication, iState {
 	private void readObject(ObjectInputStream in)
 					throws IOException, ClassNotFoundException
 	{
-		int ds_count;
-
-		try {
-			Field fld = Application.class.getDeclaredField("name");
-			fld.setAccessible(true);
-			fld.set(this, in.readUTF());
-		}
-		catch (Exception ex) {
-			throw new IOException("Unable to assign name", ex);
-		}
+		in.defaultReadObject();
 
 		setupObject();
+	}
+
+	public void postLoadState(ObjectInputStream in)
+					throws IOException
+	{
+		GlobalConfig config = GlobalConfig.getInstance();
+		int ds_count;
+
+		config.addApplication(this);
 
 		ds_count = in.readInt();
 

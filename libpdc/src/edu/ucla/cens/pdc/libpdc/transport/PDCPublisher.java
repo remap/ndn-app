@@ -11,6 +11,8 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski
  */
 public class PDCPublisher extends PDCNode {
+	private static final long serialVersionUID = -7537161887405500608L;
+	
 	private String _stream_id;
 
 	public PDCPublisher(String uri, String stream_id)
