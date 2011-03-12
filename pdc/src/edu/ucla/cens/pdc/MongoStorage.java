@@ -26,6 +26,8 @@ import org.bson.types.ObjectId;
 final public class MongoStorage extends Storage {
 	final private DBCollection _coll;
 
+	private static String _prefix = null;
+
 	private String _last_entry = null;
 
 	public boolean insert_caching = false;
@@ -36,8 +38,18 @@ final public class MongoStorage extends Storage {
 
 		_coll = Database.getDBCollection(Database.db_type.DATA, app.name,
 						data_stream_id);
-		
+
 		_coll.setObjectClass(DataRecord.class);
+	}
+
+	public static void setPrefix(String prefix)
+	{
+		_prefix = prefix;
+	}
+
+	public static String getPrefix()
+	{
+		return _prefix;
 	}
 
 	@Override

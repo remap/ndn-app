@@ -48,62 +48,19 @@ public class Main {
 		}
 	}
 
-	/**
-	 * @param args the command line arguments
-	 */
-	public static void main(String[] args)
-					throws MalformedContentNameStringException, IOException,
-					ConfigurationException, PDCTransmissionException, PDCDatabaseException
+	static void setupPDV(int pdv_started)
+					throws MalformedContentNameStringException
 	{
+		GlobalConfig config = GlobalConfig.getInstance();
+		CCNHandle handle;
 		byte[] key = new byte[]{'t', 'e', 's', 't', 'k', 'e', 'y', 0};
 		Application n1_app = null, n2_app = null;
 		DataStream n1_ds = null, n2_ds = null;
-		NDNetwork test = null;
-		CCNHandle handle;
-		int pdv_started = 0;
 
-		if (args.length != 1)
-			usage();
-
-		String uri = args[0];
-
-		PDCPublisher node1 = new PDCPublisher("ccnx:/ucla.edu/apps/pdv1", "myacl");
+		PDCPublisher node1 = new PDCPublisher("ccnx:/ucla.edu/apps/pdv1", "myds");
 		PDCReceiver node2 = new PDCReceiver("ccnx:/ucla.edu/apps/pdv2");
 
-		if (uri.equals(node1.uri.toURIString()))
-			pdv_started = 1;
-		else if (uri.equals(node2.uri.toURIString()))
-			pdv_started = 2;
-		else if (uri.equals("database"))
-			pdv_started = -1;
-		else {
-			edu.ucla.cens.pdc.libpdc.util.Log.error("Unknown URI");
-			System.exit(10);
-		}
-
-		if (pdv_started == 1 || pdv_started == -1) {
-			MongoConfigStorage.setPrefix("pdv1_");
-			Database.setPrefix("pdv1_");
-		} else if (pdv_started == 2) {
-			MongoConfigStorage.setPrefix("pdv2_");
-			Database.setPrefix("pdv2_");
-		}
-
-		GlobalConfig.setConfigStorage(MongoConfigStorage.class);
-		GlobalConfig.setDataStorage(MongoStorage.class);
-
-		//Disable annoying ccnx debug messages
-		Log.setDefaultLevel(Log.FAC_ALL, Level.WARNING);
-
-//		GlobalConfig config = GlobalConfig.loadState();
-		GlobalConfig config = GlobalConfig.getInstance();
-
 		handle = CCNHandle.getHandle();
-
-		if (pdv_started == -1)
-			test = new NDNetwork(node1.uri.toURIString());
-		else
-			test = new NDNetwork(args[0]);
 
 		if (pdv_started == 1) {
 			config.setRoot(node1.uri);
@@ -132,26 +89,80 @@ public class Main {
 //			ds.key = key.clone();
 			app.addDataStream(ds);
 			config.addApplication(app);
-			fillDatabase(ds);
-			System.exit(0);
+		}
+
+	}
+
+	/**
+	 * @param args the command line arguments
+	 */
+	public static void main(String[] args)
+					throws MalformedContentNameStringException, IOException,
+					ConfigurationException, PDCTransmissionException, PDCDatabaseException
+	{
+		GlobalConfig config;
+		int pdv_started = 0;
+		boolean restore = false;
+		NDNetwork test = null;
+
+		if (args.length != 1)
+			usage();
+
+		String uri = args[0];
+
+		if (uri.equals("ccnx:/ucla.edu/apps/pdv1"))
+			pdv_started = 1;
+		else if (uri.equals("ccnx:/ucla.edu/apps/pdv2"))
+			pdv_started = 2;
+		else if (uri.equals("database"))
+			pdv_started = -1;
+		else {
+			Log.severe("Unknown URI");
+			System.exit(10);
+		}
+
+		if (pdv_started == 1 || pdv_started == -1) {
+			MongoStorage.setPrefix("pdv1_");
+			MongoConfigStorage.setPrefix("pdv1_");
+		} else if (pdv_started == 2) {
+			MongoStorage.setPrefix("pdv2_");
+			MongoConfigStorage.setPrefix("pdv2_");
+		}
+
+		GlobalConfig.setConfigStorage(MongoConfigStorage.class);
+		GlobalConfig.setDataStorage(MongoStorage.class);
+
+		//Disable annoying ccnx debug messages
+		Log.setDefaultLevel(Log.FAC_ALL, Level.WARNING);
+
+		config = GlobalConfig.loadState();
+		if (config == null) {
+			Log.warning("No stored configuration found setting up ...");
+			config = GlobalConfig.getInstance();
+			restore = false;
+		}
+
+		if (pdv_started > 0)
+			test = new NDNetwork(args[0]);
+
+		if (!restore) {
+			setupPDV(pdv_started);
+			config.storeStateRecursive(); //Save the configuration
 		}
 
 		edu.ucla.cens.pdc.libpdc.util.Log.debug(config.toString());
-		config.storeStateRecursive();
 
-//		Mongo mongo = new Mongo();
-//		DB db = mongo.getDB("settings");
-//		DBCollection collection = db.getCollection(n1_app.getCollectionName());
-//		collection.insert(n1_app);
+		if (pdv_started == -1) {
+			DataStream ds = config.getApplication("myapp").getDataStream("myds");
+			fillDatabase(ds);
+			System.exit(0);
+		}
 
 		test.startListening();
 
 		edu.ucla.cens.pdc.libpdc.util.Log.debug("Listening");
 
-//		if (uri.equals(node2.uri.toURIString()))
-//			n2_ds.getTransport().fetchDataFromUplink();
-
-		if (uri.equals(node2.uri.toURIString()))
-			n2_app.periodicPullStart(5000);
+		if (pdv_started == 2)
+			config.getApplication("myapp").periodicPullStart(5000);
 	}
 }

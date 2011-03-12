@@ -16,12 +16,6 @@ import java.util.Map;
  * @author Derek Kulinski
  */
 public class Database {
-	/**
-	 * Prefix for databases
-	 * (useful when multiple PDVs run with one database; mostly for testing)
-	 */
-	private static String _prefix = null;
-
 	private static Mongo _connection;
 
 	private final static Map<String, DB> _dbs = new HashMap<String, DB>();
@@ -38,10 +32,11 @@ public class Database {
 	{
 		DB result;
 		String name;
+		String prefix = MongoStorage.getPrefix();
 
 		name = type2name(type) + "_" + db_name;
-		if (_prefix != null)
-			name = _prefix.concat(name);
+		if (prefix != null)
+			name = prefix.concat(name);
 
 		try {
 			if (_connection == null)
@@ -76,15 +71,5 @@ public class Database {
 		}
 
 		throw new RuntimeException("unknown type");
-	}
-
-	/**
-	 * Set prefix for database names
-	 * Should be useful if you run more than one PDV that uses the same database
-	 * @param prefix string prefix
-	 */
-	public static void setPrefix(String prefix)
-	{
-		_prefix = prefix;
 	}
 }
