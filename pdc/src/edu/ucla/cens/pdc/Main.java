@@ -109,7 +109,7 @@ public class Main {
 			config.setRoot(node1.uri);
 
 			n1_app = new Application("myapp");
-			n1_ds = new DataStream(handle, MongoStorage.class, n1_app, "myds");
+			n1_ds = new DataStream(handle, n1_app, "myds");
 			n1_ds.getTransport().getEncryptor().setEncryptKey(key.clone());
 			n1_ds.addReceiver(node2);
 
@@ -119,7 +119,7 @@ public class Main {
 			config.setRoot(node2.uri);
 
 			n2_app = new Application("myapp");
-			n2_ds = new DataStream(handle, MongoStorage.class, n2_app, "myds");
+			n2_ds = new DataStream(handle, n2_app, "myds");
 			n2_ds.getTransport().getEncryptor().setDecryptKey(key.clone());
 			n2_ds.setPublisher(node1);
 
@@ -128,7 +128,7 @@ public class Main {
 		} else if (pdv_started == -1) {
 			config.setRoot(node1.uri);
 			Application app = new Application("myapp");
-			DataStream ds = new DataStream(handle, MongoStorage.class, app, "myds");
+			DataStream ds = new DataStream(handle, app, "myds");
 //			ds.key = key.clone();
 			app.addDataStream(ds);
 			config.addApplication(app);

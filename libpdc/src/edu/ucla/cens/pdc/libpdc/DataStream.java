@@ -67,8 +67,7 @@ public class DataStream implements iDataStream, iState {
 	 */
 	protected KeyPair _stream_keys;
 
-	public DataStream(CCNHandle handle, Class<? extends Storage> type,
-					iApplication app, String data_stream_id)
+	public DataStream(CCNHandle handle, iApplication app, String data_stream_id)
 	{
 		assert app != null;
 		assert data_stream_id != null && !data_stream_id.isEmpty();
