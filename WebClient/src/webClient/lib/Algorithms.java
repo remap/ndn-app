@@ -34,6 +34,11 @@ public class Algorithms
         return new String(md.digest());
     }
 
+    /**
+     * Also produces MD5 hash but on byte arrays
+     * @param bytes
+     * @return
+     */
     public static byte[] md5Hash(byte[] bytes)
     {
         MessageDigest md;
@@ -43,7 +48,7 @@ public class Algorithms
         }
         catch (NoSuchAlgorithmException ex)
         {
-            //this should never happen ..
+            //this should never happen...
             java.util.logging.Logger.getLogger(Algorithms.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }

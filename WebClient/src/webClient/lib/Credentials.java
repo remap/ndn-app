@@ -63,7 +63,6 @@ public class Credentials implements iBSONExportable, BSONObject
         }
         catch(RuntimeException re)
         {
-            //TODO
             return null;
         }
     }
@@ -79,7 +78,6 @@ public class Credentials implements iBSONExportable, BSONObject
         }
         catch(RuntimeException e)
         {
-            //TODO
             return null;
         }
     }

@@ -13,6 +13,7 @@ import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.exceptions.NoSuchUserHashException;
 import webClient.frontEnd.WebClientServer;
+import webClient.log.Log;
 import webClient.session.Session;
 import webClient.session.SessionManager;
 
@@ -49,6 +50,8 @@ public class PDCDataRecords
         String pdv_uri = session.getPDV_URI();
         String appName = session.getCurrentApp();
         String dsName = session.getCurrentDataStream();
+
+        Log.write("Retrieving list of data records.");
 
         ContentObject coDataRecords = this._ccnHandle.get(ContentName.fromURI
                 (pdv_uri + "/" + appName + "/" + dsName +
@@ -87,7 +90,9 @@ public class PDCDataRecords
 
         //SignedInterest interest = session.getSignedInterest(ContentName.fromURI(pdv_uri
         //        + "/" + dsName + "/data/" + dataRecord);
-        
+
+        Log.write("Retrieving data record " + dataRecord);
+
         //the data command postfix: <stream_id>/data/<data_id>
         ContentObject coRecord = this._ccnHandle.get(ContentName.fromURI(pdv_uri
                 + "/" + dsName + "/data/" + dataRecord),

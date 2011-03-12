@@ -10,6 +10,7 @@ import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.lib.ConfigurationSettings;
+import webClient.log.Log;
 
 /**
  * This class grabs the current configuration settings for a datastream and allows
@@ -44,6 +45,7 @@ public class PDCConfig implements CCNFilterListener
     private void startListening() throws IOException
     {
         this._ccnHandle.registerFilter(_namespace, this);
+        Log.write("Began listening for configuration file request.");
     }
     
     /**
@@ -53,6 +55,8 @@ public class PDCConfig implements CCNFilterListener
      */
     public boolean handleInterest(Interest intrst)
     {
+        Log.write("Received interest for new configuration.");
+        
         byte[] settingBytes = this.convertSettingsToBytes(_settings);
         ContentObject coSettings = ContentObject.buildContentObject(_namespace, settingBytes);
 
@@ -76,7 +80,7 @@ public class PDCConfig implements CCNFilterListener
      */
     public ConfigurationSettings getCurrentConfigSettings()
     {
-        //TODO
+        //TODO once data streams have a notion of ACL/settings
         return new ConfigurationSettings();
     }
 

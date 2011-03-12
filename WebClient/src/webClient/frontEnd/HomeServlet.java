@@ -2,6 +2,7 @@ package webClient.frontEnd;
 
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -11,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.backEnd.PDCLogin;
 import webClient.lib.Algorithms;
+import webClient.lib.Security;
+import webClient.log.Log;
 import webClient.session.SessionManager;
 
 /**
@@ -41,6 +44,7 @@ public class HomeServlet extends HttpServlet
 
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().println("<h1>Home Page.</h1>");
         try 
         {
             if (isAuthenticatedUser(request, pdcLogin))
@@ -61,14 +65,20 @@ public class HomeServlet extends HttpServlet
             }
             else
             {
-                //TODO redirect to login page to try again
+                //redirect to login page to try again
+                String loginURL = request.getRequestURL().substring(0, request.getRequestURL().length() - PageDirectory.HOME.length())
+                        + PageDirectory.LOGIN;
+                response.getWriter().println("<meta http-equiv=\"REFRESH\" content=\"0;url=" + loginURL + "\">");
             }
         }
         catch (PDCEncryptionException ex)
         {
             Logger.getLogger(HomeServlet.class.getName()).log(Level.SEVERE, null, ex);
             response.getWriter().println("Encryption Error: Try again.");
-            //TODO redirect to login page to try again
+            //redirect to login page to try again
+            String loginURL = request.getRequestURL().substring(0, request.getRequestURL().length() - PageDirectory.HOME.length())
+                    + PageDirectory.LOGIN;
+            response.getWriter().println("<meta http-equiv=\"REFRESH\" content=\"0;url=" + loginURL + "\">");
         }
     }
 
@@ -89,9 +99,19 @@ public class HomeServlet extends HttpServlet
         //if the user is authenticated, register a new session 
         if(isAuthenticatedUser)
         {
-            _userHash = username;//Algorithms.md5HashStr(pdv_uri + username + password);
-            SessionManager.registerSession(_userHash);
-            SessionManager.getSession(_userHash).setPDV_URI(pdv_uri);
+            Log.write(username + " successfully logged in.");
+            try 
+            {
+                _userHash = username; //Algorithms.md5HashStr(pdv_uri + username + password);
+                SessionManager.registerSession(_userHash, Security.generateSymmKey("DES"));
+                SessionManager.getSession(_userHash).setPDV_URI(pdv_uri);
+            }
+            catch (NoSuchAlgorithmException ex)
+            {
+                //this should never happen...
+                Logger.getLogger(HomeServlet.class.getName()).log(Level.SEVERE, null, ex);
+                return false;
+            }
         }
 
         return isAuthenticatedUser;

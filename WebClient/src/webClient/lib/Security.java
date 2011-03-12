@@ -5,6 +5,8 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 
 /**
  * This class is for security functions for others to use
@@ -32,5 +34,17 @@ public class Security
         }
         kpg.initialize(keysize);
         return kpg.generateKeyPair();
+    }
+
+    /**
+     * This function generates a symmetric key
+     * @param algorithm - the algorithm to use
+     * @return - the secrety/symmetric key
+     * @throws NoSuchAlgorithmException - if the algorithm given does not exist
+     */
+    public static SecretKey generateSymmKey(String algorithm) throws NoSuchAlgorithmException
+    {
+        KeyGenerator keygen = KeyGenerator.getInstance(algorithm);
+        return keygen.generateKey();
     }
 }

@@ -1,5 +1,6 @@
 package webClient.backEnd;
 
+import edu.ucla.cens.pdc.libpdc.SignedInterest;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import java.io.IOException;
 import java.util.Collection;
@@ -15,6 +16,7 @@ import java.security.PublicKey;
 import webClient.exceptions.NoSuchUserHashException;
 import webClient.lib.Algorithms;
 import webClient.lib.CollectionTransport;
+import webClient.log.Log;
 import webClient.session.Session;
 
 /**
@@ -45,6 +47,7 @@ public class PDCApps
      */
     public Collection<String> getUserApps(String userHash) throws NoSuchUserHashException, PDCEncryptionException, IOException
     {
+        //get the appropriate session
         Session session = SessionManager.getSession(userHash);
         if(session == null)
             throw new NoSuchUserHashException();
@@ -59,14 +62,17 @@ public class PDCApps
         ContentObject apps;
         try
         {
+            Log.write("Sending interest for list of apps.");
             //TODO can't use signed interests yet since they don't extend interests...
             //SignedInterest interest = session.getSignedInterest(uri);
+            //apps = this._ccnHandle.get(interest, WebClientServer.DEFAULT_TIMEOUT); //COMPILE ERROR b/c SignedInterest does not extend Interest...
             apps = this._ccnHandle.get(ContentName.fromURI(uri), WebClientServer.DEFAULT_TIMEOUT);
         }
         catch (MalformedContentNameStringException ex)
         {
             //this should never happen unless base pdv uri is bad
             Logger.getLogger(PDCApps.class.getName()).log(Level.SEVERE, null, ex);
+            Log.write("Bad PDV URI given!");
             return null;
         }
 

@@ -8,7 +8,8 @@ import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
- *
+ * This class provides a basic implementation of a CCNFilterListener.  That is,
+ * it contains a member ContentName and CCNHandle.  handleInterest() remains abstract.
  * @author Alexander Bonomo
  */
 public abstract class BasicCCNFilterListenerImpl implements CCNFilterListener

@@ -4,10 +4,11 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import webClient.log.Log;
 import webClient.ndn.test.NDNTestServlet;
 
 /**
- * This class holds the main function of the web client and set up all the servlets
+ * This class holds the main function of the web client which sets up all the servlets
  * @author Alexander Bonomo
  */
 public class WebClientServer
@@ -24,11 +25,14 @@ public class WebClientServer
     
     public static void main(String[] args)
     {
+        //process arguments
         processArgs(args);
 
-        //TODO print this in the log
-        System.out.println("Starting new server on port " + port);
-        System.out.println("Using NDN namespace: " + namespace);
+        //start log
+        Log log = new Log();
+
+        Log.write("Starting new server on port " + port);
+        Log.write("Using NDN namespace: " + namespace);
 
         Server server = new Server(port);
 
@@ -60,20 +64,22 @@ public class WebClientServer
         }
         catch(InterruptedException e)
         {
-            //TODO
+            return;
         }
         catch(Exception e)
         {
-            //TODO
+            return;
         }
     }
 
+    //prints usage
     private static void usage()
     {
         System.out.println("Example usage:");
         System.out.println("java -jar WebClient.jar -port:8081 -namespace:/ucla.edu/webclient");
     }
 
+    //processes arguments to the jar
     private static void processArgs(String[] args)
     {
         String portArg = "-port";

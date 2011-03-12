@@ -31,8 +31,13 @@ public class DownloadServlet extends HttpServlet
             throws ServletException, IOException
     {
          this.m_userHash = request.getParameter(VarNames.USER_HASH);
-         //TODO make sure this isn't null
+         //make sure this isn't null
+         if(this.m_userHash == null)
+         {
+            return;
+         }
 
+         //set the requested data stream in the session
          String dataStream = request.getParameter(VarNames.DATA_STREAM);
          SessionManager.getSession(m_userHash).setCurrentDataStream(dataStream);
 
@@ -40,7 +45,7 @@ public class DownloadServlet extends HttpServlet
          String record = request.getParameter(VarNames.DATA_RECORD);
          if(record != null)
          {
-             DataRecord theRecord = this.getDataRecord(record, response);
+             DataRecord theRecord = this.getDataRecord(record);
              //TODO start download
          }
 
@@ -109,8 +114,15 @@ public class DownloadServlet extends HttpServlet
          }
      }
 
-     private DataRecord getDataRecord(String dataRecord, HttpServletResponse response)
+     /**
+      * Gets a single data record from the pdv instance for download
+      * @param dataRecord - the id of the requested data record
+      * @param response - the http servlet response
+      * @return
+      */
+     private DataRecord getDataRecord(String dataRecord)
      {
+         //try to get and return the data record
         PDCDataRecords pdcdr = new PDCDataRecords();
         try
         {

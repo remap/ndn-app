@@ -21,7 +21,6 @@ import webClient.session.SessionManager;
 public class DataStreamServlet extends HttpServlet
 {
     private String m_userHash;
-    private String m_hashParam; //the parameter passed to the next page
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -33,7 +32,6 @@ public class DataStreamServlet extends HttpServlet
         response.getWriter().println("<h1> Here are the data streams for this app. </h1>");
 
         this.m_userHash = request.getParameter(VarNames.USER_HASH);
-        this.m_hashParam = "?" + VarNames.USER_HASH + "=" + this.m_userHash;
 
         printDataStreams(request, response);
     }
@@ -47,6 +45,7 @@ public class DataStreamServlet extends HttpServlet
     {
         String appID = request.getParameter(VarNames.APPLICATION);
 
+        //get the data streams
         PDCDataStreams streamGetter = new PDCDataStreams();
         Collection<String> dataStreams;
         try
@@ -64,6 +63,7 @@ public class DataStreamServlet extends HttpServlet
             return;
         }
 
+        //print a link for each stream
         for(String ds : dataStreams)
         {
             try
