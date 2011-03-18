@@ -80,8 +80,8 @@ public class TestApplication implements iApplication
         return streams;
     }
 
-    public DBCollection get_db_collection(String id)
+    /*public DBCollection get_db_collection(String id)
     {
 		return this.m_db.getDatabase().getCollection(id);
-    }
+    }*/
 }
