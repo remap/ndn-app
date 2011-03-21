@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc;
 
+import edu.ucla.cens.pdc.libpdc.core.PDVInstance;
 import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.DataRecord;
@@ -13,6 +14,7 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.util.Date;
 import java.util.logging.Level;
 import org.ccnx.ccn.CCNHandle;
@@ -98,12 +100,13 @@ public class Main {
 	 */
 	public static void main(String[] args)
 					throws MalformedContentNameStringException, IOException,
-					ConfigurationException, PDCTransmissionException, PDCDatabaseException
+					ConfigurationException, PDCTransmissionException, PDCDatabaseException,
+					InvalidKeyException
 	{
 		GlobalConfig config;
 		int pdv_started = 0;
 		boolean restore = false;
-		NDNetwork test = null;
+		PDVInstance test = null;
 
 		if (args.length != 1)
 			usage();
@@ -135,20 +138,21 @@ public class Main {
 		//Disable annoying ccnx debug messages
 		Log.setDefaultLevel(Log.FAC_ALL, Level.WARNING);
 
-		config = GlobalConfig.loadState();
-		if (config == null) {
-			Log.warning("No stored configuration found setting up ...");
+		if (restore) {
+			config = GlobalConfig.loadState();
+			if (config == null) {
+				Log.warning("No stored configuration found setting up ...");
+				config = GlobalConfig.getInstance();
+				restore = false;
+			}
+		} else
 			config = GlobalConfig.getInstance();
-			restore = false;
-		}
+
+		if (!restore)
+			setupPDV(pdv_started);
 
 		if (pdv_started > 0)
-			test = new NDNetwork(args[0]);
-
-		if (!restore) {
-			setupPDV(pdv_started);
-			config.storeStateRecursive(); //Save the configuration
-		}
+			test = new PDVInstance();
 
 		edu.ucla.cens.pdc.libpdc.util.Log.debug(config.toString());
 
@@ -163,6 +167,6 @@ public class Main {
 		edu.ucla.cens.pdc.libpdc.util.Log.debug("Listening");
 
 		if (pdv_started == 2)
-			config.getApplication("myapp").periodicPullStart(5000);
+			config.getApplication("myapp").periodicPullStart(5);
 	}
 }

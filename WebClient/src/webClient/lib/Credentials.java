@@ -1,6 +1,5 @@
 package webClient.lib;
 
-import edu.ucla.cens.pdc.libpdc.DataRecord;
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
 import java.security.PublicKey;
 import java.util.LinkedHashMap;

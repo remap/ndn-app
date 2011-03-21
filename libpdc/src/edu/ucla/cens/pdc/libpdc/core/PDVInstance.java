@@ -2,44 +2,71 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc;
+package edu.ucla.cens.pdc.libpdc.core;
 
 import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.Map;
 import org.ccnx.ccn.CCNFilterListener;
 import org.ccnx.ccn.CCNHandle;
+import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.config.ConfigurationException;
+import org.ccnx.ccn.impl.security.keys.BasicKeyManager;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
+import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
  * @author Derek Kulinski
  */
-public class NDNetwork implements CCNFilterListener {
-	final private Map<String, ReceiverCommand> _receiver_commands = new HashMap<String, ReceiverCommand>(
+final public class PDVInstance implements CCNFilterListener {
+	final private Map<String, GenericCommand> _generic_commands = new HashMap<String, GenericCommand>(
 					1);
 
-	final private Map<String, PublisherCommand> _publisher_commands = new HashMap<String, PublisherCommand>(
+	final private Map<String, StreamCommand> _stream_commands = new HashMap<String, StreamCommand>(
 					2);
 
 	final private GlobalConfig _config = GlobalConfig.getInstance();
 
 	final static CCNHandle ccn_handle = CCNHandle.getHandle();
 
-	public NDNetwork(String namespace)
-					throws IOException, ConfigurationException,
-					MalformedContentNameStringException
+//	private KeyManager _keymanager;
+
+	public PDVInstance()
+					throws MalformedContentNameStringException, ConfigurationException, IOException, InvalidKeyException
 	{
-		add_publisher_command(PublisherDataCommand.get_instance(ccn_handle));
-		add_publisher_command(PublisherControlCommands.get_instance(ccn_handle));
-		add_receiver_command(new ReceiverControlCommands());
+		GlobalConfig config = GlobalConfig.getInstance();
+//		ContentName keyname = config.getRoot().append("keys").append("pdv");
+//		KeyLocator locator;
+//		PublisherPublicKeyDigest digest;
+//
+//		_keymanager = new BasicKeyManager("pdv", "~/pdv_keys", null, null,
+//						null, null, null);
+//
+//		_keymanager.initialize();
+//
+//		locator = new KeyLocator(keyname);
+//		digest = _keymanager.getDefaultKeyID();
+//		_keymanager.setKeyLocator(digest, locator);
+//
+//		_keymanager.publishKeyToRepository(keyname, digest);
+//
+//		_keymanager.saveSecureKeyCache();
+//
+//		ccn_handle.setKeyManager(_keymanager);
+
+		add_generic_command(new PublisherDataCommand());
+		add_generic_command(new PublisherControlCommands());
+		add_stream_command(new ReceiverControlCommands());
 	}
 
 	public void startListening()
@@ -47,6 +74,12 @@ public class NDNetwork implements CCNFilterListener {
 	{
 		ContentName root = _config.getRoot();
 		ccn_handle.registerFilter(root, this);
+	}
+
+	public void stopListening()
+	{
+		ContentName root = _config.getRoot();
+		ccn_handle.unregisterFilter(root, this);
 	}
 
 	public boolean handleInterest(Interest interest)
@@ -101,26 +134,26 @@ public class NDNetwork implements CCNFilterListener {
 		}
 
 		command_name = postfix.stringComponent(2);
-		if (!_publisher_commands.containsKey(command_name)) {
+		if (!_stream_commands.containsKey(command_name)) {
 			Log.warning("Unknown command: " + command_name);
 			return false;
 		}
 
 		ContentName remain = postfix.subname(3, postfix.count() - 3);
-		PublisherCommand cmd = _publisher_commands.get(command_name);
+		StreamCommand cmd = _stream_commands.get(command_name);
 		Log.info(String.format("Firing %s(%s, %s, %s)\n", cmd.getCommandName(),
 						app.name, remain.toURIString(), interest));
 
 		return cmd.processCommand(ds, remain, interest);
 	}
 
-	private void add_publisher_command(PublisherCommand command)
+	private void add_generic_command(StreamCommand command)
 	{
-		_publisher_commands.put(command.getCommandName(), command);
+		_stream_commands.put(command.getCommandName(), command);
 	}
 
-	private void add_receiver_command(ReceiverCommand command)
+	private void add_stream_command(GenericCommand command)
 	{
-		_receiver_commands.put(command.getCommandName(), command);
+		_generic_commands.put(command.getCommandName(), command);
 	}
 }

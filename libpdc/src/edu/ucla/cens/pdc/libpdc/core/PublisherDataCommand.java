@@ -2,12 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc;
+package edu.ucla.cens.pdc.libpdc.core;
 
-import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
-import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
@@ -18,32 +16,11 @@ import edu.ucla.cens.pdc.libpdc.util.Log;
  *
  * @author Derek Kulinski
  */
-public class PublisherDataCommand extends PublisherCommand {
-	private static PublisherDataCommand _instance = null;
-
-	private final int FRESHNESS = 5;
-
-	private GlobalConfig _config = GlobalConfig.getInstance();
-
-	private PublisherDataCommand(CCNHandle handle)
+public class PublisherDataCommand extends StreamCommand {
+	PublisherDataCommand()
 					throws MalformedContentNameStringException
 	{
-		super(handle, Constants.STR_DATA);
-	}
-
-	static PublisherDataCommand get_instance()
-	{
-		assert _instance != null;
-		return _instance;
-	}
-
-	static PublisherDataCommand get_instance(CCNHandle handle)
-					throws MalformedContentNameStringException
-	{
-		if (_instance == null)
-			_instance = new PublisherDataCommand(handle);
-
-		return _instance;
+		super(Constants.STR_DATA);
 	}
 
 	@Override

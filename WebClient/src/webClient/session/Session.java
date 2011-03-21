@@ -1,10 +1,8 @@
 package webClient.session;
 
 import edu.ucla.cens.pdc.libpdc.DataEncryptor;
-import edu.ucla.cens.pdc.libpdc.DataStream;
-import edu.ucla.cens.pdc.libpdc.SignedInterest;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
-import edu.ucla.cens.pdc.libpdc.iApplication;
+import edu.ucla.cens.pdc.libpdc.util.SignedInterest;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;

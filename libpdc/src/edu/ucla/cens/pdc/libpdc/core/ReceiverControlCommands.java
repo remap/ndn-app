@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc;
+package edu.ucla.cens.pdc.libpdc.core;
 
 import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.Constants;
@@ -10,8 +10,6 @@ import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.transport.StreamTransport;
 import edu.ucla.cens.pdc.libpdc.util.Log;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 
@@ -19,8 +17,8 @@ import org.ccnx.ccn.protocol.Interest;
  *
  * @author Derek Kulinski
  */
-public class ReceiverControlCommands extends ReceiverCommand {
-	public ReceiverControlCommands()
+public class ReceiverControlCommands extends GenericCommand {
+	ReceiverControlCommands()
 	{
 		super(Constants.STR_CONTROL);
 	}
@@ -60,7 +58,7 @@ public class ReceiverControlCommands extends ReceiverCommand {
 			return setupCommand(ds, interest);
 		else if (command.equals("pull"))
 			return pullCommand(ds, interest);
-		
+
 		Log.error("Unknown command '" + command + "'!");
 
 		return false;
