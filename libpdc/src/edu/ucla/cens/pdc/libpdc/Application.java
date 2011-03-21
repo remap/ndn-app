@@ -10,7 +10,6 @@ import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -20,6 +19,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
@@ -42,6 +44,11 @@ public class Application implements iApplication, iState {
 	private transient Set<String> _to_pull;
 
 	private transient Timer _pull_timer = null;
+
+	private transient final ScheduledExecutorService _scheduler = Executors.
+					newSingleThreadScheduledExecutor();
+
+	private long _pull_rate = 0;
 
 	public Application(String name)
 	{
@@ -138,26 +145,35 @@ public class Application implements iApplication, iState {
 
 	synchronized public void periodicPullStart(long period)
 	{
-		if (_pull_timer != null)
+		if (_pull_rate > 0)
 			periodicPullStop();
 
-		_pull_timer = new Timer(true);
-		_pull_timer.schedule(new TimerTask() {
-			@Override
+		Log.debug("Setting up pull for " + period + " seconds");
+
+		_pull_rate = period;
+
+		_scheduler.schedule(new Runnable() {
 			public void run()
 			{
+				if (_pull_rate == 0)
+					return;
+
+				Log.debug("Performing pull...");
 				performPull();
+				Log.debug("Scheduling next task...");
+
+				_scheduler.schedule(this, _pull_rate, TimeUnit.SECONDS);
 			}
-		}, 0, period);
+		}, _pull_rate, TimeUnit.SECONDS);
 	}
 
 	synchronized public void periodicPullStop()
 	{
-		if (_pull_timer == null)
+		if (_pull_rate == 0)
 			return;
 
-		_pull_timer.cancel();
-		_pull_timer = null;
+		_pull_rate = 0;
+		_scheduler.shutdown();
 	}
 
 	@Override

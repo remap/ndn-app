@@ -59,6 +59,16 @@ public class DataEncryptor implements Serializable {
 //		_cipher = new BufferedBlockCipher(engine);
 	}
 
+	public byte[] getDecryptKey()
+	{
+		return _decrypt_key;
+	}
+
+	public byte[] getEncryptKey()
+	{
+		return _encrypt_key;
+	}
+
 	public void setEncryptKey(byte[] key)
 	{
 		this._encrypt_key = key;

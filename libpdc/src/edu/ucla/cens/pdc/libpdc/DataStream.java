@@ -149,6 +149,18 @@ public class DataStream implements iDataStream, iState {
 		return _receivers;
 	}
 
+	public synchronized PDCReceiver getReceiver(ContentName name_id)
+	{
+		for (PDCReceiver receiver : _receivers) {
+			if (!receiver.uri.equals(name_id))
+				continue;
+
+			return receiver;
+		}
+
+		return null;
+	}
+
 	@Override
 	public String toString()
 	{

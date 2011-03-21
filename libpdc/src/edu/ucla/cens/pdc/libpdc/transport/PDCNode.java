@@ -2,11 +2,12 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package edu.ucla.cens.pdc.libpdc.transport;
 
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.Serializable;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.LinkedList;
 import java.util.List;
 import org.ccnx.ccn.protocol.ContentName;
@@ -19,7 +20,7 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  */
 public class PDCNode implements Serializable {
 	private static final long serialVersionUID = -6962419725928576508L;
-	
+
 	/**
 	 * URI of the node
 	 */
@@ -29,6 +30,16 @@ public class PDCNode implements Serializable {
 	 * Node's public key digest
 	 */
 	protected PublisherPublicKeyDigest _publickey_digest;
+
+	public PublisherPublicKeyDigest getPublickeyDigest()
+	{
+		return _publickey_digest;
+	}
+
+	public void setPublickeyDigest(PublisherPublicKeyDigest digest)
+	{
+		this._publickey_digest = digest;
+	}
 
 	public PDCNode(String uri)
 					throws MalformedContentNameStringException

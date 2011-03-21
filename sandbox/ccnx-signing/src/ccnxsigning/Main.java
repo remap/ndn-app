@@ -5,8 +5,10 @@
 package ccnxsigning;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
@@ -18,6 +20,7 @@ public class Main {
 	 * @param args the command line arguments
 	 */
 	public static void main(String[] args)
+					throws ConfigurationException, InvalidKeyException
 	{
 		try {
 			Signing app = new Signing("ccnx:/signing");
