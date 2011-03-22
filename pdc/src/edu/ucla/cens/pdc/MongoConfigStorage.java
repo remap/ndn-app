@@ -66,16 +66,13 @@ final public class MongoConfigStorage implements iConfigStorage {
 		_prefix = prefix;
 	}
 
-	public Object loadEntry(String group, String name)
+	public ByteArrayInputStream loadEntry(String group, String name)
 					throws IOException
 	{
 		boolean exists;
 		DBCollection coll;
 		DBObject query = new BasicDBObject();
 		DBObject db_response;
-		ByteArrayInputStream byte_in;
-		ObjectInputStream obj_in;
-		iState result;
 
 		exists = _db.collectionExists(group);
 		coll = _db.getCollection(group);
@@ -94,50 +91,26 @@ final public class MongoConfigStorage implements iConfigStorage {
 		if (db_response == null)
 			return null;
 
-		byte_in = new ByteArrayInputStream((byte[]) db_response.get("object"));
-		try {
-			obj_in = new ObjectInputStream(byte_in);
-			byte_in.close();
-			result = (iState) obj_in.readObject();
-			result.postLoadState(obj_in);
-			obj_in.close();
-
-			return result;
-		}
-		catch (ClassNotFoundException ex) {
-			throw new IOException("Invalid data", ex);
-		}
-		catch (IOException ex) {
-			throw new IOException("Problem parsing data", ex);
-		}
+		return new ByteArrayInputStream((byte[]) db_response.get("object"));
 	}
 
-	public void saveEntry(iState object)
+	public void saveEntry(String obj_group, String obj_key,
+					ByteArrayOutputStream byte_out)
 					throws IOException
 	{
 		boolean exists;
 		DBCollection coll;
-		ByteArrayOutputStream byte_out;
-		ObjectOutputStream obj_out;
 		DBObject query = new BasicDBObject();
 		DBObject new_data = new BasicDBObject();
 
-		exists = _db.collectionExists(object.getStateGroupName());
-		coll = _db.getCollection(object.getStateGroupName());
+		exists = _db.collectionExists(obj_group);
+		coll = _db.getCollection(obj_group);
 		if (!exists)
 			coll.ensureIndex("name");
 
-		byte_out = new ByteArrayOutputStream(1024);
-		obj_out = new ObjectOutputStream(byte_out);
-		obj_out.writeObject(object);
-		object.postStoreState(obj_out);
-		obj_out.close();
-
-		query.put("name", object.getStateKey());
-		new_data.put("name", object.getStateKey());
+		query.put("name", obj_key);
+		new_data.put("name", obj_key);
 		new_data.put("object", byte_out.toByteArray());
-
-		byte_out.close();
 
 		try {
 			coll.findAndModify(query, null, null, false, new_data, false, true);

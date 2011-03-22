@@ -7,6 +7,8 @@ package edu.ucla.cens.pdc.libpdc;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -39,7 +41,6 @@ public class GlobalConfig implements iState {
 
 	private transient final Map<String, Application> _applications = new HashMap<String, Application>();
 
-	@SuppressWarnings("LeakingThisInConstructor")
 	private GlobalConfig()
 	{
 		_config_storage = setupConfigStorage();
@@ -186,13 +187,45 @@ public class GlobalConfig implements iState {
 	public Object loadConfig(String group, String name)
 					throws IOException
 	{
-		return _config_storage.loadEntry(group, name);
+		ObjectInputStream obj_in;
+		ByteArrayInputStream byte_in;
+		iState result;
+
+		byte_in = _config_storage.loadEntry(group, name);
+
+		try {
+			obj_in = new ObjectInputStream(byte_in);
+			byte_in.close();
+			result = (iState) obj_in.readObject();
+			result.postLoadState(obj_in);
+			obj_in.close();
+
+			return result;
+		}
+		catch (ClassNotFoundException ex) {
+			throw new IOException("Invalid data", ex);
+		}
+		catch (IOException ex) {
+			throw new IOException("Problem parsing data", ex);
+		}
 	}
 
 	public void saveConfig(iState object)
 					throws IOException
 	{
-		_config_storage.saveEntry(object);
+		ByteArrayOutputStream byte_out;
+		ObjectOutputStream obj_out;
+
+		byte_out = new ByteArrayOutputStream(1024);
+		obj_out = new ObjectOutputStream(byte_out);
+		obj_out.writeObject(object);
+		object.postStoreState(obj_out);
+		obj_out.close();
+
+		_config_storage.saveEntry(object.getStateGroupName(), object.getStateKey(),
+						byte_out);
+
+		byte_out.close();
 	}
 
 	/**
@@ -299,7 +332,7 @@ public class GlobalConfig implements iState {
 	public void storeState()
 					throws IOException
 	{
-		_config_storage.saveEntry(this);
+		saveConfig(this);
 	}
 
 	public void storeStateRecursive()
@@ -314,10 +347,28 @@ public class GlobalConfig implements iState {
 	public static GlobalConfig loadState()
 					throws IOException
 	{
+		ObjectInputStream obj_in;
+		ByteArrayInputStream byte_in;
+		GlobalConfig config;
+
 		// Bootstrapping the process
 		iConfigStorage storage = GlobalConfig.setupConfigStorage();
-		GlobalConfig config = (GlobalConfig) storage.loadEntry("main", "global");
 
-		return config;
+		byte_in = storage.loadEntry("main", "global");
+		obj_in = new ObjectInputStream(byte_in);
+		byte_in.close();
+
+		try {
+			config = (GlobalConfig) obj_in.readObject();
+			config.postLoadState(obj_in);
+
+			return config;
+		}
+		catch (ClassNotFoundException ex) {
+			throw new IOException("Unable to initialize the object", ex);
+		}
+		finally {
+			obj_in.close();
+		}
 	}
 }
