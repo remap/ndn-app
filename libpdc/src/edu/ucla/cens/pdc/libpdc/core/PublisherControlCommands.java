@@ -40,9 +40,10 @@ public class PublisherControlCommands extends StreamCommand {
 //			if (command.matches("pull"))
 //				return handlePull(interest, ds, postfix.subname(1, postfix.count() - 1));
 //			else
-			if (command.matches("stream_info"))
-				return ds.getTransport().publishStreamInfo(interest);
-			else if (command.matches("list"))
+//			if (command.matches("stream_info"))
+//				return ds.getTransport().publishStreamInfo(interest);
+//			else
+				if (command.matches("list"))
 				return ds.getTransport().publishRecordList(interest, postfix.subname(
 								1, postfix.count() - 1));
 			else {
