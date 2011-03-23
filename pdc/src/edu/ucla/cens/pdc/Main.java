@@ -36,13 +36,16 @@ public class Main {
 	static void fillDatabase(DataStream ds)
 	{
 		try {
-			for (double i = 0; i < 10; i++) {
+			for (double i = 0; i < 500; i++) {
 				DataRecord dr = new DataRecord();
 				dr.put("date", new Date());
 				dr.put("type", 1);
 				dr.put("latitude", i);
 				dr.put("longitude", 123.3974);
+				for (int j = 0; j < 500; j++)
+					dr.put("entry" + j, j);
 				ds.getStorage().insertRecord(dr);
+				Log.info("Record {0} added.", i);
 			}
 		}
 		catch (PDCDatabaseException ex) {
