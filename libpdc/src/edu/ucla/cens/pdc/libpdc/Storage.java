@@ -15,7 +15,7 @@ abstract public class Storage {
 	public Storage(iApplication app, String data_stream_id)
 	{
 		assert app != null;
-		assert data_stream_id != null && !data_stream_id.isEmpty();
+		assert data_stream_id != null && data_stream_id.length() != 0;
 
 		// Initialize your storage here as needed
 	}

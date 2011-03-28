@@ -30,7 +30,7 @@ final public class MongoStorage extends Storage {
 
 	private String _last_entry = null;
 
-	public boolean insert_caching = false;
+	public boolean insert_caching = true;
 
 	public MongoStorage(Application app, String data_stream_id)
 	{
@@ -184,12 +184,10 @@ final public class MongoStorage extends Storage {
 	synchronized public boolean insertRecord(DataRecord record)
 					throws PDCDatabaseException
 	{
-//		WriteResult result;
-
 		_last_entry = null;
 
 		try {
-			_coll.insert(record, WriteConcern.NORMAL);
+			_coll.insert(record);
 		}
 		catch (MongoException ex) {
 			throw new PDCDatabaseException("Unable to insert a record", ex);

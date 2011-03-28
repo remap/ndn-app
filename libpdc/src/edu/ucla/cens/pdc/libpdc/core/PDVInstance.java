@@ -18,6 +18,8 @@ import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.impl.security.keys.BasicKeyManager;
+import org.ccnx.ccn.impl.security.keys.NetworkKeyManager;
+import org.ccnx.ccn.impl.security.keys.RepositoryKeyManager;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.KeyLocator;
@@ -39,30 +41,41 @@ final public class PDVInstance implements CCNFilterListener {
 
 	final static CCNHandle ccn_handle = CCNHandle.getHandle();
 
-//	private KeyManager _keymanager;
-
 	public PDVInstance()
 					throws MalformedContentNameStringException, ConfigurationException, IOException, InvalidKeyException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
-//		ContentName keyname = config.getRoot().append("keys").append("pdv");
-//		KeyLocator locator;
-//		PublisherPublicKeyDigest digest;
-//
-//		_keymanager = new BasicKeyManager("pdv", "~/pdv_keys", null, null,
-//						null, null, null);
-//
-//		_keymanager.initialize();
-//
-//		locator = new KeyLocator(keyname);
-//		digest = _keymanager.getDefaultKeyID();
-//		_keymanager.setKeyLocator(digest, locator);
-//
-//		_keymanager.publishKeyToRepository(keyname, digest);
-//
+		ContentName root, last, keyname;
+		KeyLocator locator;
+		PublisherPublicKeyDigest digest;
+		KeyManager keymanager;
+
+		//XXX: remove this code
+		root = config.getRoot();
+		keyname = root.cut(root.count() - 1);
+		last = root.postfix(keyname);
+		keyname = keyname.append(".pdv_keys").append(last);
+
+		keymanager = new BasicKeyManager(last.toString(), "pdv_keys", last.toString().concat(".conf"), last.toString().concat(".key"),
+						null, null, null);
+
+		config.setKeyManager(keymanager);
+
+		keymanager.initialize();
+
+		locator = new KeyLocator(keyname);
+		digest = keymanager.getDefaultKeyID();
+		keymanager.setKeyLocator(digest, locator);
+
+		keymanager.publishKeyToRepository(keyname, digest);
+
+		config.getApplication("myapp").getDataStream("myds").setStreamKeyDigest(
+						digest);
+
 //		_keymanager.saveSecureKeyCache();
-//
-//		ccn_handle.setKeyManager(_keymanager);
+		//XXX: remove this code
+
+		ccn_handle.setKeyManager(keymanager);
 
 		add_generic_command(new PublisherDataCommand());
 		add_generic_command(new PublisherControlCommands());

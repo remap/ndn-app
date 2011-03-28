@@ -4,12 +4,15 @@
  */
 package edu.ucla.cens.pdc.libpdc.transport;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.DataRecord;
 import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.Storage;
+import edu.ucla.cens.pdc.libpdc.StreamInfo;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
@@ -23,6 +26,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import org.bson.BSONDecoder;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.SystemConfiguration;
 import org.ccnx.ccn.protocol.ContentName;
@@ -93,6 +97,13 @@ public class StreamTransport implements Serializable {
 		return _ccn_handle.keyManager().getDefaultKeyLocator();
 	}
 
+	/**
+	 * Responds with data record
+	 * @param interest interest asking for the record
+	 * @param data_id record id
+	 * @return true if record was published
+	 * @throws PDCTransmissionException
+	 */
 	public boolean publishDataRecord(Interest interest, String data_id)
 					throws PDCTransmissionException
 	{
@@ -145,6 +156,19 @@ public class StreamTransport implements Serializable {
 		cipher = _encryptor.encryptData(data.getBytes());
 
 		return publishData(interest, cipher, 1);
+	}
+
+	public boolean publishStreamInfo(Interest interest)
+					throws PDCTransmissionException
+	{
+		StreamInfo si = new StreamInfo(_stream);
+		byte[] data;
+		BSONDecoder decoder = new BSONDecoder();
+
+
+		data = JSON.serialize(decoder.readObject(si.toBSON())).getBytes();
+
+		return publishData(interest, data, 1);
 	}
 
 	public boolean publishACK(Interest interest)
@@ -372,6 +396,7 @@ public class StreamTransport implements Serializable {
 	{
 		in.defaultReadObject();
 
+		//XXX: this is wrong!
 		_ccn_handle = CCNHandle.getHandle();
 	}
 }

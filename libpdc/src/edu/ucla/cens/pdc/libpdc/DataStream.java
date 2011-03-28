@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
-import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -23,6 +22,7 @@ import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
@@ -65,7 +65,7 @@ public class DataStream implements iDataStream, iState {
 	/**
 	 * keys associated with our stream
 	 */
-	protected KeyPair _stream_keys;
+	protected PublisherPublicKeyDigest _stream_key_digest;
 
 	public DataStream(CCNHandle handle, iApplication app, String data_stream_id)
 	{
@@ -149,7 +149,7 @@ public class DataStream implements iDataStream, iState {
 		return _receivers;
 	}
 
-	public synchronized PDCReceiver getReceiver(ContentName name_id)
+	public synchronized PDCReceiver name2receiver(ContentName name_id)
 	{
 		for (PDCReceiver receiver : _receivers) {
 			if (!receiver.uri.equals(name_id))
@@ -159,6 +159,22 @@ public class DataStream implements iDataStream, iState {
 		}
 
 		return null;
+	}
+
+	public PublisherPublicKeyDigest getStreamKeyDigest()
+	{
+		return _stream_key_digest;
+	}
+
+	/**
+	 *
+	 * @param digest
+	 * @deprecated this won't be needed later, as the keys will be automatically
+	 * generated
+	 */
+	public void setStreamKeyDigest(PublisherPublicKeyDigest digest)
+	{
+		this._stream_key_digest = digest;
 	}
 
 	@Override
@@ -175,13 +191,14 @@ public class DataStream implements iDataStream, iState {
 		data.add(_transport.toString());
 		data.add(_publisher == null ? null : _publisher.toString());
 		data.add(_receivers.toString());
-		data.add(_stream_keys == null ? null : _stream_keys.toString());
+		data.add(_stream_key_digest == null ? null : _stream_key_digest.toString());
 		sb.append(StringUtil.join(data, "; "));
 		sb.append(']');
 
 		return sb.toString();
 	}
 
+// <editor-fold defaultstate="collapsed" desc="serialization code">
 	private void writeObject(ObjectOutputStream out)
 					throws IOException
 	{
@@ -273,4 +290,5 @@ public class DataStream implements iDataStream, iState {
 
 		return stream;
 	}
+// </editor-fold>
 }

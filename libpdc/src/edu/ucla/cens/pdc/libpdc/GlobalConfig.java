@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
@@ -40,6 +41,8 @@ public class GlobalConfig implements iState {
 	private transient ContentName _root = null;
 
 	private transient final Map<String, Application> _applications = new HashMap<String, Application>();
+
+	private transient KeyManager _key_manager = null;
 
 	private GlobalConfig()
 	{
@@ -184,6 +187,16 @@ public class GlobalConfig implements iState {
 		return result;
 	}
 
+	public KeyManager getKeyManager()
+	{
+		return _key_manager;
+	}
+
+	public void setKeyManager(KeyManager key_manager)
+	{
+		this._key_manager = key_manager;
+	}
+
 	public Object loadConfig(String group, String name)
 					throws IOException
 	{
@@ -256,6 +269,7 @@ public class GlobalConfig implements iState {
 		return sb.toString();
 	}
 
+// <editor-fold defaultstate="collapsed" desc="class serialization">
 	private void writeObject(ObjectOutputStream out)
 					throws IOException
 	{
@@ -355,6 +369,9 @@ public class GlobalConfig implements iState {
 		iConfigStorage storage = GlobalConfig.setupConfigStorage();
 
 		byte_in = storage.loadEntry("main", "global");
+		if (byte_in == null)
+			return null;
+
 		obj_in = new ObjectInputStream(byte_in);
 		byte_in.close();
 
@@ -371,4 +388,5 @@ public class GlobalConfig implements iState {
 			obj_in.close();
 		}
 	}
+// </editor-fold>
 }

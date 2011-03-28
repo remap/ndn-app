@@ -43,4 +43,6 @@ public interface iDataStream {
 	public void delReceiver(PDCReceiver node);
 
 	public Collection<PDCReceiver> getReceivers();
+
+	public PDCReceiver name2receiver(ContentName name_id);
 }

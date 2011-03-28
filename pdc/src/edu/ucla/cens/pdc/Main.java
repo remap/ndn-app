@@ -13,14 +13,18 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
+import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.util.Date;
 import java.util.logging.Level;
 import org.ccnx.ccn.CCNHandle;
+import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.config.ConfigurationException;
-import org.ccnx.ccn.impl.support.Log;
+import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
@@ -29,7 +33,9 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 public class Main {
 	static void usage()
 	{
-		System.err.printf("Usage: pdc.jar <uri>\n");
+		System.err.printf("Usage: pdc.jar database\n");
+		System.err.printf("       pdc.jar pdv2\n");
+		System.err.printf("       pdc.jar pdv1 ccnx:/path/to/pdv2/key key_digest\n");
 		System.exit(10);
 	}
 
@@ -45,7 +51,7 @@ public class Main {
 				for (int j = 0; j < 500; j++)
 					dr.put("entry" + j, j);
 				ds.getStorage().insertRecord(dr);
-				Log.info("Record {0} added.", i);
+				org.ccnx.ccn.impl.support.Log.info("Record {0} added.", i);
 			}
 		}
 		catch (PDCDatabaseException ex) {
@@ -110,20 +116,28 @@ public class Main {
 		int pdv_started = 0;
 		boolean restore = false;
 		PDVInstance test = null;
+		PublisherPublicKeyDigest digest = null;
+		KeyLocator key_locator = null;
 
-		if (args.length != 1)
+		if (args.length < 1)
 			usage();
 
-		String uri = args[0];
+		if (args.length == 3) {
+			ContentName name = ContentName.fromURI(args[1]);
+			key_locator = new KeyLocator(name);
+			digest = new PublisherPublicKeyDigest(args[2]);
+		}
 
-		if (uri.equals("ccnx:/ucla.edu/apps/pdv1"))
+		String arg = args[0];
+
+		if (arg.equals("pdv1"))
 			pdv_started = 1;
-		else if (uri.equals("ccnx:/ucla.edu/apps/pdv2"))
+		else if (arg.equals("pdv2"))
 			pdv_started = 2;
-		else if (uri.equals("database"))
+		else if (arg.equals("database"))
 			pdv_started = -1;
 		else {
-			Log.severe("Unknown URI");
+			Log.error("Unknown command");
 			System.exit(10);
 		}
 
@@ -139,7 +153,8 @@ public class Main {
 		GlobalConfig.setDataStorage(MongoStorage.class);
 
 		//Disable annoying ccnx debug messages
-		Log.setDefaultLevel(Log.FAC_ALL, Level.WARNING);
+//		org.ccnx.ccn.impl.support.Log.setDefaultLevel(
+//						org.ccnx.ccn.impl.support.Log.FAC_ALL, Level.WARNING);
 
 		if (restore) {
 			config = GlobalConfig.loadState();
@@ -157,19 +172,33 @@ public class Main {
 		if (pdv_started > 0)
 			test = new PDVInstance();
 
-		edu.ucla.cens.pdc.libpdc.util.Log.debug(config.toString());
+		Log.debug(config.toString());
 
-		if (pdv_started == -1) {
+		KeyManager keymgr = config.getKeyManager();
+
+		switch (pdv_started) {
+		case -1:
 			DataStream ds = config.getApplication("myapp").getDataStream("myds");
 			fillDatabase(ds);
 			System.exit(0);
+		case 1:
+			if (digest != null && key_locator != null) {
+				Log.debug("Setting up pdv2's key");
+				PDCReceiver receiver = config.getApplication("myapp").getDataStream(
+								"myds").getReceivers().iterator().next();
+				receiver.setPublickeyDigest(digest);
+				receiver.setKeyLocator(key_locator);
+			}
+		/* fallthrough */
+		case 2:
+			Log.debug("My Key: " + keymgr.getDefaultKeyLocator() + " " + keymgr.getDefaultKeyID());
 		}
 
 		test.startListening();
 
-		edu.ucla.cens.pdc.libpdc.util.Log.debug("Listening");
+		Log.debug("Listening");
 
-		if (pdv_started == 2)
-			config.getApplication("myapp").periodicPullStart(5);
+//		if (pdv_started == 2)
+//			config.getApplication("myapp").periodicPullStart(5);
 	}
 }
