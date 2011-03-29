@@ -17,8 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -42,8 +40,6 @@ public class Application implements iApplication, iState {
 	private transient Map<String, DataStream> _data_stream;
 
 	private transient Set<String> _to_pull;
-
-	private transient Timer _pull_timer = null;
 
 	private transient final ScheduledExecutorService _scheduler = Executors.
 					newSingleThreadScheduledExecutor();
@@ -193,6 +189,7 @@ public class Application implements iApplication, iState {
 		return sb.toString();
 	}
 
+// <editor-fold defaultstate="collapsed" desc="serialization code">
 	private void writeObject(ObjectOutputStream out)
 					throws IOException
 	{
@@ -273,4 +270,5 @@ public class Application implements iApplication, iState {
 
 		return app;
 	}
+// </editor-fold>
 }

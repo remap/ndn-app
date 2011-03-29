@@ -6,6 +6,7 @@ package edu.ucla.cens.pdc.libpdc;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import org.bson.BSONDecoder;
 import org.bson.BSONEncoder;
@@ -53,11 +54,17 @@ public class StreamInfo implements iBSONExportable {
 		BSONDecoder decoder = new BSONDecoder();
 
 		try {
-			_data = (DBObject) decoder.readObject(data);
+			_data = new BasicDBObject(decoder.readObject(data).toMap());
 		} catch (RuntimeException ex) {
 			throw new PDCParseException("unable to parse data", ex);
 		}
 
 		return this;
+	}
+
+	@Override
+	public String toString()
+	{
+		return JSON.serialize(_data);
 	}
 }

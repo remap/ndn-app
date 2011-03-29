@@ -48,8 +48,7 @@ public class CommunicationHelper {
 
 		try {
 			si = new SignedInfo(sender_identity, SignedInfo.ContentType.ENCR,
-							key_locator,
-							freshness, null);
+							key_locator, freshness, null);
 			co = new ContentObject(interest.name(), si, data, signing_key);
 
 			handle.put(co);

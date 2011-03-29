@@ -88,7 +88,7 @@ public class Main {
 
 			n2_app = new Application("myapp");
 			n2_ds = new DataStream(handle, n2_app, "myds");
-			n2_ds.getTransport().getEncryptor().setDecryptKey(key.clone());
+//			n2_ds.getTransport().getEncryptor().setDecryptKey(key.clone());
 			n2_ds.setPublisher(node1);
 
 			n2_app.addDataStream(n2_ds);
@@ -153,8 +153,8 @@ public class Main {
 		GlobalConfig.setDataStorage(MongoStorage.class);
 
 		//Disable annoying ccnx debug messages
-//		org.ccnx.ccn.impl.support.Log.setDefaultLevel(
-//						org.ccnx.ccn.impl.support.Log.FAC_ALL, Level.WARNING);
+		org.ccnx.ccn.impl.support.Log.setDefaultLevel(
+						org.ccnx.ccn.impl.support.Log.FAC_ALL, Level.WARNING);
 
 		if (restore) {
 			config = GlobalConfig.loadState();
@@ -198,7 +198,8 @@ public class Main {
 
 		Log.debug("Listening");
 
-//		if (pdv_started == 2)
-//			config.getApplication("myapp").periodicPullStart(5);
+		if (pdv_started == 2)
+			config.getApplication("myapp").periodicPullStart(5);
+//			config.getApplication("myapp").getDataStream("myds").getTransport().fetchDataFromUplink();
 	}
 }

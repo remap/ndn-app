@@ -4,25 +4,17 @@
  */
 package edu.ucla.cens.pdc.libpdc.transport;
 
+import edu.ucla.cens.pdc.libpdc.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.GlobalConfig;
-import edu.ucla.cens.pdc.libpdc.core.PublisherControlCommands;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.io.Serializable;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.KeyLocator;
@@ -94,6 +86,8 @@ public class PDCNode implements Serializable {
 
 		try {
 			key = kmgr.getPublicKey(_publickey_digest, _key_locator);
+			if (key == null)
+				Log.warning("No key available " + _key_locator + " " + _publickey_digest);
 		}
 		catch (IOException ex) {
 			Log.error("Unable to obtain key for " + uri.toURIString() + ": " + ex.
@@ -113,49 +107,15 @@ public class PDCNode implements Serializable {
 	public byte[] encryptData(byte[] data)
 					throws PDCEncryptionException
 	{
-		PublicKey key;
-		String alg;
-		Cipher cipher;
-		byte[] encoded;
+		PublicKey public_key;
 
-		key = getPublicKey();
-		if (key == null)
+		Log.debug("Encrypting: >" + new String(data) + "<");
+
+		public_key = getPublicKey();
+		if (public_key == null)
 			throw new PDCEncryptionException("Public key not available");
 
-		//CBC/PKCS1Padding or ISO9796d1Encoding, not sure what's better?
-		//XXX: why CBC or CFB are bad?
-		alg = key.getAlgorithm() + "/ECB/PKCS1Padding";
-		Log.debug(alg);
-
-		try {
-			cipher = Cipher.getInstance(alg);
-			Log.debug(cipher.getAlgorithm());
-			cipher.init(Cipher.ENCRYPT_MODE, key);
-			encoded = cipher.doFinal(data);
-
-			return encoded;
-		}
-		catch (IllegalBlockSizeException ex) {
-			Logger.getLogger(PublisherControlCommands.class.getName()).
-							log(Level.SEVERE, null, ex);
-		}
-		catch (BadPaddingException ex) {
-			Logger.getLogger(PublisherControlCommands.class.getName()).
-							log(Level.SEVERE, null, ex);
-		}
-		catch (InvalidKeyException ex) {
-			Logger.getLogger(PublisherControlCommands.class.getName()).
-							log(Level.SEVERE, null, ex);
-		}
-		catch (NoSuchAlgorithmException ex) {
-			Logger.getLogger(PublisherControlCommands.class.getName()).
-							log(Level.SEVERE, null, ex);
-		}
-		catch (NoSuchPaddingException ex) {
-			Logger.getLogger(PublisherControlCommands.class.getName()).
-							log(Level.SEVERE, null, ex);
-		}
-		return null;
+		return DataEncryptor.encryptAsymData(public_key, data);
 	}
 
 	@Override

@@ -96,8 +96,8 @@ public class PublisherControlCommands extends StreamCommand {
 		assert encrypted != null;
 
 		try {
-			return CommunicationHelper.publishEncryptedData(handle, interest,
-							ds.getStreamKeyDigest(), encrypted, 1);
+			return CommunicationHelper.publishEncryptedData(handle, interest, ds.
+							getTransport().getEncryptor().getStreamKeyDigest(), encrypted, 1);
 		}
 		catch (PDCTransmissionException ex) {
 			Log.error("Unable to transmit data: " + ex.getMessage());
@@ -106,6 +106,7 @@ public class PublisherControlCommands extends StreamCommand {
 	}
 
 	@Override
+	@SuppressWarnings("CallToThreadDumpStack")
 	boolean processCommand(DataStream ds, ContentName postfix, Interest interest)
 	{
 		Log.debug("Got replication interest for: " + postfix.toURIString());

@@ -4,30 +4,31 @@
  */
 package edu.ucla.cens.pdc.libpdc.transport;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.DataRecord;
 import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.Storage;
 import edu.ucla.cens.pdc.libpdc.StreamInfo;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import org.bson.BSONDecoder;
 import org.ccnx.ccn.CCNHandle;
+import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.config.SystemConfiguration;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
@@ -51,6 +52,8 @@ public class StreamTransport implements Serializable {
 	final private DataEncryptor _encryptor;
 
 	private transient CCNHandle _ccn_handle;
+
+	private transient int _invalid_key_retry = 1;
 
 	public StreamTransport(CCNHandle handle, DataStream stream)
 					throws PDCTransmissionException
@@ -77,24 +80,6 @@ public class StreamTransport implements Serializable {
 	public DataEncryptor getEncryptor()
 	{
 		return _encryptor;
-	}
-
-	public PublisherPublicKeyDigest getKeyDigest()
-	{
-		//TODO: don't generate this every time
-//		return new PublisherPublicKeyDigest(_stream_keys.getPublic());
-//		return null;
-		return _ccn_handle.getDefaultPublisher();
-	}
-
-	public KeyLocator getKeyLocator()
-	{
-//		//TODO: this is obviously wrong
-//		KeyLocator locator = new KeyLocator(_stream_keys.getPublic());
-//
-//		return locator;
-//		return null;
-		return _ccn_handle.keyManager().getDefaultKeyLocator();
 	}
 
 	/**
@@ -158,19 +143,6 @@ public class StreamTransport implements Serializable {
 		return publishData(interest, cipher, 1);
 	}
 
-	public boolean publishStreamInfo(Interest interest)
-					throws PDCTransmissionException
-	{
-		StreamInfo si = new StreamInfo(_stream);
-		byte[] data;
-		BSONDecoder decoder = new BSONDecoder();
-
-
-		data = JSON.serialize(decoder.readObject(si.toBSON())).getBytes();
-
-		return publishData(interest, data, 1);
-	}
-
 	public boolean publishACK(Interest interest)
 					throws PDCTransmissionException
 	{
@@ -182,17 +154,33 @@ public class StreamTransport implements Serializable {
 	private boolean publishData(Interest interest, byte[] data, int freshness)
 					throws PDCTransmissionException
 	{
+		GlobalConfig config = GlobalConfig.getInstance();
 		SignedInfo si;
 		ContentObject co;
+		KeyManager keymgr;
+		PublisherPublicKeyDigest digest;
+		KeyLocator key_locator;
+		PrivateKey signing_key;
 
 		assert interest != null;
 		assert data != null;
 
+		keymgr = config.getKeyManager();
+		assert keymgr != null;
+
+		digest = _encryptor.getStreamKeyDigest();
+		assert digest != null;
+
+		key_locator = keymgr.getKeyLocator(digest);
+		assert key_locator != null;
+
+		signing_key = keymgr.getSigningKey(digest);
+		assert signing_key != null;
+
 		try {
-			si = new SignedInfo(getKeyDigest(), SignedInfo.ContentType.ENCR,
-							getKeyLocator(), freshness, null);
-			co = new ContentObject(interest.name(), si, data,
-							_ccn_handle.keyManager().getDefaultSigningKey());
+			si = new SignedInfo(digest, SignedInfo.ContentType.ENCR, key_locator,
+							freshness, null);
+			co = new ContentObject(interest.name(), si, data, signing_key);
 
 			_ccn_handle.put(co);
 
@@ -200,6 +188,55 @@ public class StreamTransport implements Serializable {
 		}
 		catch (Exception ex) {
 			throw new PDCTransmissionException("Error while publishing data", ex);
+		}
+	}
+
+	public synchronized void fetchStreamInfo()
+					throws PDCTransmissionException
+	{
+		GlobalConfig config = GlobalConfig.getInstance();
+		ContentName uri;
+		ContentObject object;
+		byte[] decrypted;
+
+		try {
+			uri = _stream.getPublisherStreamURI().append(Constants.STR_CONTROL).append(
+							"stream_info").append(config.getRoot());
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error(
+							String.format(
+							"Unable to create proper URI (%s, %s, %s)",
+							_stream.app.getAppName(), _stream.data_stream_id, config.getRoot()),
+							ex);
+		}
+
+		Log.debug("requesting stream_info data for " + uri.toURIString());
+
+		try {
+			object = _ccn_handle.get(uri, SystemConfiguration.MEDIUM_TIMEOUT);
+		}
+		catch (IOException ex) {
+			throw new PDCTransmissionException("Unable to get the data", ex);
+		}
+
+		if (object == null)
+			return;
+
+		try {
+			decrypted = _encryptor.decryptAsymData(object.content());
+		}
+		catch (PDCEncryptionException ex) {
+			throw new PDCTransmissionException("Unable to decrypt the data", ex);
+		}
+
+		try {
+			StreamInfo si = new StreamInfo().fromBSON(decrypted);
+			Log.debug("Got StreamInfo: " + si);
+			_stream.processStreamInfo(si);
+		}
+		catch (PDCParseException ex) {
+			throw new PDCTransmissionException("Unable to process the data", ex);
 		}
 	}
 
@@ -257,8 +294,13 @@ public class StreamTransport implements Serializable {
 			decoded = _encryptor.decryptData(response.content());
 		}
 		catch (PDCEncryptionException ex) {
-			throw new PDCTransmissionException("Unable to decrypt the message", ex);
+			if (isFinalFailure(false))
+				throw new PDCTransmissionException("Unable to decrypt the message", ex);
+
+			fetchStreamInfo();
+			return null;
 		}
+		isFinalFailure(true);
 
 		//Special case (empty list returned)
 		if (decoded.length == 0)
@@ -373,6 +415,15 @@ public class StreamTransport implements Serializable {
 		return true;
 	}
 
+	private boolean isFinalFailure(boolean success)
+	{
+		if (!success && _invalid_key_retry-- > 0)
+			return false;
+
+		_invalid_key_retry = 1;
+		return !success;
+	}
+
 	@Override
 	public String toString()
 	{
@@ -391,6 +442,7 @@ public class StreamTransport implements Serializable {
 		return sb.toString();
 	}
 
+// <editor-fold defaultstate="collapsed" desc="serialization code">
 	private void readObject(ObjectInputStream in)
 					throws IOException, ClassNotFoundException
 	{
@@ -399,4 +451,5 @@ public class StreamTransport implements Serializable {
 		//XXX: this is wrong!
 		_ccn_handle = CCNHandle.getHandle();
 	}
+// </editor-fold>
 }

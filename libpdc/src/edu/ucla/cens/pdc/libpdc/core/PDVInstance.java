@@ -42,7 +42,8 @@ final public class PDVInstance implements CCNFilterListener {
 	final static CCNHandle ccn_handle = CCNHandle.getHandle();
 
 	public PDVInstance()
-					throws MalformedContentNameStringException, ConfigurationException, IOException, InvalidKeyException
+					throws MalformedContentNameStringException, ConfigurationException,
+					IOException, InvalidKeyException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		ContentName root, last, keyname;
@@ -56,7 +57,8 @@ final public class PDVInstance implements CCNFilterListener {
 		last = root.postfix(keyname);
 		keyname = keyname.append(".pdv_keys").append(last);
 
-		keymanager = new BasicKeyManager(last.toString(), "pdv_keys", last.toString().concat(".conf"), last.toString().concat(".key"),
+		keymanager = new BasicKeyManager(last.toString(), "pdv_keys", last.toString().
+						concat(".conf"), last.toString().concat(".key"),
 						null, null, null);
 
 		config.setKeyManager(keymanager);
@@ -69,8 +71,8 @@ final public class PDVInstance implements CCNFilterListener {
 
 		keymanager.publishKeyToRepository(keyname, digest);
 
-		config.getApplication("myapp").getDataStream("myds").setStreamKeyDigest(
-						digest);
+		config.getApplication("myapp").getDataStream("myds").getTransport().
+						getEncryptor().setStreamKeyDigest(digest);
 
 //		_keymanager.saveSecureKeyCache();
 		//XXX: remove this code

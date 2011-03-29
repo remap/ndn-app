@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
@@ -62,10 +61,6 @@ public class DataStream implements iDataStream, iState {
 	 */
 	protected List<PDCReceiver> _receivers = new ArrayList<PDCReceiver>();
 
-	/**
-	 * keys associated with our stream
-	 */
-	protected PublisherPublicKeyDigest _stream_key_digest;
 
 	public DataStream(CCNHandle handle, iApplication app, String data_stream_id)
 	{
@@ -99,6 +94,11 @@ public class DataStream implements iDataStream, iState {
 	public StreamTransport getTransport()
 	{
 		return _transport;
+	}
+
+	public void processStreamInfo(StreamInfo data)
+	{
+		_transport.getEncryptor().setDecryptKey(data.getStreamKey());
 	}
 
 	public ContentName getPublisherStreamURI()
@@ -161,21 +161,6 @@ public class DataStream implements iDataStream, iState {
 		return null;
 	}
 
-	public PublisherPublicKeyDigest getStreamKeyDigest()
-	{
-		return _stream_key_digest;
-	}
-
-	/**
-	 *
-	 * @param digest
-	 * @deprecated this won't be needed later, as the keys will be automatically
-	 * generated
-	 */
-	public void setStreamKeyDigest(PublisherPublicKeyDigest digest)
-	{
-		this._stream_key_digest = digest;
-	}
 
 	@Override
 	public String toString()
@@ -191,7 +176,6 @@ public class DataStream implements iDataStream, iState {
 		data.add(_transport.toString());
 		data.add(_publisher == null ? null : _publisher.toString());
 		data.add(_receivers.toString());
-		data.add(_stream_key_digest == null ? null : _stream_key_digest.toString());
 		sb.append(StringUtil.join(data, "; "));
 		sb.append(']');
 
