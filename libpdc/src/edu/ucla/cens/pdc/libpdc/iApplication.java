@@ -5,6 +5,7 @@
 package edu.ucla.cens.pdc.libpdc;
 
 import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
@@ -16,4 +17,6 @@ public interface iApplication {
 	boolean isDataStream(String id);
 	DataStream getDataStream(String id);
 	DataStream addDataStream(DataStream ds);
+	public PublisherPublicKeyDigest getKeyDigest();
+	public void setKeyDigest(PublisherPublicKeyDigest digest);
 }

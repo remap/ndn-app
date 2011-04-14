@@ -32,7 +32,7 @@ public class Database {
 	{
 		DB result;
 		String name;
-		String prefix = MongoStorage.getPrefix();
+		String prefix = MongoDataStorage.getPrefix();
 
 		name = type2name(type) + "_" + db_name;
 		if (prefix != null)

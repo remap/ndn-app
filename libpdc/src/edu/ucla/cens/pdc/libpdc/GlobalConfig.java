@@ -20,8 +20,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.ccnx.ccn.KeyManager;
+import org.ccnx.ccn.impl.security.keys.BasicKeyManager;
 import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
@@ -47,6 +50,54 @@ public class GlobalConfig implements iState {
 	private GlobalConfig()
 	{
 		_config_storage = setupConfigStorage();
+		//FIXME: currently we do the setup after setting the root
+//		setupObject();
+	}
+
+	private void setupObject()
+	{
+		ContentName root, last, keyname;
+		KeyLocator locator;
+		PublisherPublicKeyDigest digest;
+		KeyManager keymanager;
+
+		//XXX: remove this code
+		root = getRoot();
+		keyname = root.cut(root.count() - 1); //root -1 last part (eg. /ucla.edu/apps)
+		last = root.postfix(keyname); //last part of root (eg. pdv1)
+
+		try {
+			keyname = keyname.append(".pdv_keys").append(last); // eg. /ucla.edu/apps/.pdv_keys/pdv1
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to create uri for keylocator", ex);
+		}
+		try {
+			keymanager = new BasicKeyManager(last.toString(), "pdv_keys",
+							last.toString().concat(".conf"), last.toString().concat(".key"),
+							null, null, null);
+			keymanager.initialize();
+
+			setKeyManager(keymanager);
+		}
+		catch (Exception ex) {
+			throw new Error("Unable to setup keymanager", ex);
+		}
+
+//		config.setKeyManager(keymanager);
+
+
+//		locator = new KeyLocator(keyname);
+//		digest = keymanager.getDefaultKeyID();
+//		keymanager.setKeyLocator(digest, locator);
+
+//		keymanager.publishKeyToRepository(keyname, digest);
+
+//		config.getApplication("myapp").getDataStream("myds").getTransport().
+//						getEncryptor().setStreamKeyDigest(digest);
+
+		//XXX: remove this code
+
 	}
 
 	public static void setDataStorage(Class<? extends Storage> name)
@@ -108,6 +159,7 @@ public class GlobalConfig implements iState {
 							"You can't change the root once it is already set");
 
 		_root = root;
+		setupObject();
 	}
 
 	/**
@@ -322,6 +374,8 @@ public class GlobalConfig implements iState {
 					throws IOException
 	{
 		int app_count = in.readInt();
+
+		setupObject();
 
 		for (int i = 0; i < app_count; i++) {
 			String name = in.readUTF();

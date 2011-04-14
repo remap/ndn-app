@@ -1,4 +1,4 @@
-/*
+		/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -22,6 +22,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  * Stores information about applications that PDV handles
@@ -45,6 +46,11 @@ public class Application implements iApplication, iState {
 					newSingleThreadScheduledExecutor();
 
 	private long _pull_rate = 0;
+
+	/**
+	 * keys associated with our application
+	 */
+	protected PublisherPublicKeyDigest _key_digest;
 
 	public Application(String name)
 	{
@@ -170,6 +176,22 @@ public class Application implements iApplication, iState {
 
 		_pull_rate = 0;
 		_scheduler.shutdown();
+	}
+
+	public PublisherPublicKeyDigest getKeyDigest()
+	{
+		return _key_digest;
+	}
+
+	/**
+	 *
+	 * @param digest
+	 * @deprecated this won't be needed later, as the keys will be automatically
+	 * generated
+	 */
+	public void setKeyDigest(PublisherPublicKeyDigest digest)
+	{
+		this._key_digest = digest;
 	}
 
 	@Override

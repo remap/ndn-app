@@ -10,7 +10,6 @@ import edu.ucla.cens.pdc.libpdc.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.io.IOException;
 import java.security.InvalidKeyException;
-import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.Map;
 import org.ccnx.ccn.CCNFilterListener;
@@ -18,8 +17,6 @@ import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.impl.security.keys.BasicKeyManager;
-import org.ccnx.ccn.impl.security.keys.NetworkKeyManager;
-import org.ccnx.ccn.impl.security.keys.RepositoryKeyManager;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.KeyLocator;
@@ -42,40 +39,13 @@ final public class PDVInstance implements CCNFilterListener {
 	final static CCNHandle ccn_handle = CCNHandle.getHandle();
 
 	public PDVInstance()
-					throws MalformedContentNameStringException, ConfigurationException,
-					IOException, InvalidKeyException
+					throws MalformedContentNameStringException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
-		ContentName root, last, keyname;
-		KeyLocator locator;
-		PublisherPublicKeyDigest digest;
 		KeyManager keymanager;
 
-		//XXX: remove this code
-		root = config.getRoot();
-		keyname = root.cut(root.count() - 1);
-		last = root.postfix(keyname);
-		keyname = keyname.append(".pdv_keys").append(last);
-
-		keymanager = new BasicKeyManager(last.toString(), "pdv_keys", last.toString().
-						concat(".conf"), last.toString().concat(".key"),
-						null, null, null);
-
-		config.setKeyManager(keymanager);
-
-		keymanager.initialize();
-
-		locator = new KeyLocator(keyname);
-		digest = keymanager.getDefaultKeyID();
-		keymanager.setKeyLocator(digest, locator);
-
-		keymanager.publishKeyToRepository(keyname, digest);
-
-		config.getApplication("myapp").getDataStream("myds").getTransport().
-						getEncryptor().setStreamKeyDigest(digest);
-
-//		_keymanager.saveSecureKeyCache();
-		//XXX: remove this code
+		keymanager = config.getKeyManager();
+		assert keymanager != null;
 
 		ccn_handle.setKeyManager(keymanager);
 

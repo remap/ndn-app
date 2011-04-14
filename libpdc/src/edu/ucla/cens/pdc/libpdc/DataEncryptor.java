@@ -8,6 +8,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
+import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
@@ -118,6 +119,13 @@ public class DataEncryptor implements Serializable {
 	public void setStreamKeyDigest(PublisherPublicKeyDigest digest)
 	{
 		this._stream_key_digest = digest;
+	}
+
+	public PublisherPublicKeyDigest generateStreamKeys()
+	{
+		_stream_key_digest = EncryptionHelper.generatePublisherKeys();
+
+		return _stream_key_digest;
 	}
 
 	public byte[] encryptRecord(iBSONExportable record)
@@ -325,24 +333,15 @@ public class DataEncryptor implements Serializable {
 		}
 	}
 
-	public byte[] decryptAsymData(byte[] cipherText)
+	public static byte[] decryptAsymData(PrivateKey private_key, byte[] cipherText)
 					throws PDCEncryptionException
 	{
 		BSONDecoder decoder = new BSONDecoder();
-		GlobalConfig config = GlobalConfig.getInstance();
-		KeyManager keymgr;
 		Cipher cipher;
 		BSONObject obj;
-		PrivateKey private_key;
 		SecretKey secret_key;
 		byte[] aes_ciphertext, iv;
 
-		Log.debug("Decrypting data using my key: " + _stream_key_digest);
-
-		keymgr = config.getKeyManager();
-		assert keymgr != null;
-
-		private_key = keymgr.getSigningKey(_stream_key_digest);
 		assert private_key != null;
 
 		try {
@@ -380,6 +379,24 @@ public class DataEncryptor implements Serializable {
 		catch (NoSuchPaddingException ex) {
 			throw new PDCEncryptionException("Unable to decrypt message", ex);
 		}
+	}
+
+	public byte[] decryptAsymData(byte[] cipherText)
+					throws PDCEncryptionException
+	{
+		GlobalConfig config = GlobalConfig.getInstance();
+		KeyManager keymgr;
+		PrivateKey private_key;
+
+		Log.debug("Decrypting data using my key: " + _stream_key_digest);
+
+		keymgr = config.getKeyManager();
+		assert keymgr != null;
+
+		private_key = keymgr.getSigningKey(_stream_key_digest);
+		assert private_key != null;
+
+		return decryptAsymData(private_key, cipherText);
 	}
 
 	private byte[] repeat(int size, String pattern)

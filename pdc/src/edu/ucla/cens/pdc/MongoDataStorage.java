@@ -10,7 +10,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
-import com.mongodb.WriteConcern;
 import edu.ucla.cens.pdc.libpdc.DataRecord;
 import edu.ucla.cens.pdc.libpdc.Storage;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
@@ -23,7 +22,7 @@ import org.bson.types.ObjectId;
  *
  * @author Derek Kulinski
  */
-final public class MongoStorage extends Storage {
+final public class MongoDataStorage extends Storage {
 	final private DBCollection _coll;
 
 	private static String _prefix = null;
@@ -32,7 +31,7 @@ final public class MongoStorage extends Storage {
 
 	public boolean insert_caching = true;
 
-	public MongoStorage(Application app, String data_stream_id)
+	public MongoDataStorage(Application app, String data_stream_id)
 	{
 		super(app, data_stream_id);
 

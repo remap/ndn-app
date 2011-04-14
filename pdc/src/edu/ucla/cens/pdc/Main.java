@@ -107,6 +107,7 @@ public class Main {
 	/**
 	 * @param args the command line arguments
 	 */
+	@SuppressWarnings("fallthrough")
 	public static void main(String[] args)
 					throws MalformedContentNameStringException, IOException,
 					ConfigurationException, PDCTransmissionException, PDCDatabaseException,
@@ -142,15 +143,15 @@ public class Main {
 		}
 
 		if (pdv_started == 1 || pdv_started == -1) {
-			MongoStorage.setPrefix("pdv1_");
+			MongoDataStorage.setPrefix("pdv1_");
 			MongoConfigStorage.setPrefix("pdv1_");
 		} else if (pdv_started == 2) {
-			MongoStorage.setPrefix("pdv2_");
+			MongoDataStorage.setPrefix("pdv2_");
 			MongoConfigStorage.setPrefix("pdv2_");
 		}
 
 		GlobalConfig.setConfigStorage(MongoConfigStorage.class);
-		GlobalConfig.setDataStorage(MongoStorage.class);
+		GlobalConfig.setDataStorage(MongoDataStorage.class);
 
 		//Disable annoying ccnx debug messages
 		org.ccnx.ccn.impl.support.Log.setDefaultLevel(
@@ -182,7 +183,7 @@ public class Main {
 			fillDatabase(ds);
 			System.exit(0);
 		case 1:
-			if (digest != null && key_locator != null) {
+			if (!restore && digest != null && key_locator != null) {
 				Log.debug("Setting up pdv2's key");
 				PDCReceiver receiver = config.getApplication("myapp").getDataStream(
 								"myds").getReceivers().iterator().next();
@@ -191,7 +192,7 @@ public class Main {
 			}
 		/* fallthrough */
 		case 2:
-			Log.debug("My Key: " + keymgr.getDefaultKeyLocator() + " " + keymgr.getDefaultKeyID());
+			Log.info("My Key: " + keymgr.getDefaultKeyLocator() + " " + keymgr.getDefaultKeyID());
 		}
 
 		test.startListening();

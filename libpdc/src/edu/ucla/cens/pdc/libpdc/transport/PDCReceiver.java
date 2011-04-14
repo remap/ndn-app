@@ -13,21 +13,10 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 public class PDCReceiver extends PDCNode {
 	private static final long serialVersionUID = -2708593542096598873L;
 
-	private transient String _authenticator;
-
 	public PDCReceiver(String uri)
 					throws MalformedContentNameStringException
 	{
 		super(uri);
 	}
 
-	public String getAuthenticator()
-	{
-		return _authenticator;
-	}
-
-	public void setAuthenticator(String authenticator)
-	{
-		this._authenticator = authenticator;
-	}
 }

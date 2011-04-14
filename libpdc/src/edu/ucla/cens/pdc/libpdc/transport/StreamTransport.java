@@ -16,6 +16,7 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
+import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
@@ -71,6 +72,29 @@ public class StreamTransport implements Serializable {
 		catch (MalformedContentNameStringException ex) {
 			throw new PDCTransmissionException(
 							"Unable to create base name for the data stream", ex);
+		}
+
+		setupClass();
+	}
+
+	private void setupClass()
+	{
+		PublisherPublicKeyDigest digest;
+		assert _encryptor != null;
+
+		digest = _encryptor.getStreamKeyDigest();
+		if (digest != null) {
+			Log.info("Keys for " + _stream.data_stream_id + " loaded, hash: " + digest);
+		} else {
+			Log.info("Generating keys for " + _stream.data_stream_id + "...");
+
+			digest = _encryptor.generateStreamKeys();
+			if (digest == null)
+				throw new Error("Unable to obtain stream keys");
+			else
+				Log.info("Generated keys for " + _stream.data_stream_id + ": " + digest);
+
+
 		}
 	}
 
@@ -448,8 +472,10 @@ public class StreamTransport implements Serializable {
 	{
 		in.defaultReadObject();
 
-		//XXX: this is wrong!
+		//FIXME: this is wrong!
 		_ccn_handle = CCNHandle.getHandle();
+
+		setupClass();
 	}
 // </editor-fold>
 }

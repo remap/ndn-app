@@ -38,6 +38,8 @@ public class PDCNode implements Serializable {
 	 */
 	protected PublisherPublicKeyDigest _publickey_digest;
 
+	private transient String _authenticator;
+
 	/**
 	 * Key locator for the  node
 	 */
@@ -96,6 +98,16 @@ public class PDCNode implements Serializable {
 		}
 
 		return key;
+	}
+
+	public String getAuthenticator()
+	{
+		return _authenticator;
+	}
+
+	public void setAuthenticator(String authenticator)
+	{
+		this._authenticator = authenticator;
 	}
 
 	public byte[] encryptData(iBSONExportable data)

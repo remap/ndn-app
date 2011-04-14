@@ -11,7 +11,6 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import org.bson.BSONDecoder;
 import org.bson.BSONEncoder;
-import org.ccnx.ccn.protocol.ContentName;
 
 /**
  *
@@ -42,9 +41,8 @@ public class Authenticator implements iBSONExportable {
 
 		_data = new BasicDBObject();
 		_data.put(STR_AUTHENTICATOR, authenticator);
-
-		//XXX: to implement
-		_data.put(STR_KEY_DIGEST, "blah blah blah");
+		_data.put(STR_KEY_DIGEST,
+						stream._transport.getEncryptor()._stream_key_digest);
 	}
 
 	public String getAuthenticator()
