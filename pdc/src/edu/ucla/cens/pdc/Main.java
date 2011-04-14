@@ -8,7 +8,7 @@ import edu.ucla.cens.pdc.libpdc.core.PDVInstance;
 import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.DataRecord;
-import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;

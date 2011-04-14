@@ -4,7 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc.core;
 
-import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 

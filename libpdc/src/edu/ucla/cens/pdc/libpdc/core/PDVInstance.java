@@ -6,7 +6,7 @@ package edu.ucla.cens.pdc.libpdc.core;
 
 import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.GlobalConfig;
-import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.io.IOException;
 import java.security.InvalidKeyException;

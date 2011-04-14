@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc;
 
+import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

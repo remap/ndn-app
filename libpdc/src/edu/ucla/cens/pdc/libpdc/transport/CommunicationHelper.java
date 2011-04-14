@@ -6,8 +6,8 @@ package edu.ucla.cens.pdc.libpdc.transport;
 
 import edu.ucla.cens.pdc.libpdc.Authenticator;
 import edu.ucla.cens.pdc.libpdc.Constants;
-import edu.ucla.cens.pdc.libpdc.DataEncryptor;
-import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;

@@ -1,6 +1,6 @@
 package webClient.backEnd;
 
-import edu.ucla.cens.pdc.libpdc.DataEncryptor;
+import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import java.io.IOException;
 import java.security.InvalidKeyException;

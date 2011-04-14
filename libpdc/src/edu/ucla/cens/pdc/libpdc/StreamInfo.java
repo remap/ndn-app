@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc;
 
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -26,7 +27,7 @@ public class StreamInfo implements iBSONExportable {
 	{
 		_data = new BasicDBObject();
 
-		_data.put("enc_key", stream._transport.getEncryptor().getEncryptKey());
+		_data.put("enc_key", stream.getTransport().getEncryptor().getEncryptKey());
 	}
 
 	public byte[] getStreamKey()

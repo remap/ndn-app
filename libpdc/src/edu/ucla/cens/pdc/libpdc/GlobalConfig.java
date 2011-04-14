@@ -4,6 +4,8 @@
  */
 package edu.ucla.cens.pdc.libpdc;
 
+import edu.ucla.cens.pdc.libpdc.stream.Storage;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;

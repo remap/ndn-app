@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc;
 
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
@@ -42,7 +43,7 @@ public class Authenticator implements iBSONExportable {
 		_data = new BasicDBObject();
 		_data.put(STR_AUTHENTICATOR, authenticator);
 		_data.put(STR_KEY_DIGEST,
-						stream._transport.getEncryptor()._stream_key_digest);
+						stream.getTransport().getEncryptor().getStreamKeyDigest());
 	}
 
 	public String getAuthenticator()

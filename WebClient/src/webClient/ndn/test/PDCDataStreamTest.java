@@ -1,6 +1,6 @@
 package webClient.ndn.test;
 
-import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import java.io.IOException;
 import java.lang.String;
 import java.util.logging.Level;

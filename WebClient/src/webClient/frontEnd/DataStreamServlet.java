@@ -1,6 +1,6 @@
 package webClient.frontEnd;
 
-import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;

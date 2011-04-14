@@ -2,7 +2,7 @@ package webClient.ndn.test;
 
 import com.mongodb.DBCollection;
 import edu.ucla.cens.pdc.Database;
-import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import java.util.Collection;
 import java.util.LinkedHashMap;

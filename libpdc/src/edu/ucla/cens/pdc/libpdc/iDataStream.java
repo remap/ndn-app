@@ -4,9 +4,10 @@
  */
 package edu.ucla.cens.pdc.libpdc;
 
+import edu.ucla.cens.pdc.libpdc.stream.Storage;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
-import edu.ucla.cens.pdc.libpdc.transport.StreamTransport;
+import edu.ucla.cens.pdc.libpdc.stream.StreamTransport;
 import java.util.Collection;
 import org.ccnx.ccn.protocol.ContentName;
 

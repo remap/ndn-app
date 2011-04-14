@@ -2,20 +2,21 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc.libpdc.transport;
+package edu.ucla.cens.pdc.libpdc.stream;
 
 import com.mongodb.util.JSON;
 import edu.ucla.cens.pdc.libpdc.Constants;
-import edu.ucla.cens.pdc.libpdc.DataEncryptor;
+import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.DataRecord;
-import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.GlobalConfig;
-import edu.ucla.cens.pdc.libpdc.Storage;
+import edu.ucla.cens.pdc.libpdc.stream.Storage;
 import edu.ucla.cens.pdc.libpdc.StreamInfo;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
+import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;

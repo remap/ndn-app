@@ -2,12 +2,17 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc.libpdc;
+package edu.ucla.cens.pdc.libpdc.stream;
 
+import edu.ucla.cens.pdc.libpdc.Application;
+import edu.ucla.cens.pdc.libpdc.GlobalConfig;
+import edu.ucla.cens.pdc.libpdc.StreamInfo;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
+import edu.ucla.cens.pdc.libpdc.iApplication;
+import edu.ucla.cens.pdc.libpdc.iDataStream;
+import edu.ucla.cens.pdc.libpdc.iState;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
-import edu.ucla.cens.pdc.libpdc.transport.StreamTransport;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.io.ObjectInputStream;

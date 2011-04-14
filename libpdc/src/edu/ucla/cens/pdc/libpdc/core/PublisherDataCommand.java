@@ -9,7 +9,7 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 
 /**

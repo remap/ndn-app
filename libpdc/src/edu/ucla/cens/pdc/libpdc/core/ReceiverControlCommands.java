@@ -6,9 +6,9 @@ package edu.ucla.cens.pdc.libpdc.core;
 
 import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.Constants;
-import edu.ucla.cens.pdc.libpdc.DataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
-import edu.ucla.cens.pdc.libpdc.transport.StreamTransport;
+import edu.ucla.cens.pdc.libpdc.stream.StreamTransport;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;

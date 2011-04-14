@@ -1,6 +1,6 @@
 package webClient.session;
 
-import edu.ucla.cens.pdc.libpdc.DataEncryptor;
+import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.util.SignedInterest;
 import java.security.KeyPair;
