@@ -2,8 +2,12 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc.libpdc;
+package edu.ucla.cens.pdc.libpdc.core;
 
+import edu.ucla.cens.pdc.libpdc.Application;
+import edu.ucla.cens.pdc.libpdc.iApplication;
+import edu.ucla.cens.pdc.libpdc.iConfigStorage;
+import edu.ucla.cens.pdc.libpdc.iState;
 import edu.ucla.cens.pdc.libpdc.stream.Storage;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;

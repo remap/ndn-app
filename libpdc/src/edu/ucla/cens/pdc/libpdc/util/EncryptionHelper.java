@@ -4,7 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc.util;
 
-import edu.ucla.cens.pdc.libpdc.GlobalConfig;
+import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.InvalidKeyException;

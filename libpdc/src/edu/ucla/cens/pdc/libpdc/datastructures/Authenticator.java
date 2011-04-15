@@ -2,13 +2,14 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc.libpdc;
+package edu.ucla.cens.pdc.libpdc.datastructures;
 
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
+import edu.ucla.cens.pdc.libpdc.iBSONExportable;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import org.bson.BSONDecoder;
 import org.bson.BSONEncoder;

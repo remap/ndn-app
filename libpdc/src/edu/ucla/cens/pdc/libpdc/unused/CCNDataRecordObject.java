@@ -5,7 +5,7 @@
 package edu.ucla.cens.pdc.libpdc.unused;
 
 import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
-import edu.ucla.cens.pdc.libpdc.DataRecord;
+import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import java.io.IOException;

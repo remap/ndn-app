@@ -4,7 +4,6 @@
  */
 package edu.ucla.cens.pdc.libpdc.core;
 
-import edu.ucla.cens.pdc.libpdc.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;

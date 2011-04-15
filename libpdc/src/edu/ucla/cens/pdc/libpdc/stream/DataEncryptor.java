@@ -6,8 +6,8 @@ package edu.ucla.cens.pdc.libpdc.stream;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
-import edu.ucla.cens.pdc.libpdc.DataRecord;
-import edu.ucla.cens.pdc.libpdc.GlobalConfig;
+import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
+import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.iApplication;

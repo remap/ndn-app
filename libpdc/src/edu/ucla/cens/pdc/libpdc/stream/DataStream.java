@@ -5,8 +5,8 @@
 package edu.ucla.cens.pdc.libpdc.stream;
 
 import edu.ucla.cens.pdc.libpdc.Application;
-import edu.ucla.cens.pdc.libpdc.GlobalConfig;
-import edu.ucla.cens.pdc.libpdc.StreamInfo;
+import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
+import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iDataStream;

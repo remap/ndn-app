@@ -5,7 +5,7 @@
 package edu.ucla.cens.pdc.libpdc.transport;
 
 import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
-import edu.ucla.cens.pdc.libpdc.GlobalConfig;
+import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
 import edu.ucla.cens.pdc.libpdc.util.Log;

@@ -4,7 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc.core;
 
-import edu.ucla.cens.pdc.libpdc.Authenticator;
+import edu.ucla.cens.pdc.libpdc.datastructures.Authenticator;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
@@ -13,7 +13,7 @@ import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
-import edu.ucla.cens.pdc.libpdc.StreamInfo;
+import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
 import edu.ucla.cens.pdc.libpdc.transport.CommunicationHelper;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.util.Log;

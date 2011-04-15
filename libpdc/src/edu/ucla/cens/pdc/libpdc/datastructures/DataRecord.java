@@ -2,12 +2,13 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc.libpdc;
+package edu.ucla.cens.pdc.libpdc.datastructures;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
+import edu.ucla.cens.pdc.libpdc.iBSONExportable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;

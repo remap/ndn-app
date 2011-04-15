@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc;
 
+import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
@@ -104,7 +105,7 @@ public class Application implements iApplication, iState {
 		return _data_stream.put(ds.data_stream_id, ds);
 	}
 
-	synchronized Iterator<DataStream> getDataStreamsIterator()
+	synchronized public Iterator<DataStream> getDataStreamsIterator()
 	{
 		return _data_stream.values().iterator();
 	}
