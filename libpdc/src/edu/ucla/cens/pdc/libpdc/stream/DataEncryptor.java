@@ -8,11 +8,11 @@ import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
+import edu.ucla.cens.pdc.libpdc.core.PDCKeyManager;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
-import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
@@ -127,7 +127,12 @@ public class DataEncryptor implements Serializable {
 
 	public PublisherPublicKeyDigest generateStreamKeys()
 	{
-		_stream_key_digest = EncryptionHelper.generatePublisherKeys();
+		GlobalConfig config = GlobalConfig.getInstance();
+
+		PDCKeyManager keymgr = config.getKeyManager();
+		assert keymgr != null;
+
+		_stream_key_digest = keymgr.generatePublisherKeys();
 
 		return _stream_key_digest;
 	}
@@ -312,28 +317,28 @@ public class DataEncryptor implements Serializable {
 			return encoder.encode(obj);
 		}
 		catch (InvalidAlgorithmParameterException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to " + public_key.
-							toString(), ex);
+			throw new PDCEncryptionException("Unable to encrypt message to "
+							+ public_key.toString(), ex);
 		}
 		catch (BadPaddingException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to " + public_key.
-							toString(), ex);
+			throw new PDCEncryptionException("Unable to encrypt message to "
+							+ public_key.toString(), ex);
 		}
 		catch (IllegalBlockSizeException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to " + public_key.
-							toString(), ex);
+			throw new PDCEncryptionException("Unable to encrypt message to "
+							+ public_key.toString(), ex);
 		}
 		catch (InvalidKeyException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to " + public_key.
-							toString(), ex);
+			throw new PDCEncryptionException("Unable to encrypt message to "
+							+ public_key.toString(), ex);
 		}
 		catch (NoSuchAlgorithmException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to " + public_key.
-							toString(), ex);
+			throw new PDCEncryptionException("Unable to encrypt message to "
+							+ public_key.toString(), ex);
 		}
 		catch (NoSuchPaddingException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to " + public_key.
-							toString(), ex);
+			throw new PDCEncryptionException("Unable to encrypt message to "
+							+ public_key.toString(), ex);
 		}
 	}
 

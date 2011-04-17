@@ -25,8 +25,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.ccnx.ccn.KeyManager;
-import org.ccnx.ccn.impl.security.keys.BasicKeyManager;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
@@ -37,22 +35,6 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  * @author Derek Kulinski
  */
 public class GlobalConfig implements iState {
-	private static final long serialVersionUID = -7308017340474869649L;
-
-	private static GlobalConfig _instance;
-
-	private static Class<? extends Storage> _data_storage_class = null;
-
-	private static Class<? extends iConfigStorage> _config_storage_class = null;
-
-	private transient iConfigStorage _config_storage;
-
-	private transient ContentName _root = null;
-
-	private transient final Map<String, Application> _applications = new HashMap<String, Application>();
-
-	private transient KeyManager _key_manager = null;
-
 	private GlobalConfig()
 	{
 		_config_storage = setupConfigStorage();
@@ -65,7 +47,7 @@ public class GlobalConfig implements iState {
 		ContentName root, last, keyname;
 		KeyLocator locator;
 		PublisherPublicKeyDigest digest;
-		KeyManager keymanager;
+		PDCKeyManager keymanager;
 
 		//XXX: remove this code
 		root = getRoot();
@@ -79,9 +61,7 @@ public class GlobalConfig implements iState {
 			throw new Error("Unable to create uri for keylocator", ex);
 		}
 		try {
-			keymanager = new BasicKeyManager(last.toString(), "pdv_keys",
-							last.toString().concat(".conf"), last.toString().concat(".key"),
-							null, null, null);
+			keymanager = new PDCKeyManager(last.toString());
 			keymanager.initialize();
 
 			setKeyManager(keymanager);
@@ -245,12 +225,12 @@ public class GlobalConfig implements iState {
 		return result;
 	}
 
-	public KeyManager getKeyManager()
+	public PDCKeyManager getKeyManager()
 	{
 		return _key_manager;
 	}
 
-	public void setKeyManager(KeyManager key_manager)
+	public void setKeyManager(PDCKeyManager key_manager)
 	{
 		this._key_manager = key_manager;
 	}
@@ -449,4 +429,20 @@ public class GlobalConfig implements iState {
 		}
 	}
 // </editor-fold>
+
+	private static final long serialVersionUID = -7308017340474869649L;
+
+	private static GlobalConfig _instance;
+
+	private static Class<? extends Storage> _data_storage_class = null;
+
+	private static Class<? extends iConfigStorage> _config_storage_class = null;
+
+	private transient iConfigStorage _config_storage;
+
+	private transient ContentName _root = null;
+
+	private transient final Map<String, Application> _applications = new HashMap<String, Application>();
+
+	private transient PDCKeyManager _key_manager = null;
 }

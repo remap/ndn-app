@@ -2,12 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ucla.cens.pdc.libpdc;
+package edu.ucla.cens.pdc.libpdc.stream;
 
+import edu.ucla.cens.pdc.libpdc.core.PDCKeyManager;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
-import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
-import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -17,18 +16,18 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.KeyManager;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import edu.ucla.cens.pdc.libpdc.iBSONExportable;
+import edu.ucla.cens.pdc.libpdc.iConfigStorage;
 import java.security.KeyPairGenerator;
 import java.security.KeyPair;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import org.bouncycastle.util.encoders.Base64;
-import org.bouncycastle.util.encoders.Hex;
 import org.bson.BSONEncoder;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.config.UserConfiguration;
@@ -55,8 +54,14 @@ import static org.junit.Assert.*;
 public class DataEncryptorTest {
 	private static DataEncryptor encryptor;
 
-	static class TestKeyManager extends KeyManager {
+	static class TestKeyManager extends PDCKeyManager {
 		private KeyPair keypair;
+
+		public TestKeyManager()
+						throws ConfigurationException, IOException
+		{
+			super("testing");
+		}
 
 		@Override
 		public void close()
@@ -66,7 +71,7 @@ public class DataEncryptorTest {
 
 		@Override
 		public void initialize()
-						throws InvalidKeyException, IOException, ConfigurationException
+						throws IOException, ConfigurationException
 		{
 			KeyPairGenerator kpg = null;
 			try {
@@ -287,7 +292,7 @@ public class DataEncryptorTest {
 		}
 	}
 
-	static class TestConfigStorage implements iConfigStorage {
+	public static class TestConfigStorage implements iConfigStorage {
 		public ByteArrayInputStream loadEntry(String group, String name)
 						throws IOException
 		{
@@ -317,7 +322,7 @@ public class DataEncryptorTest {
 					throws Exception
 	{
 		GlobalConfig config;
-		KeyManager keymgr;
+		PDCKeyManager keymgr;
 
 		keymgr = new TestKeyManager();
 		keymgr.initialize();
@@ -432,8 +437,9 @@ public class DataEncryptorTest {
 		kg.init(128);
 		sec_key = kg.generateKey();
 
-		byte[] wrappedKey = encryptor.wrapKey(keymgr.getPublicKey(null), sec_key);
-		SecretKey unwrappedKey = encryptor.unwrapKey(keymgr.getSigningKey(null), wrappedKey);
+		byte[] wrappedKey = DataEncryptor.wrapKey(keymgr.getPublicKey(null), sec_key);
+		SecretKey unwrappedKey = DataEncryptor.unwrapKey(keymgr.getSigningKey(null),
+						wrappedKey);
 
 		assertTrue(unwrappedKey.equals(sec_key));
 	}
@@ -462,7 +468,7 @@ public class DataEncryptorTest {
 		byte[] input = encoder.encode(object);
 		byte[] expResult = input.clone();
 
-		byte[] cipherText = encryptor.encryptAsymData(keymgr.getPublicKey(null),
+		byte[] cipherText = DataEncryptor.encryptAsymData(keymgr.getPublicKey(null),
 						input);
 		System.out.println(new String(Base64.encode(cipherText)));
 		byte[] decrypted = encryptor.decryptAsymData(cipherText);
