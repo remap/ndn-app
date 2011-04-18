@@ -331,8 +331,6 @@ public class GlobalConfig implements iState {
 	private void readObject(ObjectInputStream in)
 					throws IOException, ClassNotFoundException
 	{
-		int app_count;
-
 		in.defaultReadObject();
 
 		try {

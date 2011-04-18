@@ -33,42 +33,11 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski
  */
 public class DataStream implements iDataStream, iState {
-	private static final long serialVersionUID = 4028445614659553162L;
-
-	/**
-	 * application associated with the DS
-	 */
-	public transient final iApplication app;
-
-	/**
-	 * id of the data stream
-	 */
-	public final String data_stream_id;
-
-	/**
-	 * instance of class responsible for the storage of data
-	 */
-	protected transient Storage _store;
-
-	/**
-	 * instance of class responsible for transferring data
-	 * over the network
-	 */
-	protected StreamTransport _transport;
-
-	/**
-	 * publisher of the DS
-	 */
-	protected PDCPublisher _publisher = null;
-
-	/**
-	 * receivers of our DS
-	 */
-	protected List<PDCReceiver> _receivers = new ArrayList<PDCReceiver>();
-
-
 	public DataStream(CCNHandle handle, iApplication app, String data_stream_id)
 	{
+		l.log(Level.FINER, "Generating new data stream {0} for {1}",
+						new Object[]{data_stream_id, app.getAppName()});
+
 		assert app != null;
 		assert data_stream_id != null && !data_stream_id.isEmpty();
 		assert !data_stream_id.startsWith("/") : "stream id: " + data_stream_id;
@@ -76,7 +45,7 @@ public class DataStream implements iDataStream, iState {
 		this.app = app;
 		this.data_stream_id = data_stream_id;
 
-		setupClass();
+		setupObject();
 
 		try {
 			this._transport = new StreamTransport(handle, this);
@@ -86,9 +55,15 @@ public class DataStream implements iDataStream, iState {
 		}
 	}
 
-	protected void setupClass()
+	protected final void setupObject()
 	{
+		l.entering(this.getClass().getName(), "setupObject()");
+
+		assert this.app != null;
+		assert this.data_stream_id != null;
+
 		_store = GlobalConfig.setupDataStorage(app, data_stream_id);
+		l.exiting(this.getClass().getName(), "setupObject()");
 	}
 
 	public Storage getStorage()
@@ -166,7 +141,6 @@ public class DataStream implements iDataStream, iState {
 		return null;
 	}
 
-
 	@Override
 	public String toString()
 	{
@@ -237,7 +211,7 @@ public class DataStream implements iDataStream, iState {
 			Logger.getLogger(DataStream.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
-		setupClass();
+		setupObject();
 
 //		_transport = (StreamTransport) in.readObject();
 //		_publisher = (PDCPublisher) in.readObject();
@@ -280,4 +254,39 @@ public class DataStream implements iDataStream, iState {
 		return stream;
 	}
 // </editor-fold>
+
+	private static final long serialVersionUID = 4028445614659553162L;
+
+	private static Logger l = Logger.getLogger(DataStream.class.getName());
+
+	/**
+	 * application associated with the DS
+	 */
+	public transient final iApplication app;
+
+	/**
+	 * id of the data stream
+	 */
+	public String data_stream_id;
+
+	/**
+	 * instance of class responsible for the storage of data
+	 */
+	protected transient Storage _store;
+
+	/**
+	 * instance of class responsible for transferring data
+	 * over the network
+	 */
+	protected StreamTransport _transport;
+
+	/**
+	 * publisher of the DS
+	 */
+	protected PDCPublisher _publisher = null;
+
+	/**
+	 * receivers of our DS
+	 */
+	protected List<PDCReceiver> _receivers = new ArrayList<PDCReceiver>();
 }

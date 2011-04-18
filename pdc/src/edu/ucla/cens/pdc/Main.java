@@ -115,7 +115,8 @@ public class Main {
 	{
 		GlobalConfig config;
 		int pdv_started = 0;
-		boolean restore = false;
+		boolean RESTORE_CONFIG = true;
+		final boolean SAVE_CONFIG = true;
 		PDVInstance test = null;
 		PublisherPublicKeyDigest digest = null;
 		KeyLocator key_locator = null;
@@ -157,23 +158,25 @@ public class Main {
 		org.ccnx.ccn.impl.support.Log.setDefaultLevel(
 						org.ccnx.ccn.impl.support.Log.FAC_ALL, Level.WARNING);
 
-		if (restore) {
+		if (RESTORE_CONFIG) {
 			config = GlobalConfig.loadState();
 			if (config == null) {
 				Log.warning("No stored configuration found setting up ...");
 				config = GlobalConfig.getInstance();
-				restore = false;
+				RESTORE_CONFIG = false;
 			}
 		} else
 			config = GlobalConfig.getInstance();
 
-		if (!restore)
+		if (!RESTORE_CONFIG)
 			setupPDV(pdv_started);
 
 		if (pdv_started > 0)
 			test = new PDVInstance();
 
 		Log.debug(config.toString());
+		if (SAVE_CONFIG)
+			config.storeStateRecursive();
 
 		KeyManager keymgr = config.getKeyManager();
 
@@ -183,7 +186,7 @@ public class Main {
 			fillDatabase(ds);
 			System.exit(0);
 		case 1:
-			if (!restore && digest != null && key_locator != null) {
+			if (!RESTORE_CONFIG && digest != null && key_locator != null) {
 				Log.debug("Setting up pdv2's key");
 				PDCReceiver receiver = config.getApplication("myapp").getDataStream(
 								"myds").getReceivers().iterator().next();

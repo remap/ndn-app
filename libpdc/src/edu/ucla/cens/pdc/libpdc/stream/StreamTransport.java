@@ -8,6 +8,7 @@ import com.mongodb.util.JSON;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
+import edu.ucla.cens.pdc.libpdc.core.PDCKeyManager;
 import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -76,13 +78,32 @@ public class StreamTransport implements Serializable {
 
 	private void setupClass()
 	{
+		GlobalConfig config = GlobalConfig.getInstance();
+		PDCKeyManager keymgr;
 		PublisherPublicKeyDigest digest;
-		assert _encryptor != null;
 
+		keymgr = config.getKeyManager();
+		assert keymgr != null;
+
+		assert _encryptor != null;
 		digest = _encryptor.getStreamKeyDigest();
+
+		//Sanity check
 		if (digest != null) {
+			final PublicKey public_key = keymgr.getPublicKey(digest);
+			final PrivateKey private_key = keymgr.getSigningKey(digest);
+
+			if (public_key == null || private_key == null) {
+				Log.error("!!! have keys in config but not in key manager !!!");
+				Log.debug(public_key);
+				Log.debug(private_key);
+				digest = null;
+			}
+		}
+
+		if (digest != null)
 			Log.info("Keys for " + _stream.data_stream_id + " loaded, hash: " + digest);
-		} else {
+		else {
 			Log.info("Generating keys for " + _stream.data_stream_id + "...");
 
 			digest = _encryptor.generateStreamKeys();
@@ -90,8 +111,6 @@ public class StreamTransport implements Serializable {
 				throw new Error("Unable to obtain stream keys");
 			else
 				Log.info("Generated keys for " + _stream.data_stream_id + ": " + digest);
-
-
 		}
 	}
 
