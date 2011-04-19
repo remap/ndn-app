@@ -5,6 +5,7 @@
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
             <name>libpdc</name>
             <source-roots>
+                <root id="src.gen.dir" name="Generated source files"/>
                 <root id="src.dir"/>
             </source-roots>
             <test-roots>

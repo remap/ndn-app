@@ -1,0 +1,41 @@
+//package edu.ucla.cens.pdc.libpdc;
+
+option java_package = "edu.ucla.cens.pdc.libpdc";
+option optimize_for = LITE_RUNTIME;
+
+message Application {
+	required string name = 1;
+	repeated string data_streams = 2;
+	optional int64 pull_rate = 16;
+}
+
+message DataStream {
+	required string data_stream_id = 1;
+	optional PDCPublisher publisher = 2;
+	repeated PDCReceiver receivers = 3;
+	optional StreamTransport transport = 17;
+}
+
+message StreamTransport {
+	required DataEncryptor encryptor = 1;
+}
+
+message DataEncryptor {
+	optional string encryption_key = 1;
+	optional string decryption_key = 2;
+	optional string stream_key_digest = 3;
+}
+
+message PDCNode {
+	required string uri = 1;
+	optional string key_digest = 2;
+	optional string key_locator = 3;
+}
+
+message PDCReceiver {
+	required PDCNode base = 1;
+}
+message PDCPublisher {
+	required PDCNode base = 1;
+	optional string stream_id = 2;
+}
