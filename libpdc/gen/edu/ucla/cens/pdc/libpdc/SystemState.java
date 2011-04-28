@@ -1495,13 +1495,13 @@ public final class SystemState {
   public interface DataEncryptorOrBuilder
       extends com.google.protobuf.MessageLiteOrBuilder {
     
-    // optional string encryption_key = 1;
+    // optional bytes encryption_key = 1;
     boolean hasEncryptionKey();
-    String getEncryptionKey();
+    com.google.protobuf.ByteString getEncryptionKey();
     
-    // optional string decryption_key = 2;
+    // optional bytes decryption_key = 2;
     boolean hasDecryptionKey();
-    String getDecryptionKey();
+    com.google.protobuf.ByteString getDecryptionKey();
     
     // optional string stream_key_digest = 3;
     boolean hasStreamKeyDigest();
@@ -1526,68 +1526,24 @@ public final class SystemState {
     }
     
     private int bitField0_;
-    // optional string encryption_key = 1;
+    // optional bytes encryption_key = 1;
     public static final int ENCRYPTION_KEY_FIELD_NUMBER = 1;
-    private Object encryptionKey_;
+    private com.google.protobuf.ByteString encryptionKey_;
     public boolean hasEncryptionKey() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
-    public String getEncryptionKey() {
-      Object ref = encryptionKey_;
-      if (ref instanceof String) {
-        return (String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
-        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
-          encryptionKey_ = s;
-        }
-        return s;
-      }
-    }
-    private com.google.protobuf.ByteString getEncryptionKeyBytes() {
-      Object ref = encryptionKey_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
-        encryptionKey_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+    public com.google.protobuf.ByteString getEncryptionKey() {
+      return encryptionKey_;
     }
     
-    // optional string decryption_key = 2;
+    // optional bytes decryption_key = 2;
     public static final int DECRYPTION_KEY_FIELD_NUMBER = 2;
-    private Object decryptionKey_;
+    private com.google.protobuf.ByteString decryptionKey_;
     public boolean hasDecryptionKey() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
-    public String getDecryptionKey() {
-      Object ref = decryptionKey_;
-      if (ref instanceof String) {
-        return (String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
-        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
-          decryptionKey_ = s;
-        }
-        return s;
-      }
-    }
-    private com.google.protobuf.ByteString getDecryptionKeyBytes() {
-      Object ref = decryptionKey_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
-        decryptionKey_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+    public com.google.protobuf.ByteString getDecryptionKey() {
+      return decryptionKey_;
     }
     
     // optional string stream_key_digest = 3;
@@ -1623,8 +1579,8 @@ public final class SystemState {
     }
     
     private void initFields() {
-      encryptionKey_ = "";
-      decryptionKey_ = "";
+      encryptionKey_ = com.google.protobuf.ByteString.EMPTY;
+      decryptionKey_ = com.google.protobuf.ByteString.EMPTY;
       streamKeyDigest_ = "";
     }
     private byte memoizedIsInitialized = -1;
@@ -1640,10 +1596,10 @@ public final class SystemState {
                         throws java.io.IOException {
       getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getEncryptionKeyBytes());
+        output.writeBytes(1, encryptionKey_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, getDecryptionKeyBytes());
+        output.writeBytes(2, decryptionKey_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, getStreamKeyDigestBytes());
@@ -1658,11 +1614,11 @@ public final class SystemState {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getEncryptionKeyBytes());
+          .computeBytesSize(1, encryptionKey_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, getDecryptionKeyBytes());
+          .computeBytesSize(2, decryptionKey_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
@@ -1768,9 +1724,9 @@ public final class SystemState {
       
       public Builder clear() {
         super.clear();
-        encryptionKey_ = "";
+        encryptionKey_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
-        decryptionKey_ = "";
+        decryptionKey_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
         streamKeyDigest_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1879,22 +1835,15 @@ public final class SystemState {
       
       private int bitField0_;
       
-      // optional string encryption_key = 1;
-      private Object encryptionKey_ = "";
+      // optional bytes encryption_key = 1;
+      private com.google.protobuf.ByteString encryptionKey_ = com.google.protobuf.ByteString.EMPTY;
       public boolean hasEncryptionKey() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
-      public String getEncryptionKey() {
-        Object ref = encryptionKey_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-          encryptionKey_ = s;
-          return s;
-        } else {
-          return (String) ref;
-        }
+      public com.google.protobuf.ByteString getEncryptionKey() {
+        return encryptionKey_;
       }
-      public Builder setEncryptionKey(String value) {
+      public Builder setEncryptionKey(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -1909,28 +1858,16 @@ public final class SystemState {
         
         return this;
       }
-      void setEncryptionKey(com.google.protobuf.ByteString value) {
-        bitField0_ |= 0x00000001;
-        encryptionKey_ = value;
-        
-      }
       
-      // optional string decryption_key = 2;
-      private Object decryptionKey_ = "";
+      // optional bytes decryption_key = 2;
+      private com.google.protobuf.ByteString decryptionKey_ = com.google.protobuf.ByteString.EMPTY;
       public boolean hasDecryptionKey() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
-      public String getDecryptionKey() {
-        Object ref = decryptionKey_;
-        if (!(ref instanceof String)) {
-          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-          decryptionKey_ = s;
-          return s;
-        } else {
-          return (String) ref;
-        }
+      public com.google.protobuf.ByteString getDecryptionKey() {
+        return decryptionKey_;
       }
-      public Builder setDecryptionKey(String value) {
+      public Builder setDecryptionKey(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -1944,11 +1881,6 @@ public final class SystemState {
         decryptionKey_ = getDefaultInstance().getDecryptionKey();
         
         return this;
-      }
-      void setDecryptionKey(com.google.protobuf.ByteString value) {
-        bitField0_ |= 0x00000002;
-        decryptionKey_ = value;
-        
       }
       
       // optional string stream_key_digest = 3;

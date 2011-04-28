@@ -21,8 +21,8 @@ message StreamTransport {
 }
 
 message DataEncryptor {
-	optional string encryption_key = 1;
-	optional string decryption_key = 2;
+	optional bytes encryption_key = 1;
+	optional bytes decryption_key = 2;
 	optional string stream_key_digest = 3;
 }
 
