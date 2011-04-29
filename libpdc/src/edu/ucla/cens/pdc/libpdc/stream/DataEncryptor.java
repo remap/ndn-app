@@ -20,7 +20,6 @@ import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -29,8 +28,6 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -54,9 +51,7 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  *
  * @author Derek Kulinski
  */
-public class DataEncryptor implements Serializable {
-	private static final long serialVersionUID = -8548399076599734736L;
-
+public class DataEncryptor {
 	private transient BufferedBlockCipher _cipher;
 
 	private byte[] _encrypt_key;

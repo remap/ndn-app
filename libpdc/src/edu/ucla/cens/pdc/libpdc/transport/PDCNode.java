@@ -12,7 +12,6 @@ import edu.ucla.cens.pdc.libpdc.iBSONExportable;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
-import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,7 +25,7 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  * Stores information about every node we communicate with
  * @author Derek Kulinski
  */
-public class PDCNode implements Serializable {
+public class PDCNode {
 	public PDCNode(String uri)
 					throws MalformedContentNameStringException
 	{
@@ -160,8 +159,6 @@ public class PDCNode implements Serializable {
 
 		return builder.build();
 	}
-
-	private static final long serialVersionUID = -6962419725928576508L;
 
 	/**
 	 * URI of the node

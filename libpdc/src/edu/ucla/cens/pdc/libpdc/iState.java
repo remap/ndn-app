@@ -5,15 +5,12 @@
 package edu.ucla.cens.pdc.libpdc;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 
 /**
  *
  * @author Derek Kulinski
  */
-public interface iState extends Serializable {
+public interface iState {
 	/**
 	 * Returns name of the group in which the element belongs
 	 * @return name of the group
@@ -26,16 +23,10 @@ public interface iState extends Serializable {
 	 */
 	public String getStateKey();
 
-	public void postLoadState(ObjectInputStream in)
-					throws IOException, ClassNotFoundException;
-
 	public void storeState()
 					throws IOException;
 
 	public void storeStateRecursive()
-					throws IOException;
-
-	public void postStoreState(ObjectOutputStream out)
 					throws IOException;
 
 	/*

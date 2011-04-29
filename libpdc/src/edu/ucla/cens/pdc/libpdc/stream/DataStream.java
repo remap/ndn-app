@@ -4,11 +4,9 @@
  */
 package edu.ucla.cens.pdc.libpdc.stream;
 
-import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
-import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
@@ -16,11 +14,7 @@ import edu.ucla.cens.pdc.libpdc.iState;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -36,54 +30,38 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski
  */
 public class DataStream implements iDataStream, iState {
-	public DataStream(CCNHandle handle, iApplication app, String data_stream_id)
+	public DataStream(CCNHandle handle, iApplication app, String name)
+					throws IOException
 	{
-		l.log(Level.FINER, "Generating new data stream {0} for {1}",
-						new Object[]{data_stream_id, app.getAppName()});
-
-		this.app = app;
-		this.data_stream_id = data_stream_id;
-
-		setupObject();
-
-		try {
-			this._transport = new StreamTransport(handle, this);
-		}
-		catch (PDCTransmissionException ex) {
-			throw new Error("Unable to instantiate transmission class", ex);
-		}
+		this(handle, app, name, false);
 	}
 
-	public DataStream(iApplication app, String name)
+	public DataStream(CCNHandle handle, iApplication app, String name,
+					boolean restore)
 					throws IOException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
-		ByteArrayInputStream byte_in;
+		byte[] byte_in;
 		SystemState.DataStream state;
-		CCNHandle handle;
 
-		//XXX: Can I get rid of this?
-		handle = CCNHandle.getHandle();
+		if (restore) {
+			byte_in = config.loadConfig("datastream_".concat(app.getAppName()), name);
 
-		//XXX: modify it later so no casting needed
-		byte_in = (ByteArrayInputStream) config.loadConfig("datastream_".concat(app.
-						getAppName()), name);
+			state = SystemState.DataStream.parseFrom(byte_in);
 
-		state = SystemState.DataStream.parseFrom(byte_in);
+			this.app = app;
+			this.data_stream_id = state.getDataStreamId();
+		} else {
+			l.log(Level.FINER, "Generating new data stream {0} for {1}",
+							new Object[]{data_stream_id, app.getAppName()});
 
-		this.app = app;
-		this.data_stream_id = state.getDataStreamId();
-		setupObject();
-
-		try {
-			this._transport = new StreamTransport(handle, this, state.getTransport());
+			this.app = app;
+			this.data_stream_id = name;
 		}
-		catch (PDCException ex) {
-			throw new Error("Unable to instantiate transmission class", ex);
-		}
+		setupObject(handle);
 	}
 
-	protected final void setupObject()
+	protected final void setupObject(CCNHandle handle)
 	{
 		l.entering(this.getClass().getName(), "setupObject()");
 
@@ -92,6 +70,14 @@ public class DataStream implements iDataStream, iState {
 		assert !data_stream_id.startsWith("/") : "stream id: " + data_stream_id;
 
 		_store = GlobalConfig.setupDataStorage(app, data_stream_id);
+
+		try {
+			this._transport = new StreamTransport(handle, this);
+		}
+		catch (PDCTransmissionException ex) {
+			throw new Error("Unable to instantiate transmission class", ex);
+		}
+
 		l.exiting(this.getClass().getName(), "setupObject()");
 	}
 
@@ -191,63 +177,6 @@ public class DataStream implements iDataStream, iState {
 	}
 
 // <editor-fold defaultstate="collapsed" desc="serialization code">
-	private void writeObject(ObjectOutputStream out)
-					throws IOException
-	{
-		out.defaultWriteObject();
-
-//		out.writeUTF(data_stream_id);
-//		out.writeObject(_transport);
-//		out.writeObject(_publisher);
-//		out.writeObject(_receivers);
-//		out.writeObject(_stream_keys);
-	}
-
-	public void postStoreState(ObjectOutputStream out)
-					throws IOException
-	{
-		out.writeUTF(app.getAppName());
-	}
-
-	private void readObject(ObjectInputStream in)
-					throws IOException, ClassNotFoundException
-	{
-		in.defaultReadObject();
-	}
-
-	@SuppressWarnings("unchecked")
-	public void postLoadState(ObjectInputStream in)
-					throws IOException, ClassNotFoundException
-	{
-		GlobalConfig config = GlobalConfig.getInstance();
-		String app_name;
-		Application tmp_app;
-
-		app_name = in.readUTF();
-
-		tmp_app = config.getApplication(app_name);
-		if (tmp_app == null)
-			throw new IOException("Application " + app_name + " not found");
-
-		tmp_app.addDataStream(this);
-
-		try {
-			Field fld_app = DataStream.class.getDeclaredField("app");
-			fld_app.setAccessible(true);
-			fld_app.set(this, tmp_app);
-		}
-		catch (Exception ex) {
-			Logger.getLogger(DataStream.class.getName()).log(Level.SEVERE, null, ex);
-		}
-
-		setupObject();
-
-//		_transport = (StreamTransport) in.readObject();
-//		_publisher = (PDCPublisher) in.readObject();
-//		_receivers = (List<PDCReceiver>) in.readObject();
-//		_stream_keys = (KeyPair) in.readObject();
-	}
-
 	public String getStateGroupName()
 	{
 		return "datastream_" + app.getAppName();
@@ -272,17 +201,6 @@ public class DataStream implements iDataStream, iState {
 		storeState();
 	}
 
-	public static DataStream loadState(String app_name, String ds_name)
-					throws IOException
-	{
-		DataStream stream;
-		GlobalConfig config = GlobalConfig.getInstance();
-
-		stream = (DataStream) config.loadConfig("datastream_" + app_name, ds_name);
-
-		return stream;
-	}
-
 	SystemState.DataStream getObjectState()
 	{
 		SystemState.DataStream.Builder builder = SystemState.DataStream.newBuilder();
@@ -305,9 +223,7 @@ public class DataStream implements iDataStream, iState {
 	}
 // </editor-fold>
 
-	private static final long serialVersionUID = 4028445614659553162L;
-
-	private static Logger l = Logger.getLogger(DataStream.class.getName());
+	private static final Logger l = Logger.getLogger(DataStream.class.getName());
 
 	/**
 	 * application associated with the DS

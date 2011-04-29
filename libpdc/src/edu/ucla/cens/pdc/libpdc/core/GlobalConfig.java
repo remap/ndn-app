@@ -12,22 +12,14 @@ import edu.ucla.cens.pdc.libpdc.iState;
 import edu.ucla.cens.pdc.libpdc.stream.Storage;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
-import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
@@ -45,11 +37,12 @@ public class GlobalConfig implements iState {
 //		setupObject();
 	}
 
-	@SuppressWarnings("LeakingThisInConstructor")
 	private GlobalConfig(SystemState.GlobalConfig state)
 					throws IOException
 	{
+		assert state != null;
 		assert state.hasRoot();
+
 		try {
 			_root = ContentName.fromNative(state.getRoot());
 		}
@@ -111,6 +104,10 @@ public class GlobalConfig implements iState {
 
 	}
 
+	/**
+	 * Provide class responsible for handling data storage
+	 * @param name class name
+	 */
 	public static void setDataStorage(Class<? extends Storage> name)
 	{
 		if (_data_storage_class != null)
@@ -124,6 +121,7 @@ public class GlobalConfig implements iState {
 		Constructor<? extends Storage> constructor;
 		Storage store;
 
+		assert app != null;
 		assert _data_storage_class != null;
 
 		try {
@@ -138,6 +136,9 @@ public class GlobalConfig implements iState {
 		return store;
 	}
 
+	/**
+	 * Provide class responsible for handling configuration storage
+	 */
 	public static void setConfigStorage(Class<? extends iConfigStorage> name)
 	{
 		if (_config_storage_class != null)
@@ -250,6 +251,10 @@ public class GlobalConfig implements iState {
 		return result;
 	}
 
+	/**
+	 * Return Key Manager
+	 * @return Key Manager
+	 */
 	public PDCKeyManager getKeyManager()
 	{
 		return _key_manager;
@@ -260,35 +265,10 @@ public class GlobalConfig implements iState {
 		this._key_manager = key_manager;
 	}
 
-	public Object loadConfig(String group, String name)
+	public byte[] loadConfig(String group, String name)
 					throws IOException
 	{
-		//XXX: remove this kludge
-		if (group.startsWith("datastream_") || group.equals("applications"))
-			return _config_storage.loadEntry(group, name);
-		else {
-			ObjectInputStream obj_in;
-			ByteArrayInputStream byte_in;
-			iState result;
-
-			byte_in = _config_storage.loadEntry(group, name);
-
-			try {
-				obj_in = new ObjectInputStream(byte_in);
-				byte_in.close();
-				result = (iState) obj_in.readObject();
-				result.postLoadState(obj_in);
-				obj_in.close();
-
-				return result;
-			}
-			catch (ClassNotFoundException ex) {
-				throw new IOException("Invalid data", ex);
-			}
-			catch (IOException ex) {
-				throw new IOException("Problem parsing data", ex);
-			}
-		}
+		return _config_storage.loadEntry(group, name);
 	}
 
 	public void saveConfig(iState object)
@@ -327,69 +307,6 @@ public class GlobalConfig implements iState {
 	}
 
 // <editor-fold defaultstate="collapsed" desc="class serialization">
-	private void writeObject(ObjectOutputStream out)
-					throws IOException
-	{
-		out.defaultWriteObject();
-
-		out.writeUTF(_root.toURIString());
-	}
-
-	public void postStoreState(ObjectOutputStream out)
-					throws IOException
-	{
-		int app_count = _applications.size();
-
-		out.writeInt(app_count);
-		for (String name : _applications.keySet()) {
-			Log.debug("Saving app: " + name);
-			out.writeUTF(name);
-		}
-	}
-
-	private void readObject(ObjectInputStream in)
-					throws IOException, ClassNotFoundException
-	{
-		in.defaultReadObject();
-
-		try {
-			_root = ContentName.fromURI(in.readUTF());
-		}
-		catch (MalformedContentNameStringException ex) {
-			throw new IOException("Error while parsing URI", ex);
-		}
-
-		_instance = this;
-		_config_storage = setupConfigStorage();
-
-		// Ugh! Force the compiler to do what we want.
-		try {
-			Field fld = GlobalConfig.class.getDeclaredField("_applications");
-			fld.setAccessible(true);
-			fld.set(this, new HashMap<String, Application>());
-		}
-		catch (Exception ex) {
-			throw new Error("Unable to override access restrictions.", ex);
-		}
-	}
-
-	public void postLoadState(ObjectInputStream in)
-					throws IOException
-	{
-		int app_count = in.readInt();
-
-		setupObject();
-
-		for (int i = 0; i < app_count; i++) {
-			String name = in.readUTF();
-			Log.debug("app: " + name);
-
-			// the loadState should also add applications to our list at
-			// the right time
-			Application.loadState(name);
-		}
-	}
-
 	public String getStateGroupName()
 	{
 		return "main";
@@ -418,7 +335,7 @@ public class GlobalConfig implements iState {
 	public static GlobalConfig loadState()
 					throws IOException
 	{
-		ByteArrayInputStream byte_in;
+		byte[] byte_in;
 		SystemState.GlobalConfig state;
 
 		// Bootstrapping the process
@@ -428,13 +345,8 @@ public class GlobalConfig implements iState {
 		if (byte_in == null)
 			return null;
 
-		try {
-			state = SystemState.GlobalConfig.parseFrom(byte_in);
-			return new GlobalConfig(state);
-		}
-		finally {
-			byte_in.close();
-		}
+		state = SystemState.GlobalConfig.parseFrom(byte_in);
+		return new GlobalConfig(state);
 	}
 
 	SystemState.GlobalConfig getObjectState()
@@ -456,8 +368,6 @@ public class GlobalConfig implements iState {
 		return getObjectState().toByteArray();
 	}
 // </editor-fold>
-
-	private static final long serialVersionUID = -7308017340474869649L;
 
 	private static GlobalConfig _instance;
 

@@ -9,10 +9,7 @@ import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -23,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
@@ -32,17 +30,23 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  * @author Derek Kulinski
  */
 public class Application implements iApplication, iState {
+	public Application(String name)
+					throws IOException
+	{
+		this(name, false);
+	}
+
 	public Application(String name, boolean restore)
 					throws IOException
 	{
 		if (restore) {
 			GlobalConfig config = GlobalConfig.getInstance();
-			ByteArrayInputStream byte_in;
+			byte[] byte_in;
 			SystemState.Application state;
+			CCNHandle handle = CCNHandle.getHandle();
 
-			byte_in = (ByteArrayInputStream) config.loadConfig("applications", name);
+			byte_in = config.loadConfig("applications", name);
 			state = SystemState.Application.parseFrom(byte_in);
-			byte_in.close();
 
 			this.name = state.getName();
 
@@ -53,7 +57,7 @@ public class Application implements iApplication, iState {
 			setupObject();
 
 			for (String stream_name : state.getDataStreamsList()) {
-				DataStream stream = new DataStream(this, stream_name);
+				DataStream stream = new DataStream(handle, this, stream_name, true);
 				addDataStream(stream);
 			}
 		} else {
@@ -77,6 +81,10 @@ public class Application implements iApplication, iState {
 		_to_pull = new LinkedHashSet<String>();
 	}
 
+	/**
+	 * Returns name of the application
+	 * @return application name
+	 */
 	public String getAppName()
 	{
 		return name;
@@ -216,49 +224,6 @@ public class Application implements iApplication, iState {
 	}
 
 // <editor-fold defaultstate="collapsed" desc="serialization code">
-	private void writeObject(ObjectOutputStream out)
-					throws IOException
-	{
-		out.defaultWriteObject();
-	}
-
-	public void postStoreState(ObjectOutputStream out)
-					throws IOException
-	{
-		int ds_count = _data_stream.size();
-		out.writeInt(ds_count);
-
-		for (String ds_name : _data_stream.keySet())
-			out.writeUTF(ds_name);
-	}
-
-	private void readObject(ObjectInputStream in)
-					throws IOException, ClassNotFoundException
-	{
-		in.defaultReadObject();
-
-		setupObject();
-	}
-
-	public void postLoadState(ObjectInputStream in)
-					throws IOException
-	{
-		GlobalConfig config = GlobalConfig.getInstance();
-		int ds_count;
-
-		config.addApplication(this);
-
-		ds_count = in.readInt();
-
-		for (int i = 0; i < ds_count; i++) {
-			String ds_name = in.readUTF();
-			DataStream stream = DataStream.loadState(name, ds_name);
-			assert stream != null;
-
-			_data_stream.put(ds_name, stream);
-		}
-	}
-
 	public String getStateGroupName()
 	{
 		return "applications";
@@ -286,17 +251,6 @@ public class Application implements iApplication, iState {
 		storeState();
 	}
 
-	public static Application loadState(String name)
-					throws IOException
-	{
-		Application app;
-		GlobalConfig config = GlobalConfig.getInstance();
-
-		app = (Application) config.loadConfig("applications", name);
-
-		return app;
-	}
-
 	SystemState.Application getObjectState()
 	{
 		SystemState.Application.Builder builder = SystemState.Application.newBuilder();
@@ -313,8 +267,6 @@ public class Application implements iApplication, iState {
 		return getObjectState().toByteArray();
 	}
 // </editor-fold>
-
-	private static final long serialVersionUID = -5652787850695477611L;
 
 	/**
 	 * Identifier for the application

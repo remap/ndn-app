@@ -11,13 +11,8 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
-import edu.ucla.cens.pdc.libpdc.iState;
 import edu.ucla.cens.pdc.libpdc.iConfigStorage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.UnknownHostException;
 
 /**
@@ -66,7 +61,7 @@ final public class MongoConfigStorage implements iConfigStorage {
 		_prefix = prefix;
 	}
 
-	public ByteArrayInputStream loadEntry(String group, String name)
+	public byte[] loadEntry(String group, String name)
 					throws IOException
 	{
 		boolean exists;
@@ -91,7 +86,7 @@ final public class MongoConfigStorage implements iConfigStorage {
 		if (db_response == null)
 			return null;
 
-		return new ByteArrayInputStream((byte[]) db_response.get("object"));
+		return (byte[]) db_response.get("object");
 	}
 
 	public void saveEntry(String obj_group, String obj_key, byte[] byte_out)

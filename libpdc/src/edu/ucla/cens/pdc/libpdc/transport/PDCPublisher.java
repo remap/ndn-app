@@ -59,7 +59,5 @@ public class PDCPublisher extends PDCNode {
 		return builder.build();
 	}
 
-	private static final long serialVersionUID = -7537161887405500608L;
-
 	private String _stream_id;
 }

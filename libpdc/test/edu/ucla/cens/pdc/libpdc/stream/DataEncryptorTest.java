@@ -7,8 +7,6 @@ package edu.ucla.cens.pdc.libpdc.stream;
 import edu.ucla.cens.pdc.libpdc.core.PDCKeyManager;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
@@ -293,7 +291,7 @@ public class DataEncryptorTest {
 	}
 
 	public static class TestConfigStorage implements iConfigStorage {
-		public ByteArrayInputStream loadEntry(String group, String name)
+		public byte[] loadEntry(String group, String name)
 						throws IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");

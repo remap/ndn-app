@@ -21,7 +21,6 @@ import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -44,7 +43,7 @@ import org.ccnx.ccn.protocol.SignedInfo;
  *
  * @author Derek Kulinski
  */
-public class StreamTransport implements Serializable {
+public class StreamTransport {
 	public StreamTransport(CCNHandle handle, DataStream stream)
 					throws PDCTransmissionException
 	{
@@ -516,8 +515,6 @@ public class StreamTransport implements Serializable {
 		return builder.build();
 	}
 // </editor-fold>
-
-	private static final long serialVersionUID = -178853391793959411L;
 
 	final public ContentName base_name;
 
