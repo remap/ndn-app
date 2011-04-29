@@ -8,6 +8,435 @@ public final class SystemState {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistryLite registry) {
   }
+  public interface GlobalConfigOrBuilder
+      extends com.google.protobuf.MessageLiteOrBuilder {
+    
+    // optional string root = 1;
+    boolean hasRoot();
+    String getRoot();
+    
+    // repeated string applications = 2;
+    java.util.List<String> getApplicationsList();
+    int getApplicationsCount();
+    String getApplications(int index);
+  }
+  public static final class GlobalConfig extends
+      com.google.protobuf.GeneratedMessageLite
+      implements GlobalConfigOrBuilder {
+    // Use GlobalConfig.newBuilder() to construct.
+    private GlobalConfig(Builder builder) {
+      super(builder);
+    }
+    private GlobalConfig(boolean noInit) {}
+    
+    private static final GlobalConfig defaultInstance;
+    public static GlobalConfig getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public GlobalConfig getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    private int bitField0_;
+    // optional string root = 1;
+    public static final int ROOT_FIELD_NUMBER = 1;
+    private Object root_;
+    public boolean hasRoot() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public String getRoot() {
+      Object ref = root_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          root_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getRootBytes() {
+      Object ref = root_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        root_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
+    // repeated string applications = 2;
+    public static final int APPLICATIONS_FIELD_NUMBER = 2;
+    private com.google.protobuf.LazyStringList applications_;
+    public java.util.List<String>
+        getApplicationsList() {
+      return applications_;
+    }
+    public int getApplicationsCount() {
+      return applications_.size();
+    }
+    public String getApplications(int index) {
+      return applications_.get(index);
+    }
+    
+    private void initFields() {
+      root_ = "";
+      applications_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      memoizedIsInitialized = 1;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getRootBytes());
+      }
+      for (int i = 0; i < applications_.size(); i++) {
+        output.writeBytes(2, applications_.getByteString(i));
+      }
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getRootBytes());
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < applications_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(applications_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getApplicationsList().size();
+      }
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    @java.lang.Override
+    protected Object writeReplace() throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
+    public static edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageLite.Builder<
+          edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig, Builder>
+        implements edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfigOrBuilder {
+      // Construct using edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+      
+      private void maybeForceBuilderInitialization() {
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+      
+      public Builder clear() {
+        super.clear();
+        root_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        applications_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig getDefaultInstanceForType() {
+        return edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig.getDefaultInstance();
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig build() {
+        edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+      
+      private edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return result;
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig buildPartial() {
+        edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig result = new edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.root_ = root_;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          applications_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              applications_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.applications_ = applications_;
+        result.bitField0_ = to_bitField0_;
+        return result;
+      }
+      
+      public Builder mergeFrom(edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig other) {
+        if (other == edu.ucla.cens.pdc.libpdc.SystemState.GlobalConfig.getDefaultInstance()) return this;
+        if (other.hasRoot()) {
+          setRoot(other.getRoot());
+        }
+        if (!other.applications_.isEmpty()) {
+          if (applications_.isEmpty()) {
+            applications_ = other.applications_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureApplicationsIsMutable();
+            applications_.addAll(other.applications_);
+          }
+          
+        }
+        return this;
+      }
+      
+      public final boolean isInitialized() {
+        return true;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              
+              return this;
+            default: {
+              if (!parseUnknownField(input, extensionRegistry, tag)) {
+                
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              root_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ensureApplicationsIsMutable();
+              applications_.add(input.readBytes());
+              break;
+            }
+          }
+        }
+      }
+      
+      private int bitField0_;
+      
+      // optional string root = 1;
+      private Object root_ = "";
+      public boolean hasRoot() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      public String getRoot() {
+        Object ref = root_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          root_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setRoot(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        root_ = value;
+        
+        return this;
+      }
+      public Builder clearRoot() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        root_ = getDefaultInstance().getRoot();
+        
+        return this;
+      }
+      void setRoot(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000001;
+        root_ = value;
+        
+      }
+      
+      // repeated string applications = 2;
+      private com.google.protobuf.LazyStringList applications_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureApplicationsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          applications_ = new com.google.protobuf.LazyStringArrayList(applications_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+      public java.util.List<String>
+          getApplicationsList() {
+        return java.util.Collections.unmodifiableList(applications_);
+      }
+      public int getApplicationsCount() {
+        return applications_.size();
+      }
+      public String getApplications(int index) {
+        return applications_.get(index);
+      }
+      public Builder setApplications(
+          int index, String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureApplicationsIsMutable();
+        applications_.set(index, value);
+        
+        return this;
+      }
+      public Builder addApplications(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureApplicationsIsMutable();
+        applications_.add(value);
+        
+        return this;
+      }
+      public Builder addAllApplications(
+          java.lang.Iterable<String> values) {
+        ensureApplicationsIsMutable();
+        super.addAll(values, applications_);
+        
+        return this;
+      }
+      public Builder clearApplications() {
+        applications_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        
+        return this;
+      }
+      void addApplications(com.google.protobuf.ByteString value) {
+        ensureApplicationsIsMutable();
+        applications_.add(value);
+        
+      }
+      
+      // @@protoc_insertion_point(builder_scope:GlobalConfig)
+    }
+    
+    static {
+      defaultInstance = new GlobalConfig(true);
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:GlobalConfig)
+  }
+  
   public interface ApplicationOrBuilder
       extends com.google.protobuf.MessageLiteOrBuilder {
     

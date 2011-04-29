@@ -3,6 +3,11 @@
 option java_package = "edu.ucla.cens.pdc.libpdc";
 option optimize_for = LITE_RUNTIME;
 
+message GlobalConfig {
+	optional string root = 1;
+	repeated string applications = 2;
+}
+
 message Application {
 	required string name = 1;
 	repeated string data_streams = 2;
