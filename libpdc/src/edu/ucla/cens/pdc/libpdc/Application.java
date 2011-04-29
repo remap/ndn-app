@@ -9,6 +9,7 @@ import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -31,33 +32,34 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  * @author Derek Kulinski
  */
 public class Application implements iApplication, iState {
-	private static final long serialVersionUID = -5652787850695477611L;
-
-	/**
-	 * Identifier for the application
-	 */
-	public final String name;
-
-	private transient ContentName _base_uri;
-
-	private transient Map<String, DataStream> _data_stream;
-
-	private transient Set<String> _to_pull;
-
-	private transient final ScheduledExecutorService _scheduler = Executors.
-					newSingleThreadScheduledExecutor();
-
-	private long _pull_rate = 0;
-
-	/**
-	 * keys associated with our application
-	 */
-	protected PublisherPublicKeyDigest _key_digest;
-
-	public Application(String name)
+	public Application(String name, boolean restore)
+					throws IOException
 	{
-		this.name = name;
-		setupObject();
+		if (restore) {
+			GlobalConfig config = GlobalConfig.getInstance();
+			ByteArrayInputStream byte_in;
+			SystemState.Application state;
+
+			byte_in = (ByteArrayInputStream) config.loadConfig("applications", name);
+			state = SystemState.Application.parseFrom(byte_in);
+			byte_in.close();
+
+			this.name = state.getName();
+
+			assert name.equals(this.name) : "Saved state name differs: " + name
+							+ " vs " + this.name;
+
+			this._pull_rate = state.getPullRate();
+			setupObject();
+
+			for (String stream_name : state.getDataStreamsList()) {
+				DataStream stream = new DataStream(this, stream_name);
+				addDataStream(stream);
+			}
+		} else {
+			this.name = name;
+			setupObject();
+		}
 	}
 
 	private void setupObject()
@@ -100,7 +102,7 @@ public class Application implements iApplication, iState {
 		return _data_stream.get(id);
 	}
 
-	synchronized public DataStream addDataStream(DataStream ds)
+	public final synchronized DataStream addDataStream(DataStream ds)
 	{
 		return _data_stream.put(ds.data_stream_id, ds);
 	}
@@ -294,5 +296,44 @@ public class Application implements iApplication, iState {
 
 		return app;
 	}
+
+	SystemState.Application getObjectState()
+	{
+		SystemState.Application.Builder builder = SystemState.Application.newBuilder();
+
+		builder.setName(name);
+		builder.addAllDataStreams(_data_stream.keySet());
+		builder.setPullRate(_pull_rate);
+
+		return builder.build();
+	}
+
+	public byte[] stateToByteArray()
+	{
+		return getObjectState().toByteArray();
+	}
 // </editor-fold>
+
+	private static final long serialVersionUID = -5652787850695477611L;
+
+	/**
+	 * Identifier for the application
+	 */
+	public final String name;
+
+	private transient ContentName _base_uri;
+
+	private transient Map<String, DataStream> _data_stream;
+
+	private transient Set<String> _to_pull;
+
+	private transient final ScheduledExecutorService _scheduler = Executors.
+					newSingleThreadScheduledExecutor();
+
+	private long _pull_rate = 0;
+
+	/**
+	 * keys associated with our application
+	 */
+	protected PublisherPublicKeyDigest _key_digest;
 }

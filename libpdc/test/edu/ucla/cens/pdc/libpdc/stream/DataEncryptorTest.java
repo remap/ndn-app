@@ -299,8 +299,7 @@ public class DataEncryptorTest {
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
 
-		public void saveEntry(String obj_group, String obj_key,
-						ByteArrayOutputStream byte_out)
+		public void saveEntry(String obj_group, String obj_key, byte[] byte_out)
 						throws IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");

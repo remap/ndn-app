@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc.transport;
 
+import edu.ucla.cens.pdc.libpdc.SystemState;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
@@ -19,4 +20,13 @@ public class PDCReceiver extends PDCNode {
 		super(uri);
 	}
 
+	@Override
+	public SystemState.PDCReceiver getObjectState()
+	{
+		SystemState.PDCReceiver.Builder builder = SystemState.PDCReceiver.newBuilder();
+
+		builder.setBase((SystemState.PDCNode) super.getObjectState());
+
+		return builder.build();
+	}
 }

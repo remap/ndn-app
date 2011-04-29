@@ -17,7 +17,7 @@ public interface iConfigStorage {
 					throws IOException;
 
 	public void saveEntry(String obj_group, String obj_key,
-					ByteArrayOutputStream byte_out)
+					byte[] byte_out)
 					throws IOException;
 
 	public void removeEntry(String group, String name)

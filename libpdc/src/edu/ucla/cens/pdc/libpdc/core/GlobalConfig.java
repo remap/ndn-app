@@ -5,6 +5,7 @@
 package edu.ucla.cens.pdc.libpdc.core;
 
 import edu.ucla.cens.pdc.libpdc.Application;
+import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iConfigStorage;
 import edu.ucla.cens.pdc.libpdc.iState;
@@ -25,6 +26,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
@@ -40,6 +43,28 @@ public class GlobalConfig implements iState {
 		_config_storage = setupConfigStorage();
 		//FIXME: currently we do the setup after setting the root
 //		setupObject();
+	}
+
+	@SuppressWarnings("LeakingThisInConstructor")
+	private GlobalConfig(SystemState.GlobalConfig state)
+					throws IOException
+	{
+		assert state.hasRoot();
+		try {
+			_root = ContentName.fromNative(state.getRoot());
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to parse previously stored root", ex);
+		}
+
+		_config_storage = setupConfigStorage();
+		_instance = this;
+		setupObject();
+
+		for (String app_name : state.getApplicationsList()) {
+			Application app = new Application(app_name, true);
+			addApplication(app);
+		}
 	}
 
 	private void setupObject()
@@ -163,7 +188,7 @@ public class GlobalConfig implements iState {
 	 * Add application to the config store
 	 * @param app
 	 */
-	public synchronized void addApplication(Application app)
+	public final synchronized void addApplication(Application app)
 	{
 		assert _root != null : "Root wasn't set";
 
@@ -216,7 +241,7 @@ public class GlobalConfig implements iState {
 			if (!publisher.uri.equals(publisher_uri))
 				continue;
 
-			if (!publisher.getStream_id().equals(ds_id))
+			if (!publisher.getStreamId().equals(ds_id))
 				continue;
 
 			result = ds;
@@ -238,45 +263,39 @@ public class GlobalConfig implements iState {
 	public Object loadConfig(String group, String name)
 					throws IOException
 	{
-		ObjectInputStream obj_in;
-		ByteArrayInputStream byte_in;
-		iState result;
+		//XXX: remove this kludge
+		if (group.startsWith("datastream_") || group.equals("applications"))
+			return _config_storage.loadEntry(group, name);
+		else {
+			ObjectInputStream obj_in;
+			ByteArrayInputStream byte_in;
+			iState result;
 
-		byte_in = _config_storage.loadEntry(group, name);
+			byte_in = _config_storage.loadEntry(group, name);
 
-		try {
-			obj_in = new ObjectInputStream(byte_in);
-			byte_in.close();
-			result = (iState) obj_in.readObject();
-			result.postLoadState(obj_in);
-			obj_in.close();
+			try {
+				obj_in = new ObjectInputStream(byte_in);
+				byte_in.close();
+				result = (iState) obj_in.readObject();
+				result.postLoadState(obj_in);
+				obj_in.close();
 
-			return result;
-		}
-		catch (ClassNotFoundException ex) {
-			throw new IOException("Invalid data", ex);
-		}
-		catch (IOException ex) {
-			throw new IOException("Problem parsing data", ex);
+				return result;
+			}
+			catch (ClassNotFoundException ex) {
+				throw new IOException("Invalid data", ex);
+			}
+			catch (IOException ex) {
+				throw new IOException("Problem parsing data", ex);
+			}
 		}
 	}
 
 	public void saveConfig(iState object)
 					throws IOException
 	{
-		ByteArrayOutputStream byte_out;
-		ObjectOutputStream obj_out;
-
-		byte_out = new ByteArrayOutputStream(1024);
-		obj_out = new ObjectOutputStream(byte_out);
-		obj_out.writeObject(object);
-		object.postStoreState(obj_out);
-		obj_out.close();
-
 		_config_storage.saveEntry(object.getStateGroupName(), object.getStateKey(),
-						byte_out);
-
-		byte_out.close();
+						object.stateToByteArray());
 	}
 
 	/**
@@ -399,32 +418,42 @@ public class GlobalConfig implements iState {
 	public static GlobalConfig loadState()
 					throws IOException
 	{
-		ObjectInputStream obj_in;
 		ByteArrayInputStream byte_in;
-		GlobalConfig config;
+		SystemState.GlobalConfig state;
 
 		// Bootstrapping the process
-		iConfigStorage storage = GlobalConfig.setupConfigStorage();
+		final iConfigStorage storage = GlobalConfig.setupConfigStorage();
 
 		byte_in = storage.loadEntry("main", "global");
 		if (byte_in == null)
 			return null;
 
-		obj_in = new ObjectInputStream(byte_in);
-		byte_in.close();
-
 		try {
-			config = (GlobalConfig) obj_in.readObject();
-			config.postLoadState(obj_in);
-
-			return config;
-		}
-		catch (ClassNotFoundException ex) {
-			throw new IOException("Unable to initialize the object", ex);
+			state = SystemState.GlobalConfig.parseFrom(byte_in);
+			return new GlobalConfig(state);
 		}
 		finally {
-			obj_in.close();
+			byte_in.close();
 		}
+	}
+
+	SystemState.GlobalConfig getObjectState()
+	{
+		SystemState.GlobalConfig.Builder builder = SystemState.GlobalConfig.
+						newBuilder();
+
+		if (_root == null)
+			throw new RuntimeException("Root is not set");
+
+		builder.setRoot(_root.toString());
+		builder.addAllApplications(_applications.keySet());
+
+		return builder.build();
+	}
+
+	public byte[] stateToByteArray()
+	{
+		return getObjectState().toByteArray();
 	}
 // </editor-fold>
 

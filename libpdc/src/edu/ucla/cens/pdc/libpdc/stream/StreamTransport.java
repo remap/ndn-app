@@ -6,12 +6,14 @@ package edu.ucla.cens.pdc.libpdc.stream;
 
 import com.mongodb.util.JSON;
 import edu.ucla.cens.pdc.libpdc.Constants;
+import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.core.PDCKeyManager;
 import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
@@ -43,18 +45,6 @@ import org.ccnx.ccn.protocol.SignedInfo;
  * @author Derek Kulinski
  */
 public class StreamTransport implements Serializable {
-	private static final long serialVersionUID = -178853391793959411L;
-
-	final public ContentName base_name;
-
-	final private DataStream _stream;
-
-	final private DataEncryptor _encryptor;
-
-	private transient CCNHandle _ccn_handle;
-
-	private transient int _invalid_key_retry = 1;
-
 	public StreamTransport(CCNHandle handle, DataStream stream)
 					throws PDCTransmissionException
 	{
@@ -71,6 +61,28 @@ public class StreamTransport implements Serializable {
 		catch (MalformedContentNameStringException ex) {
 			throw new PDCTransmissionException(
 							"Unable to create base name for the data stream", ex);
+		}
+
+		setupClass();
+	}
+
+	public StreamTransport(CCNHandle handle, DataStream stream,
+					SystemState.StreamTransport state)
+					throws PDCException
+	{
+		assert handle != null;
+		assert stream != null;
+
+		this._stream = stream;
+		this._encryptor = new DataEncryptor(state.getEncryptor());
+		this._ccn_handle = handle;
+
+		try {
+			this.base_name = _stream.app.getBaseName().append(_stream.data_stream_id);
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new PDCException("Unable to create base name for the data stream",
+							ex);
 		}
 
 		setupClass();
@@ -493,5 +505,27 @@ public class StreamTransport implements Serializable {
 
 		setupClass();
 	}
+
+	SystemState.StreamTransport getObjectState()
+	{
+		SystemState.StreamTransport.Builder builder = SystemState.StreamTransport.
+						newBuilder();
+
+		builder.setEncryptor(_encryptor.getObjectState());
+
+		return builder.build();
+	}
 // </editor-fold>
+
+	private static final long serialVersionUID = -178853391793959411L;
+
+	final public ContentName base_name;
+
+	final private DataStream _stream;
+
+	final private DataEncryptor _encryptor;
+
+	private transient CCNHandle _ccn_handle;
+
+	private transient int _invalid_key_retry = 1;
 }

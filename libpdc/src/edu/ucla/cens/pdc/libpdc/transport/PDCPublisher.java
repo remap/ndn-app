@@ -4,6 +4,8 @@
  */
 package edu.ucla.cens.pdc.libpdc.transport;
 
+import edu.ucla.cens.pdc.libpdc.SystemState;
+import java.io.IOException;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
@@ -11,10 +13,6 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski
  */
 public class PDCPublisher extends PDCNode {
-	private static final long serialVersionUID = -7537161887405500608L;
-	
-	private String _stream_id;
-
 	public PDCPublisher(String uri, String stream_id)
 					throws MalformedContentNameStringException
 	{
@@ -25,10 +23,18 @@ public class PDCPublisher extends PDCNode {
 		this._stream_id = stream_id;
 	}
 
+	public PDCPublisher(SystemState.PDCPublisher state)
+					throws MalformedContentNameStringException, IOException
+	{
+		super(state.getBase());
+
+		this._stream_id = state.getStreamId();
+	}
+
 	/**
 	 * @return the _stream_id
 	 */
-	public String getStream_id()
+	public String getStreamId()
 	{
 		return _stream_id;
 	}
@@ -36,8 +42,24 @@ public class PDCPublisher extends PDCNode {
 	/**
 	 * @param stream_id the _stream_id to set
 	 */
-	public void setStream_id(String stream_id)
+	public void setStreamId(String stream_id)
 	{
 		this._stream_id = stream_id;
 	}
+
+	@Override
+	public SystemState.PDCPublisher getObjectState()
+	{
+		SystemState.PDCPublisher.Builder builder = SystemState.PDCPublisher.
+						newBuilder();
+
+		builder.setBase((SystemState.PDCNode) super.getObjectState());
+		builder.setStreamId(_stream_id);
+
+		return builder.build();
+	}
+
+	private static final long serialVersionUID = -7537161887405500608L;
+
+	private String _stream_id;
 }

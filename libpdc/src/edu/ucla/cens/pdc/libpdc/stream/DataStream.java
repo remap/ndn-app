@@ -5,8 +5,10 @@
 package edu.ucla.cens.pdc.libpdc.stream;
 
 import edu.ucla.cens.pdc.libpdc.Application;
+import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
@@ -14,6 +16,7 @@ import edu.ucla.cens.pdc.libpdc.iState;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -38,10 +41,6 @@ public class DataStream implements iDataStream, iState {
 		l.log(Level.FINER, "Generating new data stream {0} for {1}",
 						new Object[]{data_stream_id, app.getAppName()});
 
-		assert app != null;
-		assert data_stream_id != null && !data_stream_id.isEmpty();
-		assert !data_stream_id.startsWith("/") : "stream id: " + data_stream_id;
-
 		this.app = app;
 		this.data_stream_id = data_stream_id;
 
@@ -55,12 +54,42 @@ public class DataStream implements iDataStream, iState {
 		}
 	}
 
+	public DataStream(iApplication app, String name)
+					throws IOException
+	{
+		GlobalConfig config = GlobalConfig.getInstance();
+		ByteArrayInputStream byte_in;
+		SystemState.DataStream state;
+		CCNHandle handle;
+
+		//XXX: Can I get rid of this?
+		handle = CCNHandle.getHandle();
+
+		//XXX: modify it later so no casting needed
+		byte_in = (ByteArrayInputStream) config.loadConfig("datastream_".concat(app.
+						getAppName()), name);
+
+		state = SystemState.DataStream.parseFrom(byte_in);
+
+		this.app = app;
+		this.data_stream_id = state.getDataStreamId();
+		setupObject();
+
+		try {
+			this._transport = new StreamTransport(handle, this, state.getTransport());
+		}
+		catch (PDCException ex) {
+			throw new Error("Unable to instantiate transmission class", ex);
+		}
+	}
+
 	protected final void setupObject()
 	{
 		l.entering(this.getClass().getName(), "setupObject()");
 
-		assert this.app != null;
-		assert this.data_stream_id != null;
+		assert app != null;
+		assert data_stream_id != null && !data_stream_id.isEmpty();
+		assert !data_stream_id.startsWith("/") : "stream id: " + data_stream_id;
 
 		_store = GlobalConfig.setupDataStorage(app, data_stream_id);
 		l.exiting(this.getClass().getName(), "setupObject()");
@@ -91,16 +120,16 @@ public class DataStream implements iDataStream, iState {
 
 		uri = _publisher.uri;
 		assert uri != null : "Publisher should always have URI";
-		assert _publisher.getStream_id() != null : "Publisher needs to have stream URI present";
+		assert _publisher.getStreamId() != null : "Publisher needs to have stream URI present";
 
 		try {
-			result = uri.append(app.getAppName()).append(_publisher.getStream_id());
+			result = uri.append(app.getAppName()).append(_publisher.getStreamId());
 			return result;
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error(
 							String.format("Unable to create %s/%s/%s", uri, app.getAppName(),
-							_publisher.getStream_id()), ex);
+							_publisher.getStreamId()), ex);
 		}
 	}
 
@@ -252,6 +281,27 @@ public class DataStream implements iDataStream, iState {
 		stream = (DataStream) config.loadConfig("datastream_" + app_name, ds_name);
 
 		return stream;
+	}
+
+	SystemState.DataStream getObjectState()
+	{
+		SystemState.DataStream.Builder builder = SystemState.DataStream.newBuilder();
+
+		builder.setDataStreamId(data_stream_id);
+		builder.setTransport(_transport.getObjectState());
+
+		if (_publisher != null)
+			builder.setPublisher(_publisher.getObjectState());
+
+		for (PDCReceiver receiver : _receivers)
+			builder.addReceivers(receiver.getObjectState());
+
+		return builder.build();
+	}
+
+	public byte[] stateToByteArray()
+	{
+		return getObjectState().toByteArray();
 	}
 // </editor-fold>
 

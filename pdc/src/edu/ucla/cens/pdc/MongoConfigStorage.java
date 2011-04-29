@@ -94,8 +94,7 @@ final public class MongoConfigStorage implements iConfigStorage {
 		return new ByteArrayInputStream((byte[]) db_response.get("object"));
 	}
 
-	public void saveEntry(String obj_group, String obj_key,
-					ByteArrayOutputStream byte_out)
+	public void saveEntry(String obj_group, String obj_key, byte[] byte_out)
 					throws IOException
 	{
 		boolean exists;
@@ -110,7 +109,7 @@ final public class MongoConfigStorage implements iConfigStorage {
 
 		query.put("name", obj_key);
 		new_data.put("name", obj_key);
-		new_data.put("object", byte_out.toByteArray());
+		new_data.put("object", byte_out);
 
 		try {
 			coll.findAndModify(query, null, null, false, new_data, false, true);

@@ -4,12 +4,15 @@
  */
 package edu.ucla.cens.pdc.libpdc.stream;
 
+import com.google.protobuf.ByteString;
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
+import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.core.PDCKeyManager;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
@@ -26,6 +29,8 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -69,10 +74,30 @@ public class DataEncryptor implements Serializable {
 
 	public DataEncryptor()
 	{
-		classSetup();
+		setupObject();
 	}
 
-	private void classSetup()
+	public DataEncryptor(SystemState.DataEncryptor state)
+					throws PDCException
+	{
+		if (state.hasEncryptionKey())
+			_encrypt_key = state.getEncryptionKey().toByteArray();
+		if (state.hasDecryptionKey())
+			_decrypt_key = state.getDecryptionKey().toByteArray();
+
+		if (state.hasStreamKeyDigest())
+			try {
+				_stream_key_digest = new PublisherPublicKeyDigest(
+								state.getStreamKeyDigest());
+			}
+			catch (IOException ex) {
+				throw new PDCException("Unable to generate stream key digest", ex);
+			}
+
+		setupObject();
+	}
+
+	private void setupObject()
 	{
 		BlockCipher engine = new TwofishEngine();
 
@@ -454,7 +479,24 @@ public class DataEncryptor implements Serializable {
 					throws IOException, ClassNotFoundException
 	{
 		in.defaultReadObject();
-		classSetup();
+		setupObject();
+	}
+
+	SystemState.DataEncryptor getObjectState()
+	{
+		SystemState.DataEncryptor.Builder builder = SystemState.DataEncryptor.
+						newBuilder();
+
+		if (_encrypt_key != null)
+			builder.setEncryptionKey(ByteString.copyFrom(_encrypt_key));
+
+		if (_decrypt_key != null)
+			builder.setDecryptionKey(ByteString.copyFrom(_decrypt_key));
+
+		if (_stream_key_digest != null)
+			builder.setStreamKeyDigest(_stream_key_digest.toString());
+
+		return builder.build();
 	}
 // </editor-fold>
 }

@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc.transport;
 
+import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
@@ -26,29 +27,26 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  * @author Derek Kulinski
  */
 public class PDCNode implements Serializable {
-	private static final long serialVersionUID = -6962419725928576508L;
-
-	/**
-	 * URI of the node
-	 */
-	public final ContentName uri;
-
-	/**
-	 * Node's public key digest
-	 */
-	protected PublisherPublicKeyDigest _publickey_digest;
-
-	private transient String _authenticator;
-
-	/**
-	 * Key locator for the  node
-	 */
-	protected KeyLocator _key_locator;
-
 	public PDCNode(String uri)
 					throws MalformedContentNameStringException
 	{
 		this.uri = ContentName.fromURI(uri);
+	}
+
+	public PDCNode(SystemState.PDCNode state)
+					throws MalformedContentNameStringException, IOException
+	{
+		this(state.getUri());
+
+		if (state.hasKeyDigest())
+			_publickey_digest = new PublisherPublicKeyDigest(state.getKeyDigest());
+
+		if (state.hasKeyLocator()) {
+			assert state.hasKeyDigest();
+
+			final ContentName location = ContentName.fromNative(state.getKeyLocator());
+			_key_locator = new KeyLocator(location, _publickey_digest);
+		}
 	}
 
 	public KeyLocator getKeyLocator()
@@ -145,4 +143,40 @@ public class PDCNode implements Serializable {
 
 		return sb.toString();
 	}
+
+	Object getObjectState()
+	{
+		SystemState.PDCNode.Builder builder = SystemState.PDCNode.newBuilder();
+
+		builder.setUri(uri.toString());
+
+		if (_publickey_digest != null)
+			builder.setKeyDigest(_publickey_digest.toString());
+
+		//XXX: maybe we should store more? but then _publickey_digest stores
+		//the digest, so we'll duplicate
+		if (_key_locator != null && _key_locator.name() != null)
+			builder.setKeyLocator(_key_locator.name().name().toString());
+
+		return builder.build();
+	}
+
+	private static final long serialVersionUID = -6962419725928576508L;
+
+	/**
+	 * URI of the node
+	 */
+	public final ContentName uri;
+
+	/**
+	 * Node's public key digest
+	 */
+	protected PublisherPublicKeyDigest _publickey_digest;
+
+	private transient String _authenticator;
+
+	/**
+	 * Key locator for the  node
+	 */
+	protected KeyLocator _key_locator;
 }

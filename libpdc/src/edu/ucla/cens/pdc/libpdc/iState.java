@@ -42,4 +42,6 @@ public interface iState extends Serializable {
 	 * The class should also implement static method
 	 * public static loadState(String name) throws IOException
 	 */
+
+	public byte[] stateToByteArray();
 }
