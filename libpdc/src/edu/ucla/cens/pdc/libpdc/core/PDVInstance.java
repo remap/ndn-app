@@ -41,7 +41,7 @@ final public class PDVInstance implements CCNFilterListener {
 		keymanager = config.getKeyManager();
 		assert keymanager != null;
 
-		ccn_handle.setKeyManager(keymanager);
+		ccn_handle.getNetworkManager().setKeyManager(keymanager);
 
 		add_generic_command(new PublisherDataCommand());
 		add_generic_command(new PublisherControlCommands());
