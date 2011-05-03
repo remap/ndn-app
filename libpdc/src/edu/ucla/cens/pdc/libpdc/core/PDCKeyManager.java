@@ -17,6 +17,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.HashSet;
 import java.util.Set;
@@ -166,6 +167,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 
 		_privateKeyCache.addMyPrivateKey(digest.digest(), key_pair.getPrivate());
 		_publicKeyCache.remember(key_pair.getPublic(), version);
+		_private_key_digests.add(digest);
 
 		return digest;
 	}
@@ -224,7 +226,9 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 			priv_key = _privateKeyCache.getPrivateKey(digest.digest());
 			assert priv_key != null;
 
+			Log.debug("Public key format: " + pub_key.getFormat());
 			ak_builder.setPublicKey(ByteString.copyFrom(pub_key.getEncoded()));
+			Log.debug("Private key format: " + priv_key.getFormat());
 			ak_builder.setPrivateKey(ByteString.copyFrom(priv_key.getEncoded()));
 			ak_builder.setAlgorithm(SystemState.AsyncKey.KeyAlg.valueOf(pub_key.
 							getAlgorithm()));
@@ -312,8 +316,10 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 		try {
 			final KeyFactory key_factory = KeyFactory.getInstance(ak_state.
 							getAlgorithm().name());
-			final X509EncodedKeySpec key_spec = new X509EncodedKeySpec(ak_state.
+			final PKCS8EncodedKeySpec key_spec = new PKCS8EncodedKeySpec(ak_state.
 							getPrivateKey().toByteArray());
+//			final X509EncodedKeySpec key_spec = new X509EncodedKeySpec(ak_state.
+//							getPrivateKey().toByteArray());
 
 			return key_factory.generatePrivate(key_spec);
 		}
