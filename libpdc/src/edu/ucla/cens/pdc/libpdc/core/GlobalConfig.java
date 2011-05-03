@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
@@ -30,16 +31,33 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  * @author Derek Kulinski
  */
 public class GlobalConfig implements iState {
+	@SuppressWarnings("LeakingThisInConstructor")
 	private GlobalConfig()
 	{
 		_config_storage = setupConfigStorage();
-		//FIXME: currently we do the setup after setting the root
-//		setupObject();
+		try {
+			_instance = this;
+			setupObject();
+		}
+		catch (IOException ex) {
+			_instance = null;
+			throw new Error("Cannot instantiate config", ex);
+		}
+		catch (RuntimeException ex) {
+			_instance = null;
+			throw ex;
+		}
+		catch (Error ex) {
+			_instance = null;
+			throw ex;
+		}
 	}
 
+	@SuppressWarnings("LeakingThisInConstructor")
 	private GlobalConfig(SystemState.GlobalConfig state)
 					throws IOException
 	{
+		assert _instance == null;
 		assert state != null;
 		assert state.hasRoot();
 
@@ -50,46 +68,44 @@ public class GlobalConfig implements iState {
 			throw new Error("Unable to parse previously stored root", ex);
 		}
 
-		_config_storage = setupConfigStorage();
-		_instance = this;
-		setupObject();
+		try {
+			_config_storage = setupConfigStorage();
+			_instance = this;
+			setupObject();
 
-		for (String app_name : state.getApplicationsList()) {
-			Application app = new Application(app_name, true);
-			addApplication(app);
+			for (String app_name : state.getApplicationsList()) {
+				Application app = new Application(app_name, true);
+				addApplication(app);
+			}
+		}
+		catch (IOException ex) {
+			_instance = null;
+			throw ex;
+		}
+		catch (RuntimeException ex) {
+			_instance = null;
+			throw new Error("Failure when initializing the object", ex);
+		}
+		catch (Error ex) {
+			_instance = null;
+			throw new Error("Failure when initializing the object", ex);
 		}
 	}
 
 	private void setupObject()
+					throws IOException
 	{
-		ContentName root, last, keyname;
-		KeyLocator locator;
-		PublisherPublicKeyDigest digest;
 		PDCKeyManager keymanager;
 
-		//XXX: remove this code
-		root = getRoot();
-		keyname = root.cut(root.count() - 1); //root -1 last part (eg. /ucla.edu/apps)
-		last = root.postfix(keyname); //last part of root (eg. pdv1)
-
 		try {
-			keyname = keyname.append(".pdv_keys").append(last); // eg. /ucla.edu/apps/.pdv_keys/pdv1
-		}
-		catch (MalformedContentNameStringException ex) {
-			throw new Error("Unable to create uri for keylocator", ex);
-		}
-		try {
-			keymanager = new PDCKeyManager(last.toString());
+			keymanager = new PDCKeyManager();
 			keymanager.initialize();
 
 			setKeyManager(keymanager);
 		}
-		catch (Exception ex) {
+		catch (ConfigurationException ex) {
 			throw new Error("Unable to setup keymanager", ex);
 		}
-
-//		config.setKeyManager(keymanager);
-
 
 //		locator = new KeyLocator(keyname);
 //		digest = keymanager.getDefaultKeyID();
@@ -99,9 +115,7 @@ public class GlobalConfig implements iState {
 
 //		config.getApplication("myapp").getDataStream("myds").getTransport().
 //						getEncryptor().setStreamKeyDigest(digest);
-
 		//XXX: remove this code
-
 	}
 
 	/**
@@ -171,7 +185,6 @@ public class GlobalConfig implements iState {
 							"You can't change the root once it is already set");
 
 		_root = root;
-		setupObject();
 	}
 
 	/**
@@ -208,6 +221,11 @@ public class GlobalConfig implements iState {
 		return _applications.get(name);
 	}
 
+	/**
+	 * Provide proper DataStream object based on the given URI
+	 * @param stream <app>/<ds> component of the name
+	 * @return object associated with the name
+	 */
 	public synchronized DataStream uri2dataStream(ContentName stream)
 	{
 		DataStream ds, result = null;
@@ -265,6 +283,13 @@ public class GlobalConfig implements iState {
 		this._key_manager = key_manager;
 	}
 
+	/**
+	 * load configuration binary data
+	 * @param group group under the configuration is held
+	 * @param name unique identifier within the group
+	 * @return binary encoded data or null if no entry exists
+	 * @throws IOException when there's an issue accessing the data
+	 */
 	public byte[] loadConfig(String group, String name)
 					throws IOException
 	{
@@ -276,6 +301,12 @@ public class GlobalConfig implements iState {
 	{
 		_config_storage.saveEntry(object.getStateGroupName(), object.getStateKey(),
 						object.stateToByteArray());
+	}
+
+	public void saveConfig(String group, String name, byte[] byte_out)
+					throws IOException
+	{
+		_config_storage.saveEntry(group, name, byte_out);
 	}
 
 	/**
@@ -326,6 +357,9 @@ public class GlobalConfig implements iState {
 	public void storeStateRecursive()
 					throws IOException
 	{
+		assert _key_manager != null : "Storing state needs to be done after key manager is instantienated";
+		_key_manager.storeStateRecursive();
+
 		for (Application app : _applications.values())
 			app.storeStateRecursive();
 

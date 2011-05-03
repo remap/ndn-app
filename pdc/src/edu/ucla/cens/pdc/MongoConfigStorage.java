@@ -29,10 +29,10 @@ final public class MongoConfigStorage implements iConfigStorage {
 	public MongoConfigStorage()
 					throws PDCDatabaseException
 	{
-		setupClass();
+		setupObject();
 	}
 
-	private void setupClass()
+	private void setupObject()
 					throws PDCDatabaseException
 	{
 		String name;
