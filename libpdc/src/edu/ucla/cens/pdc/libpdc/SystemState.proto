@@ -8,6 +8,22 @@ message GlobalConfig {
 	repeated string applications = 2;
 }
 
+message KeyManager {
+	required bytes default_key_id = 1;
+	repeated bytes public_key_digests = 2;
+	repeated bytes private_key_digests = 3;
+}
+
+message AsyncKey {
+	enum KeyAlg {
+		RSA = 0;
+	}
+	required KeyAlg algorithm = 1 [default = RSA];
+	required bytes public_key = 2;
+	optional bytes private_key = 3;
+	optional int64 timestamp = 4;
+}
+
 message Application {
 	required string name = 1;
 	repeated string data_streams = 2;

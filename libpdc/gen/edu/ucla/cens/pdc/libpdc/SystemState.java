@@ -437,6 +437,1027 @@ public final class SystemState {
     // @@protoc_insertion_point(class_scope:GlobalConfig)
   }
   
+  public interface KeyManagerOrBuilder
+      extends com.google.protobuf.MessageLiteOrBuilder {
+    
+    // required bytes default_key_id = 1;
+    boolean hasDefaultKeyId();
+    com.google.protobuf.ByteString getDefaultKeyId();
+    
+    // repeated bytes public_key_digests = 2;
+    java.util.List<com.google.protobuf.ByteString> getPublicKeyDigestsList();
+    int getPublicKeyDigestsCount();
+    com.google.protobuf.ByteString getPublicKeyDigests(int index);
+    
+    // repeated bytes private_key_digests = 3;
+    java.util.List<com.google.protobuf.ByteString> getPrivateKeyDigestsList();
+    int getPrivateKeyDigestsCount();
+    com.google.protobuf.ByteString getPrivateKeyDigests(int index);
+  }
+  public static final class KeyManager extends
+      com.google.protobuf.GeneratedMessageLite
+      implements KeyManagerOrBuilder {
+    // Use KeyManager.newBuilder() to construct.
+    private KeyManager(Builder builder) {
+      super(builder);
+    }
+    private KeyManager(boolean noInit) {}
+    
+    private static final KeyManager defaultInstance;
+    public static KeyManager getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public KeyManager getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    private int bitField0_;
+    // required bytes default_key_id = 1;
+    public static final int DEFAULT_KEY_ID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString defaultKeyId_;
+    public boolean hasDefaultKeyId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public com.google.protobuf.ByteString getDefaultKeyId() {
+      return defaultKeyId_;
+    }
+    
+    // repeated bytes public_key_digests = 2;
+    public static final int PUBLIC_KEY_DIGESTS_FIELD_NUMBER = 2;
+    private java.util.List<com.google.protobuf.ByteString> publicKeyDigests_;
+    public java.util.List<com.google.protobuf.ByteString>
+        getPublicKeyDigestsList() {
+      return publicKeyDigests_;
+    }
+    public int getPublicKeyDigestsCount() {
+      return publicKeyDigests_.size();
+    }
+    public com.google.protobuf.ByteString getPublicKeyDigests(int index) {
+      return publicKeyDigests_.get(index);
+    }
+    
+    // repeated bytes private_key_digests = 3;
+    public static final int PRIVATE_KEY_DIGESTS_FIELD_NUMBER = 3;
+    private java.util.List<com.google.protobuf.ByteString> privateKeyDigests_;
+    public java.util.List<com.google.protobuf.ByteString>
+        getPrivateKeyDigestsList() {
+      return privateKeyDigests_;
+    }
+    public int getPrivateKeyDigestsCount() {
+      return privateKeyDigests_.size();
+    }
+    public com.google.protobuf.ByteString getPrivateKeyDigests(int index) {
+      return privateKeyDigests_.get(index);
+    }
+    
+    private void initFields() {
+      defaultKeyId_ = com.google.protobuf.ByteString.EMPTY;
+      publicKeyDigests_ = java.util.Collections.emptyList();;
+      privateKeyDigests_ = java.util.Collections.emptyList();;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      if (!hasDefaultKeyId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, defaultKeyId_);
+      }
+      for (int i = 0; i < publicKeyDigests_.size(); i++) {
+        output.writeBytes(2, publicKeyDigests_.get(i));
+      }
+      for (int i = 0; i < privateKeyDigests_.size(); i++) {
+        output.writeBytes(3, privateKeyDigests_.get(i));
+      }
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, defaultKeyId_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < publicKeyDigests_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(publicKeyDigests_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getPublicKeyDigestsList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < privateKeyDigests_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(privateKeyDigests_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getPrivateKeyDigestsList().size();
+      }
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    @java.lang.Override
+    protected Object writeReplace() throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
+    public static edu.ucla.cens.pdc.libpdc.SystemState.KeyManager parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.KeyManager parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.KeyManager parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.KeyManager parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.KeyManager parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.KeyManager parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.KeyManager parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.KeyManager parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.KeyManager parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.KeyManager parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(edu.ucla.cens.pdc.libpdc.SystemState.KeyManager prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageLite.Builder<
+          edu.ucla.cens.pdc.libpdc.SystemState.KeyManager, Builder>
+        implements edu.ucla.cens.pdc.libpdc.SystemState.KeyManagerOrBuilder {
+      // Construct using edu.ucla.cens.pdc.libpdc.SystemState.KeyManager.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+      
+      private void maybeForceBuilderInitialization() {
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+      
+      public Builder clear() {
+        super.clear();
+        defaultKeyId_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        publicKeyDigests_ = java.util.Collections.emptyList();;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        privateKeyDigests_ = java.util.Collections.emptyList();;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.SystemState.KeyManager getDefaultInstanceForType() {
+        return edu.ucla.cens.pdc.libpdc.SystemState.KeyManager.getDefaultInstance();
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.SystemState.KeyManager build() {
+        edu.ucla.cens.pdc.libpdc.SystemState.KeyManager result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+      
+      private edu.ucla.cens.pdc.libpdc.SystemState.KeyManager buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        edu.ucla.cens.pdc.libpdc.SystemState.KeyManager result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return result;
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.SystemState.KeyManager buildPartial() {
+        edu.ucla.cens.pdc.libpdc.SystemState.KeyManager result = new edu.ucla.cens.pdc.libpdc.SystemState.KeyManager(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.defaultKeyId_ = defaultKeyId_;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          publicKeyDigests_ = java.util.Collections.unmodifiableList(publicKeyDigests_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.publicKeyDigests_ = publicKeyDigests_;
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          privateKeyDigests_ = java.util.Collections.unmodifiableList(privateKeyDigests_);
+          bitField0_ = (bitField0_ & ~0x00000004);
+        }
+        result.privateKeyDigests_ = privateKeyDigests_;
+        result.bitField0_ = to_bitField0_;
+        return result;
+      }
+      
+      public Builder mergeFrom(edu.ucla.cens.pdc.libpdc.SystemState.KeyManager other) {
+        if (other == edu.ucla.cens.pdc.libpdc.SystemState.KeyManager.getDefaultInstance()) return this;
+        if (other.hasDefaultKeyId()) {
+          setDefaultKeyId(other.getDefaultKeyId());
+        }
+        if (!other.publicKeyDigests_.isEmpty()) {
+          if (publicKeyDigests_.isEmpty()) {
+            publicKeyDigests_ = other.publicKeyDigests_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensurePublicKeyDigestsIsMutable();
+            publicKeyDigests_.addAll(other.publicKeyDigests_);
+          }
+          
+        }
+        if (!other.privateKeyDigests_.isEmpty()) {
+          if (privateKeyDigests_.isEmpty()) {
+            privateKeyDigests_ = other.privateKeyDigests_;
+            bitField0_ = (bitField0_ & ~0x00000004);
+          } else {
+            ensurePrivateKeyDigestsIsMutable();
+            privateKeyDigests_.addAll(other.privateKeyDigests_);
+          }
+          
+        }
+        return this;
+      }
+      
+      public final boolean isInitialized() {
+        if (!hasDefaultKeyId()) {
+          
+          return false;
+        }
+        return true;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              
+              return this;
+            default: {
+              if (!parseUnknownField(input, extensionRegistry, tag)) {
+                
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              defaultKeyId_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ensurePublicKeyDigestsIsMutable();
+              publicKeyDigests_.add(input.readBytes());
+              break;
+            }
+            case 26: {
+              ensurePrivateKeyDigestsIsMutable();
+              privateKeyDigests_.add(input.readBytes());
+              break;
+            }
+          }
+        }
+      }
+      
+      private int bitField0_;
+      
+      // required bytes default_key_id = 1;
+      private com.google.protobuf.ByteString defaultKeyId_ = com.google.protobuf.ByteString.EMPTY;
+      public boolean hasDefaultKeyId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      public com.google.protobuf.ByteString getDefaultKeyId() {
+        return defaultKeyId_;
+      }
+      public Builder setDefaultKeyId(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        defaultKeyId_ = value;
+        
+        return this;
+      }
+      public Builder clearDefaultKeyId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        defaultKeyId_ = getDefaultInstance().getDefaultKeyId();
+        
+        return this;
+      }
+      
+      // repeated bytes public_key_digests = 2;
+      private java.util.List<com.google.protobuf.ByteString> publicKeyDigests_ = java.util.Collections.emptyList();;
+      private void ensurePublicKeyDigestsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          publicKeyDigests_ = new java.util.ArrayList<com.google.protobuf.ByteString>(publicKeyDigests_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+      public java.util.List<com.google.protobuf.ByteString>
+          getPublicKeyDigestsList() {
+        return java.util.Collections.unmodifiableList(publicKeyDigests_);
+      }
+      public int getPublicKeyDigestsCount() {
+        return publicKeyDigests_.size();
+      }
+      public com.google.protobuf.ByteString getPublicKeyDigests(int index) {
+        return publicKeyDigests_.get(index);
+      }
+      public Builder setPublicKeyDigests(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensurePublicKeyDigestsIsMutable();
+        publicKeyDigests_.set(index, value);
+        
+        return this;
+      }
+      public Builder addPublicKeyDigests(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensurePublicKeyDigestsIsMutable();
+        publicKeyDigests_.add(value);
+        
+        return this;
+      }
+      public Builder addAllPublicKeyDigests(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensurePublicKeyDigestsIsMutable();
+        super.addAll(values, publicKeyDigests_);
+        
+        return this;
+      }
+      public Builder clearPublicKeyDigests() {
+        publicKeyDigests_ = java.util.Collections.emptyList();;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        
+        return this;
+      }
+      
+      // repeated bytes private_key_digests = 3;
+      private java.util.List<com.google.protobuf.ByteString> privateKeyDigests_ = java.util.Collections.emptyList();;
+      private void ensurePrivateKeyDigestsIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          privateKeyDigests_ = new java.util.ArrayList<com.google.protobuf.ByteString>(privateKeyDigests_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+      public java.util.List<com.google.protobuf.ByteString>
+          getPrivateKeyDigestsList() {
+        return java.util.Collections.unmodifiableList(privateKeyDigests_);
+      }
+      public int getPrivateKeyDigestsCount() {
+        return privateKeyDigests_.size();
+      }
+      public com.google.protobuf.ByteString getPrivateKeyDigests(int index) {
+        return privateKeyDigests_.get(index);
+      }
+      public Builder setPrivateKeyDigests(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensurePrivateKeyDigestsIsMutable();
+        privateKeyDigests_.set(index, value);
+        
+        return this;
+      }
+      public Builder addPrivateKeyDigests(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensurePrivateKeyDigestsIsMutable();
+        privateKeyDigests_.add(value);
+        
+        return this;
+      }
+      public Builder addAllPrivateKeyDigests(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensurePrivateKeyDigestsIsMutable();
+        super.addAll(values, privateKeyDigests_);
+        
+        return this;
+      }
+      public Builder clearPrivateKeyDigests() {
+        privateKeyDigests_ = java.util.Collections.emptyList();;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        
+        return this;
+      }
+      
+      // @@protoc_insertion_point(builder_scope:KeyManager)
+    }
+    
+    static {
+      defaultInstance = new KeyManager(true);
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:KeyManager)
+  }
+  
+  public interface AsyncKeyOrBuilder
+      extends com.google.protobuf.MessageLiteOrBuilder {
+    
+    // required .AsyncKey.KeyAlg algorithm = 1 [default = RSA];
+    boolean hasAlgorithm();
+    edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg getAlgorithm();
+    
+    // required bytes public_key = 2;
+    boolean hasPublicKey();
+    com.google.protobuf.ByteString getPublicKey();
+    
+    // optional bytes private_key = 3;
+    boolean hasPrivateKey();
+    com.google.protobuf.ByteString getPrivateKey();
+    
+    // optional int64 timestamp = 4;
+    boolean hasTimestamp();
+    long getTimestamp();
+  }
+  public static final class AsyncKey extends
+      com.google.protobuf.GeneratedMessageLite
+      implements AsyncKeyOrBuilder {
+    // Use AsyncKey.newBuilder() to construct.
+    private AsyncKey(Builder builder) {
+      super(builder);
+    }
+    private AsyncKey(boolean noInit) {}
+    
+    private static final AsyncKey defaultInstance;
+    public static AsyncKey getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public AsyncKey getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public enum KeyAlg
+        implements com.google.protobuf.Internal.EnumLite {
+      RSA(0, 0),
+      ;
+      
+      public static final int RSA_VALUE = 0;
+      
+      
+      public final int getNumber() { return value; }
+      
+      public static KeyAlg valueOf(int value) {
+        switch (value) {
+          case 0: return RSA;
+          default: return null;
+        }
+      }
+      
+      public static com.google.protobuf.Internal.EnumLiteMap<KeyAlg>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<KeyAlg>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<KeyAlg>() {
+              public KeyAlg findValueByNumber(int number) {
+                return KeyAlg.valueOf(number);
+              }
+            };
+      
+      private final int value;
+      
+      private KeyAlg(int index, int value) {
+        this.value = value;
+      }
+      
+      // @@protoc_insertion_point(enum_scope:AsyncKey.KeyAlg)
+    }
+    
+    private int bitField0_;
+    // required .AsyncKey.KeyAlg algorithm = 1 [default = RSA];
+    public static final int ALGORITHM_FIELD_NUMBER = 1;
+    private edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg algorithm_;
+    public boolean hasAlgorithm() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg getAlgorithm() {
+      return algorithm_;
+    }
+    
+    // required bytes public_key = 2;
+    public static final int PUBLIC_KEY_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString publicKey_;
+    public boolean hasPublicKey() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    public com.google.protobuf.ByteString getPublicKey() {
+      return publicKey_;
+    }
+    
+    // optional bytes private_key = 3;
+    public static final int PRIVATE_KEY_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString privateKey_;
+    public boolean hasPrivateKey() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    public com.google.protobuf.ByteString getPrivateKey() {
+      return privateKey_;
+    }
+    
+    // optional int64 timestamp = 4;
+    public static final int TIMESTAMP_FIELD_NUMBER = 4;
+    private long timestamp_;
+    public boolean hasTimestamp() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    public long getTimestamp() {
+      return timestamp_;
+    }
+    
+    private void initFields() {
+      algorithm_ = edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg.RSA;
+      publicKey_ = com.google.protobuf.ByteString.EMPTY;
+      privateKey_ = com.google.protobuf.ByteString.EMPTY;
+      timestamp_ = 0L;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      if (!hasAlgorithm()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPublicKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(1, algorithm_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, publicKey_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, privateKey_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeInt64(4, timestamp_);
+      }
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, algorithm_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, publicKey_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, privateKey_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(4, timestamp_);
+      }
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    @java.lang.Override
+    protected Object writeReplace() throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
+    public static edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageLite.Builder<
+          edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey, Builder>
+        implements edu.ucla.cens.pdc.libpdc.SystemState.AsyncKeyOrBuilder {
+      // Construct using edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+      
+      private void maybeForceBuilderInitialization() {
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+      
+      public Builder clear() {
+        super.clear();
+        algorithm_ = edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg.RSA;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        publicKey_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        privateKey_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        timestamp_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey getDefaultInstanceForType() {
+        return edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.getDefaultInstance();
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey build() {
+        edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+      
+      private edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return result;
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey buildPartial() {
+        edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey result = new edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.algorithm_ = algorithm_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.publicKey_ = publicKey_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.privateKey_ = privateKey_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.timestamp_ = timestamp_;
+        result.bitField0_ = to_bitField0_;
+        return result;
+      }
+      
+      public Builder mergeFrom(edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey other) {
+        if (other == edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.getDefaultInstance()) return this;
+        if (other.hasAlgorithm()) {
+          setAlgorithm(other.getAlgorithm());
+        }
+        if (other.hasPublicKey()) {
+          setPublicKey(other.getPublicKey());
+        }
+        if (other.hasPrivateKey()) {
+          setPrivateKey(other.getPrivateKey());
+        }
+        if (other.hasTimestamp()) {
+          setTimestamp(other.getTimestamp());
+        }
+        return this;
+      }
+      
+      public final boolean isInitialized() {
+        if (!hasAlgorithm()) {
+          
+          return false;
+        }
+        if (!hasPublicKey()) {
+          
+          return false;
+        }
+        return true;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              
+              return this;
+            default: {
+              if (!parseUnknownField(input, extensionRegistry, tag)) {
+                
+                return this;
+              }
+              break;
+            }
+            case 8: {
+              int rawValue = input.readEnum();
+              edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg value = edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg.valueOf(rawValue);
+              if (value != null) {
+                bitField0_ |= 0x00000001;
+                algorithm_ = value;
+              }
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              publicKey_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              privateKey_ = input.readBytes();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              timestamp_ = input.readInt64();
+              break;
+            }
+          }
+        }
+      }
+      
+      private int bitField0_;
+      
+      // required .AsyncKey.KeyAlg algorithm = 1 [default = RSA];
+      private edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg algorithm_ = edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg.RSA;
+      public boolean hasAlgorithm() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      public edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg getAlgorithm() {
+        return algorithm_;
+      }
+      public Builder setAlgorithm(edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        algorithm_ = value;
+        
+        return this;
+      }
+      public Builder clearAlgorithm() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        algorithm_ = edu.ucla.cens.pdc.libpdc.SystemState.AsyncKey.KeyAlg.RSA;
+        
+        return this;
+      }
+      
+      // required bytes public_key = 2;
+      private com.google.protobuf.ByteString publicKey_ = com.google.protobuf.ByteString.EMPTY;
+      public boolean hasPublicKey() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      public com.google.protobuf.ByteString getPublicKey() {
+        return publicKey_;
+      }
+      public Builder setPublicKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        publicKey_ = value;
+        
+        return this;
+      }
+      public Builder clearPublicKey() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        publicKey_ = getDefaultInstance().getPublicKey();
+        
+        return this;
+      }
+      
+      // optional bytes private_key = 3;
+      private com.google.protobuf.ByteString privateKey_ = com.google.protobuf.ByteString.EMPTY;
+      public boolean hasPrivateKey() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      public com.google.protobuf.ByteString getPrivateKey() {
+        return privateKey_;
+      }
+      public Builder setPrivateKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        privateKey_ = value;
+        
+        return this;
+      }
+      public Builder clearPrivateKey() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        privateKey_ = getDefaultInstance().getPrivateKey();
+        
+        return this;
+      }
+      
+      // optional int64 timestamp = 4;
+      private long timestamp_ ;
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      public long getTimestamp() {
+        return timestamp_;
+      }
+      public Builder setTimestamp(long value) {
+        bitField0_ |= 0x00000008;
+        timestamp_ = value;
+        
+        return this;
+      }
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        timestamp_ = 0L;
+        
+        return this;
+      }
+      
+      // @@protoc_insertion_point(builder_scope:AsyncKey)
+    }
+    
+    static {
+      defaultInstance = new AsyncKey(true);
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:AsyncKey)
+  }
+  
   public interface ApplicationOrBuilder
       extends com.google.protobuf.MessageLiteOrBuilder {
     
