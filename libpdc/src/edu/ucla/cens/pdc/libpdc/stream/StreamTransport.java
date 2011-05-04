@@ -45,7 +45,7 @@ import org.ccnx.ccn.protocol.SignedInfo;
  */
 public class StreamTransport {
 	public StreamTransport(CCNHandle handle, DataStream stream)
-					throws PDCTransmissionException
+			throws PDCException
 	{
 		assert handle != null;
 		assert stream != null;
@@ -58,16 +58,16 @@ public class StreamTransport {
 			this.base_name = _stream.app.getBaseName().append(_stream.data_stream_id);
 		}
 		catch (MalformedContentNameStringException ex) {
-			throw new PDCTransmissionException(
-							"Unable to create base name for the data stream", ex);
+			throw new PDCException("Unable to create base name for the data stream",
+					ex);
 		}
 
-		setupClass();
+		setupObject();
 	}
 
 	public StreamTransport(CCNHandle handle, DataStream stream,
-					SystemState.StreamTransport state)
-					throws PDCException
+			SystemState.StreamTransport state)
+			throws PDCException
 	{
 		assert handle != null;
 		assert stream != null;
@@ -81,13 +81,13 @@ public class StreamTransport {
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new PDCException("Unable to create base name for the data stream",
-							ex);
+					ex);
 		}
 
-		setupClass();
+		setupObject();
 	}
 
-	private void setupClass()
+	private void setupObject()
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		PDCKeyManager keymgr;
@@ -141,7 +141,7 @@ public class StreamTransport {
 	 * @throws PDCTransmissionException
 	 */
 	public boolean publishDataRecord(Interest interest, String data_id)
-					throws PDCTransmissionException
+			throws PDCTransmissionException
 	{
 		DataRecord record;
 		byte[] data;
@@ -166,8 +166,8 @@ public class StreamTransport {
 	}
 
 	public boolean publishRecordList(Interest interest, ContentName arguments)
-					throws PDCDatabaseException, PDCEncryptionException,
-					PDCTransmissionException
+			throws PDCDatabaseException, PDCEncryptionException,
+			PDCTransmissionException
 	{
 		Collection<String> ids;
 		String data;
@@ -185,7 +185,7 @@ public class StreamTransport {
 			ids = _stream.getStorage().getRangeIds(arguments.stringComponent(0));
 		else
 			ids = _stream.getStorage().getRangeIds(arguments.stringComponent(0),
-							arguments.stringComponent(1));
+					arguments.stringComponent(1));
 
 		data = StringUtil.join(ids, "\n");
 
@@ -195,7 +195,7 @@ public class StreamTransport {
 	}
 
 	public boolean publishACK(Interest interest)
-					throws PDCTransmissionException
+			throws PDCTransmissionException
 	{
 		String answer = "ACK";
 
@@ -203,7 +203,7 @@ public class StreamTransport {
 	}
 
 	private boolean publishData(Interest interest, byte[] data, int freshness)
-					throws PDCTransmissionException
+			throws PDCTransmissionException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		SignedInfo si;
@@ -230,7 +230,7 @@ public class StreamTransport {
 
 		try {
 			si = new SignedInfo(digest, SignedInfo.ContentType.ENCR, key_locator,
-							freshness, null);
+					freshness, null);
 			co = new ContentObject(interest.name(), si, data, signing_key);
 
 			_ccn_handle.put(co);
@@ -243,7 +243,7 @@ public class StreamTransport {
 	}
 
 	public synchronized void fetchStreamInfo()
-					throws PDCTransmissionException
+			throws PDCTransmissionException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		ContentName uri;
@@ -252,14 +252,14 @@ public class StreamTransport {
 
 		try {
 			uri = _stream.getPublisherStreamURI().append(Constants.STR_CONTROL).append(
-							"stream_info").append(config.getRoot());
+					"stream_info").append(config.getRoot());
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error(
-							String.format(
-							"Unable to create proper URI (%s, %s, %s)",
-							_stream.app.getAppName(), _stream.data_stream_id, config.getRoot()),
-							ex);
+					String.format(
+					"Unable to create proper URI (%s, %s, %s)",
+					_stream.app.getAppName(), _stream.data_stream_id, config.getRoot()),
+					ex);
 		}
 
 		Log.debug("requesting stream_info data for " + uri.toURIString());
@@ -292,19 +292,19 @@ public class StreamTransport {
 	}
 
 	public List<String> fetchList()
-					throws PDCTransmissionException
+			throws PDCTransmissionException
 	{
 		return fetchList(null, null);
 	}
 
 	public List<String> fetchList(String start)
-					throws PDCTransmissionException
+			throws PDCTransmissionException
 	{
 		return fetchList(start, null);
 	}
 
 	public List<String> fetchList(String start, String end)
-					throws PDCTransmissionException
+			throws PDCTransmissionException
 	{
 		ContentName uri = null;
 		ContentObject response;
@@ -314,7 +314,7 @@ public class StreamTransport {
 
 		try {
 			uri = _stream.getPublisherStreamURI().append(Constants.STR_CONTROL).append(
-							"list");
+					"list");
 
 			if (start != null) {
 				uri = uri.append(start);
@@ -325,8 +325,8 @@ public class StreamTransport {
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error(String.format(
-							"Unable to create proper URI (%s, %s, %s, %s)", _stream.app.
-							getAppName(), _stream.data_stream_id, start, end));
+					"Unable to create proper URI (%s, %s, %s, %s)",
+					_stream.app.getAppName(), _stream.data_stream_id, start, end));
 		}
 
 		Log.debug("Requesting: " + uri.toURIString());
@@ -363,7 +363,7 @@ public class StreamTransport {
 	}
 
 	public DataRecord fetchRecord(String content_id)
-					throws PDCTransmissionException
+			throws PDCTransmissionException
 	{
 		DataRecord record;
 		ContentName publisher_ds, data_uri;
@@ -375,7 +375,7 @@ public class StreamTransport {
 
 		try {
 			data_uri = _stream.getPublisherStreamURI().append(Constants.STR_DATA).
-							append(content_id);
+					append(content_id);
 
 			try {
 				response = _ccn_handle.get(data_uri, SystemConfiguration.LONG_TIMEOUT);
@@ -398,13 +398,13 @@ public class StreamTransport {
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new PDCTransmissionException(String.format(
-							"Unable to create proper URI (%s, %s, %s)",
-							publisher_ds, Constants.STR_CONTROL, content_id), ex);
+					"Unable to create proper URI (%s, %s, %s)",
+					publisher_ds, Constants.STR_CONTROL, content_id), ex);
 		}
 	}
 
 	public boolean fetchDataFromUplink()
-					throws PDCTransmissionException
+			throws PDCTransmissionException
 	{
 		PDCPublisher publisher;
 		String last_entry;
@@ -424,7 +424,7 @@ public class StreamTransport {
 		}
 		catch (PDCDatabaseException ex) {
 			throw new PDCTransmissionException(
-							"Unable to fetch id of last record from the database", ex);
+					"Unable to fetch id of last record from the database", ex);
 		}
 
 		if (last_entry == null)
@@ -494,21 +494,10 @@ public class StreamTransport {
 	}
 
 // <editor-fold defaultstate="collapsed" desc="serialization code">
-	private void readObject(ObjectInputStream in)
-					throws IOException, ClassNotFoundException
-	{
-		in.defaultReadObject();
-
-		//FIXME: this is wrong!
-		_ccn_handle = CCNHandle.getHandle();
-
-		setupClass();
-	}
-
 	SystemState.StreamTransport getObjectState()
 	{
 		SystemState.StreamTransport.Builder builder = SystemState.StreamTransport.
-						newBuilder();
+				newBuilder();
 
 		builder.setEncryptor(_encryptor.getObjectState());
 

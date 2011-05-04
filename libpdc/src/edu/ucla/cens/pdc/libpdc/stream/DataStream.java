@@ -7,6 +7,7 @@ package edu.ucla.cens.pdc.libpdc.stream;
 import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
@@ -31,14 +32,14 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  */
 public class DataStream implements iDataStream, iState {
 	public DataStream(CCNHandle handle, iApplication app, String name)
-					throws IOException
+			throws IOException
 	{
 		this(handle, app, name, false);
 	}
 
 	public DataStream(CCNHandle handle, iApplication app, String name,
-					boolean restore)
-					throws IOException
+			boolean restore)
+			throws IOException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		byte[] byte_in;
@@ -51,17 +52,38 @@ public class DataStream implements iDataStream, iState {
 
 			this.app = app;
 			this.data_stream_id = state.getDataStreamId();
+			setupObject(handle, state);
+
+			try {
+				if (state.hasPublisher()) 
+					_publisher = new PDCPublisher(state.getPublisher());
+
+				for (SystemState.PDCReceiver rec_state : state.getReceiversList()) {
+					final PDCReceiver receiver = new PDCReceiver(rec_state);
+					_receivers.add(receiver);
+				}
+			}
+			catch (MalformedContentNameStringException ex) {
+				throw new Error("URI stored is malformed", ex);
+			}
+
 		} else {
 			l.log(Level.FINER, "Generating new data stream {0} for {1}",
-							new Object[]{data_stream_id, app.getAppName()});
+					new Object[]{data_stream_id, app.getAppName()});
 
 			this.app = app;
 			this.data_stream_id = name;
+			setupObject(handle);
 		}
-		setupObject(handle);
 	}
 
 	protected final void setupObject(CCNHandle handle)
+	{
+		setupObject(handle, null);
+	}
+
+	protected final void setupObject(CCNHandle handle,
+			SystemState.DataStream state)
 	{
 		l.entering(this.getClass().getName(), "setupObject()");
 
@@ -72,9 +94,12 @@ public class DataStream implements iDataStream, iState {
 		_store = GlobalConfig.setupDataStorage(app, data_stream_id);
 
 		try {
-			this._transport = new StreamTransport(handle, this);
+			if (state != null && state.hasTransport())
+				this._transport = new StreamTransport(handle, this, state.getTransport());
+			else
+				this._transport = new StreamTransport(handle, this);
 		}
-		catch (PDCTransmissionException ex) {
+		catch (PDCException ex) {
 			throw new Error("Unable to instantiate transmission class", ex);
 		}
 
@@ -114,8 +139,8 @@ public class DataStream implements iDataStream, iState {
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error(
-							String.format("Unable to create %s/%s/%s", uri, app.getAppName(),
-							_publisher.getStreamId()), ex);
+					String.format("Unable to create %s/%s/%s", uri, app.getAppName(),
+					_publisher.getStreamId()), ex);
 		}
 	}
 
@@ -188,7 +213,7 @@ public class DataStream implements iDataStream, iState {
 	}
 
 	public void storeState()
-					throws IOException
+			throws IOException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 
@@ -196,7 +221,7 @@ public class DataStream implements iDataStream, iState {
 	}
 
 	public void storeStateRecursive()
-					throws IOException
+			throws IOException
 	{
 		storeState();
 	}

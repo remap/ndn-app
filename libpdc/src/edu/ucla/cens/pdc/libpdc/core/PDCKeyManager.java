@@ -21,8 +21,6 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.config.UserConfiguration;
@@ -226,9 +224,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 			priv_key = _privateKeyCache.getPrivateKey(digest.digest());
 			assert priv_key != null;
 
-			Log.debug("Public key format: " + pub_key.getFormat());
 			ak_builder.setPublicKey(ByteString.copyFrom(pub_key.getEncoded()));
-			Log.debug("Private key format: " + priv_key.getFormat());
 			ak_builder.setPrivateKey(ByteString.copyFrom(priv_key.getEncoded()));
 			ak_builder.setAlgorithm(SystemState.AsyncKey.KeyAlg.valueOf(pub_key.
 							getAlgorithm()));

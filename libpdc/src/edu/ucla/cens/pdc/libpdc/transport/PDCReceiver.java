@@ -5,6 +5,7 @@
 package edu.ucla.cens.pdc.libpdc.transport;
 
 import edu.ucla.cens.pdc.libpdc.SystemState;
+import java.io.IOException;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
@@ -13,9 +14,15 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  */
 public class PDCReceiver extends PDCNode {
 	public PDCReceiver(String uri)
-					throws MalformedContentNameStringException
+			throws MalformedContentNameStringException
 	{
 		super(uri);
+	}
+
+	public PDCReceiver(SystemState.PDCReceiver state)
+			throws MalformedContentNameStringException, IOException
+	{
+		super(state.getBase());
 	}
 
 	@Override
