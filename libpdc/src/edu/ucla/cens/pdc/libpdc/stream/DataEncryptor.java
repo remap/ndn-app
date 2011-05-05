@@ -470,13 +470,6 @@ public class DataEncryptor {
 	}
 
 // <editor-fold defaultstate="collapsed" desc="serialization code">
-	private void readObject(ObjectInputStream in)
-					throws IOException, ClassNotFoundException
-	{
-		in.defaultReadObject();
-		setupObject();
-	}
-
 	SystemState.DataEncryptor getObjectState()
 	{
 		SystemState.DataEncryptor.Builder builder = SystemState.DataEncryptor.

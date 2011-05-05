@@ -23,17 +23,17 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  */
 final public class PDVInstance implements CCNFilterListener {
 	final private Map<String, GenericCommand> _generic_commands = new HashMap<String, GenericCommand>(
-					1);
+		1);
 
 	final private Map<String, StreamCommand> _stream_commands = new HashMap<String, StreamCommand>(
-					2);
+		2);
 
 	final private GlobalConfig _config = GlobalConfig.getInstance();
 
 	final static CCNHandle ccn_handle = CCNHandle.getHandle();
 
 	public PDVInstance()
-					throws MalformedContentNameStringException
+		throws MalformedContentNameStringException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		KeyManager keymanager;
@@ -49,7 +49,7 @@ final public class PDVInstance implements CCNFilterListener {
 	}
 
 	public void startListening()
-					throws MalformedContentNameStringException, IOException
+		throws MalformedContentNameStringException, IOException
 	{
 		ContentName root = _config.getRoot();
 		ccn_handle.registerFilter(root, this);
@@ -94,13 +94,15 @@ final public class PDVInstance implements CCNFilterListener {
 		app_name = postfix.stringComponent(0);
 		app = _config.getApplication(app_name);
 		if (app == null) {
-			Log.warning("Application " + app_name + " doesn't exist.");
+			Log.warning("Application " + app_name
+				+ " doesn't exist.");
 			return false;
 		}
 
 		if (postfix.stringComponent(1).equals("control"))
 			//TODO: implement it (receiver side)
-			throw new UnsupportedOperationException("Not implemented yet");
+			throw new UnsupportedOperationException(
+				"Not implemented yet");
 
 		if (postfix.count() < 4)
 			return false;
@@ -120,8 +122,9 @@ final public class PDVInstance implements CCNFilterListener {
 
 		ContentName remain = postfix.subname(3, postfix.count() - 3);
 		StreamCommand cmd = _stream_commands.get(command_name);
-		Log.info(String.format("Firing %s(%s, %s, %s)\n", cmd.getCommandName(),
-						app.name, remain.toURIString(), interest));
+		Log.info(String.format("Firing %s(%s, %s, %s)\n", cmd.
+			getCommandName(),
+			app.name, remain.toURIString(), interest));
 
 		return cmd.processCommand(ds, remain, interest);
 	}
