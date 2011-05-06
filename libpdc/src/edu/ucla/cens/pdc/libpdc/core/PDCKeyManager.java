@@ -52,6 +52,8 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 	{
 		super();
 
+		_restore = restore;
+
 		if (!restore)
 			return;
 
@@ -97,7 +99,8 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 		else {
 			Log.info("Generating my default keys");
 			_defaultKeyID = generatePublisherKeys();
-			storeStateRecursive();
+			if (_restore)
+				storeStateRecursive();
 		}
 
 		_initialized = true;
@@ -436,4 +439,6 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 			synchronizedSet(new HashSet<byte[]>());
 
 	private Set<byte[]> _private_key_digests = new HashSet<byte[]>();
+
+	private final boolean _restore;
 }

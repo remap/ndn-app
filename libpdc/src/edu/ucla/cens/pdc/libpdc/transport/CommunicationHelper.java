@@ -12,6 +12,7 @@ import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
+import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.util.logging.Level;
@@ -64,7 +65,7 @@ public class CommunicationHelper {
 
 			//XXX: do verification
 
-			decoded = DataEncryptor.decryptAsymData(private_key, response.content());
+			decoded = EncryptionHelper.decryptAsymData(private_key, response.content());
 
 			authenticator = new Authenticator().fromBSON(decoded);
 

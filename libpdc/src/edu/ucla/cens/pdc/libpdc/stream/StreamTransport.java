@@ -51,7 +51,7 @@ public class StreamTransport {
 		assert stream != null;
 
 		this._stream = stream;
-		this._encryptor = new DataEncryptor();
+		this._encryptor = new DataEncryptor(stream);
 		this._ccn_handle = handle;
 
 		try {
@@ -73,7 +73,7 @@ public class StreamTransport {
 		assert stream != null;
 
 		this._stream = stream;
-		this._encryptor = new DataEncryptor(state.getEncryptor());
+		this._encryptor = new DataEncryptor(stream, state.getEncryptor());
 		this._ccn_handle = handle;
 
 		try {

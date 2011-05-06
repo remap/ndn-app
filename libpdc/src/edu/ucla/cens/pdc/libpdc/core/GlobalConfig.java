@@ -36,7 +36,7 @@ public class GlobalConfig implements iState {
 		_config_storage = setupConfigStorage();
 		try {
 			_instance = this;
-			setupObject();
+			setupObject(false);
 		}
 		catch (IOException ex) {
 			_instance = null;
@@ -70,7 +70,7 @@ public class GlobalConfig implements iState {
 		try {
 			_config_storage = setupConfigStorage();
 			_instance = this;
-			setupObject();
+			setupObject(true);
 
 			for (String app_name : state.getApplicationsList()) {
 				Application app = new Application(app_name, true);
@@ -91,13 +91,13 @@ public class GlobalConfig implements iState {
 		}
 	}
 
-	private void setupObject()
+	private void setupObject(boolean restore)
 			throws IOException
 	{
 		PDCKeyManager keymanager;
 
 		try {
-			keymanager = new PDCKeyManager();
+			keymanager = new PDCKeyManager(restore);
 			keymanager.initialize();
 
 			setKeyManager(keymanager);
@@ -105,16 +105,6 @@ public class GlobalConfig implements iState {
 		catch (ConfigurationException ex) {
 			throw new Error("Unable to setup keymanager", ex);
 		}
-
-//		locator = new KeyLocator(keyname);
-//		digest = keymanager.getDefaultKeyID();
-//		keymanager.setKeyLocator(digest, locator);
-
-//		keymanager.publishKeyToRepository(keyname, digest);
-
-//		config.getApplication("myapp").getDataStream("myds").getTransport().
-//						getEncryptor().setStreamKeyDigest(digest);
-		//XXX: remove this code
 	}
 
 	/**

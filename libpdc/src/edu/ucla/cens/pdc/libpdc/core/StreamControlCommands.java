@@ -19,7 +19,6 @@ import edu.ucla.cens.pdc.libpdc.transport.CommunicationHelper;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.security.PublicKey;
-import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.impl.CCNFlowControl.SaveType;
 import org.ccnx.ccn.io.content.PublicKeyObject;
 import org.ccnx.ccn.protocol.CCNTime;
@@ -40,7 +39,7 @@ public class StreamControlCommands extends StreamCommand {
 	boolean processAuthenticator(DataStream ds, ContentName receiver_uri,
 			Interest interest)
 	{
-		CCNHandle handle = CCNHandle.getHandle(); //XXX: remove this
+		final GlobalConfig config = GlobalConfig.getInstance();
 		PDCReceiver receiver;
 		Authenticator auth;
 		byte[] encrypted;
@@ -60,7 +59,8 @@ public class StreamControlCommands extends StreamCommand {
 			return false;
 		}
 		try {
-			encrypted = receiver.encryptData(auth);
+			encrypted = ds.getTransport().getEncryptor().encryptAsymData(receiver,
+					auth);
 		}
 		catch (PDCEncryptionException ex) {
 			Log.error("Error while encrypting data: " + ex.getMessage());
@@ -68,8 +68,8 @@ public class StreamControlCommands extends StreamCommand {
 		}
 
 		try {
-			return CommunicationHelper.publishEncryptedData(handle, interest,
-					receiver.getPublickeyDigest(), encrypted, 1);
+			return CommunicationHelper.publishEncryptedData(config.getCCNHandle(),
+					interest, receiver.getPublickeyDigest(), encrypted, 1);
 		}
 		catch (PDCTransmissionException ex) {
 			Log.error("Error while transmitting data: " + ex.getMessage());
@@ -80,7 +80,7 @@ public class StreamControlCommands extends StreamCommand {
 	boolean processStreamInfo(DataStream ds, ContentName receiver_uri,
 			Interest interest)
 	{
-		CCNHandle handle = CCNHandle.getHandle(); //XXX: remove this
+		final GlobalConfig config = GlobalConfig.getInstance();
 		PDCReceiver receiver;
 		StreamInfo si;
 		byte[] encrypted;
@@ -93,7 +93,7 @@ public class StreamControlCommands extends StreamCommand {
 
 		si = new StreamInfo(ds);
 		try {
-			encrypted = receiver.encryptData(si);
+			encrypted = ds.getTransport().getEncryptor().encryptAsymData(receiver, si);
 		}
 		catch (PDCEncryptionException ex) {
 			Log.error("Unable to encrypt stream info: " + ex.getMessage());
@@ -103,8 +103,9 @@ public class StreamControlCommands extends StreamCommand {
 		assert encrypted != null;
 
 		try {
-			return CommunicationHelper.publishEncryptedData(handle, interest, ds.
-					getTransport().getEncryptor().getStreamKeyDigest(), encrypted, 1);
+			return CommunicationHelper.publishEncryptedData(config.getCCNHandle(),
+					interest, ds.getTransport().getEncryptor().getStreamKeyDigest(),
+					encrypted, 1);
 		}
 		catch (PDCTransmissionException ex) {
 			Log.error("Unable to transmit data: " + ex.getMessage());

@@ -21,6 +21,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
 import edu.ucla.cens.pdc.libpdc.iConfigStorage;
+import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import java.security.KeyPairGenerator;
 import java.security.KeyPair;
 import javax.crypto.KeyGenerator;
@@ -56,7 +57,7 @@ public class DataEncryptorTest {
 		private KeyPair keypair;
 
 		public TestKeyManager()
-						throws ConfigurationException, IOException
+				throws ConfigurationException, IOException
 		{
 			super(false);
 		}
@@ -69,16 +70,16 @@ public class DataEncryptorTest {
 
 		@Override
 		public void initialize()
-						throws IOException, ConfigurationException
+				throws IOException, ConfigurationException
 		{
 			KeyPairGenerator kpg = null;
 			try {
 				kpg = KeyPairGenerator.getInstance(
-								UserConfiguration.defaultKeyAlgorithm());
+						UserConfiguration.defaultKeyAlgorithm());
 			}
 			catch (NoSuchAlgorithmException ex) {
 				Logger.getLogger(DataEncryptorTest.class.getName()).
-								log(Level.SEVERE, null, ex);
+						log(Level.SEVERE, null, ex);
 			}
 
 			kpg.initialize(UserConfiguration.defaultKeyLength());
@@ -93,7 +94,7 @@ public class DataEncryptorTest {
 
 		@Override
 		public void clearSavedConfigurationState()
-						throws FileNotFoundException, IOException
+				throws FileNotFoundException, IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
@@ -118,14 +119,14 @@ public class DataEncryptorTest {
 
 		@Override
 		public void saveSecureKeyCache()
-						throws FileNotFoundException, IOException
+				throws FileNotFoundException, IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
 
 		@Override
 		public void saveConfigurationState()
-						throws FileNotFoundException, IOException
+				throws FileNotFoundException, IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
@@ -192,7 +193,7 @@ public class DataEncryptorTest {
 
 		@Override
 		public void setKeyLocator(PublisherPublicKeyDigest publisherKeyID,
-						KeyLocator keyLocator)
+				KeyLocator keyLocator)
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
@@ -235,50 +236,50 @@ public class DataEncryptorTest {
 
 		@Override
 		public PublicKey getPublicKey(PublisherPublicKeyDigest publisherKeyID,
-						KeyLocator keyLocator, long timeout)
-						throws IOException
+				KeyLocator keyLocator, long timeout)
+				throws IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
 
 		@Override
 		public PublicKeyObject getPublicKeyObject(
-						PublisherPublicKeyDigest desiredKeyID,
-						KeyLocator locator, long timeout)
-						throws IOException
+				PublisherPublicKeyDigest desiredKeyID,
+				KeyLocator locator, long timeout)
+				throws IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
 
 		@Override
 		public PublicKeyObject publishKey(ContentName keyName,
-						PublicKey keyToPublish, PublisherPublicKeyDigest signingKeyID,
-						KeyLocator signingKeyLocator, boolean learnKeyLocator)
-						throws InvalidKeyException, IOException
+				PublicKey keyToPublish, PublisherPublicKeyDigest signingKeyID,
+				KeyLocator signingKeyLocator, boolean learnKeyLocator)
+				throws InvalidKeyException, IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
 
 		@Override
 		public PublicKeyObject publishKeyToRepository(ContentName keyName,
-						PublisherPublicKeyDigest keyToPublish, long timeToWaitForPreexisting)
-						throws InvalidKeyException, IOException
+				PublisherPublicKeyDigest keyToPublish, long timeToWaitForPreexisting)
+				throws InvalidKeyException, IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
 
 		@Override
 		public PublicKeyObject publishSelfSignedKeyToRepository(ContentName keyName,
-						PublicKey theKey, PublisherPublicKeyDigest keyToPublish,
-						long timeToWaitForPreexisting)
-						throws InvalidKeyException, IOException
+				PublicKey theKey, PublisherPublicKeyDigest keyToPublish,
+				long timeToWaitForPreexisting)
+				throws InvalidKeyException, IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
 
 		@Override
 		public AccessControlManager getAccessControlManagerForName(
-						ContentName contentName)
+				ContentName contentName)
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
@@ -292,19 +293,19 @@ public class DataEncryptorTest {
 
 	public static class TestConfigStorage implements iConfigStorage {
 		public byte[] loadEntry(String group, String name)
-						throws IOException
+				throws IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
 
 		public void saveEntry(String obj_group, String obj_key, byte[] byte_out)
-						throws IOException
+				throws IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
 
 		public void removeEntry(String group, String name)
-						throws IOException
+				throws IOException
 		{
 			throw new UnsupportedOperationException("Not supported yet.");
 		}
@@ -316,7 +317,7 @@ public class DataEncryptorTest {
 
 	@BeforeClass
 	public static void setUpClass()
-					throws Exception
+			throws Exception
 	{
 		GlobalConfig config;
 		PDCKeyManager keymgr;
@@ -328,12 +329,12 @@ public class DataEncryptorTest {
 		config = GlobalConfig.getInstance();
 		config.setKeyManager(keymgr);
 
-		encryptor = new DataEncryptor();
+		encryptor = new DataEncryptor(null);
 	}
 
 	@AfterClass
 	public static void tearDownClass()
-					throws Exception
+			throws Exception
 	{
 	}
 
@@ -353,11 +354,11 @@ public class DataEncryptorTest {
 	@Ignore
 	@Test
 	public void testEncryptRecord()
-					throws Exception
+			throws Exception
 	{
 		System.out.println("encryptRecord");
 		iBSONExportable record = null;
-		DataEncryptor instance = new DataEncryptor();
+		DataEncryptor instance = new DataEncryptor(null);
 		byte[] expResult = null;
 		byte[] result = instance.encryptRecord(record);
 		assertEquals(expResult, result);
@@ -371,11 +372,11 @@ public class DataEncryptorTest {
 	@Ignore
 	@Test
 	public void testEncryptData()
-					throws Exception
+			throws Exception
 	{
 		System.out.println("encryptData");
 		byte[] data = null;
-		DataEncryptor instance = new DataEncryptor();
+		DataEncryptor instance = new DataEncryptor(null);
 		byte[] expResult = null;
 		byte[] result = instance.encryptData(data);
 		assertEquals(expResult, result);
@@ -389,11 +390,11 @@ public class DataEncryptorTest {
 	@Ignore
 	@Test
 	public void testDecryptRecord()
-					throws Exception
+			throws Exception
 	{
 		System.out.println("decryptRecord");
 		byte[] cipherText = null;
-		DataEncryptor instance = new DataEncryptor();
+		DataEncryptor instance = new DataEncryptor(null);
 		DataRecord expResult = null;
 		DataRecord result = instance.decryptRecord(cipherText);
 		assertEquals(expResult, result);
@@ -407,11 +408,11 @@ public class DataEncryptorTest {
 	@Ignore
 	@Test
 	public void testDecryptData()
-					throws Exception
+			throws Exception
 	{
 		System.out.println("decryptData");
 		byte[] cipherText = null;
-		DataEncryptor instance = new DataEncryptor();
+		DataEncryptor instance = new DataEncryptor(null);
 		byte[] expResult = null;
 		byte[] result = instance.decryptData(cipherText);
 		assertEquals(expResult, result);
@@ -421,7 +422,7 @@ public class DataEncryptorTest {
 
 	@Test
 	public void testKeyWrapping()
-					throws Exception
+			throws Exception
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		KeyManager keymgr = config.getKeyManager();
@@ -434,9 +435,11 @@ public class DataEncryptorTest {
 		kg.init(128);
 		sec_key = kg.generateKey();
 
-		byte[] wrappedKey = DataEncryptor.wrapKey(keymgr.getPublicKey(null), sec_key);
-		SecretKey unwrappedKey = DataEncryptor.unwrapKey(keymgr.getSigningKey(null),
-						wrappedKey);
+		byte[] wrappedKey = EncryptionHelper.wrapKey(keymgr.getPublicKey(null),
+				sec_key);
+		SecretKey unwrappedKey = EncryptionHelper.unwrapKey(keymgr.getSigningKey(
+				null),
+				wrappedKey);
 
 		assertTrue(unwrappedKey.equals(sec_key));
 	}
@@ -446,7 +449,7 @@ public class DataEncryptorTest {
 	 */
 	@Test
 	public void testAsymData()
-					throws Exception
+			throws Exception
 	{
 		System.out.println("decryptAsymData");
 
@@ -465,8 +468,8 @@ public class DataEncryptorTest {
 		byte[] input = encoder.encode(object);
 		byte[] expResult = input.clone();
 
-		byte[] cipherText = DataEncryptor.encryptAsymData(keymgr.getPublicKey(null),
-						input);
+		byte[] cipherText = EncryptionHelper.encryptAsymData(keymgr.getPublicKey(null),
+				input);
 		System.out.println(new String(Base64.encode(cipherText)));
 		byte[] decrypted = encryptor.decryptAsymData(cipherText);
 

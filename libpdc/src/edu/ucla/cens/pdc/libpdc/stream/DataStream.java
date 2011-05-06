@@ -12,6 +12,7 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
 import edu.ucla.cens.pdc.libpdc.iState;
+import edu.ucla.cens.pdc.libpdc.transport.PDCNode;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
@@ -26,6 +27,7 @@ import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
@@ -194,6 +196,32 @@ public class DataStream implements iDataStream, iState {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Generate a key locator to fetch public key of another node
+	 * @param node node of which KeyLocator we want
+	 * @return key locator
+	 */
+	KeyLocator getKeyLocator(PDCNode node)
+	{
+		assert node != null;
+
+		PublisherPublicKeyDigest digest;
+		ContentName name;
+
+		digest = node.getPublickeyDigest();
+		assert digest != null;
+
+		try {
+			name = node.uri.append(app.getAppName()).append(data_stream_id).append(
+					Constants.STR_CONTROL).append("key");
+
+			return new KeyLocator(name, digest);
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to generate a valid key locator", ex);
+		}
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
@@ -27,13 +28,13 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  */
 public class PDCNode {
 	public PDCNode(String uri)
-					throws MalformedContentNameStringException
+			throws MalformedContentNameStringException
 	{
 		this.uri = ContentName.fromURI(uri);
 	}
 
 	public PDCNode(SystemState.PDCNode state)
-					throws MalformedContentNameStringException, IOException
+			throws MalformedContentNameStringException, IOException
 	{
 		this(state.getUri());
 
@@ -69,35 +70,6 @@ public class PDCNode {
 		this._publickey_digest = digest;
 	}
 
-	public PublicKey getPublicKey()
-	{
-		GlobalConfig config = GlobalConfig.getInstance();
-		KeyManager kmgr = config.getKeyManager();
-		PublicKey key;
-
-		assert kmgr != null;
-
-		Log.debug("Obtaining key " + _key_locator + " " + _publickey_digest);
-
-		if (_publickey_digest == null || _key_locator == null) {
-			Log.warning("Don't know public key of " + uri.toURIString());
-			return null;
-		}
-
-		try {
-			key = kmgr.getPublicKey(_publickey_digest, _key_locator);
-			if (key == null)
-				Log.warning("No key available " + _key_locator + " " + _publickey_digest);
-		}
-		catch (IOException ex) {
-			Log.error("Unable to obtain key for " + uri.toURIString() + ": " + ex.
-							getMessage());
-			return null;
-		}
-
-		return key;
-	}
-
 	public String getAuthenticator()
 	{
 		return _authenticator;
@@ -106,26 +78,6 @@ public class PDCNode {
 	public void setAuthenticator(String authenticator)
 	{
 		this._authenticator = authenticator;
-	}
-
-	public byte[] encryptData(iBSONExportable data)
-					throws PDCEncryptionException
-	{
-		return encryptData(data.toBSON());
-	}
-
-	public byte[] encryptData(byte[] data)
-					throws PDCEncryptionException
-	{
-		PublicKey public_key;
-
-		Log.debug("Encrypting: >" + new String(data) + "<");
-
-		public_key = getPublicKey();
-		if (public_key == null)
-			throw new PDCEncryptionException("Public key not available");
-
-		return DataEncryptor.encryptAsymData(public_key, data);
 	}
 
 	@Override
