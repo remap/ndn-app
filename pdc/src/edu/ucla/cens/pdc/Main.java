@@ -60,7 +60,7 @@ public class Main {
 	}
 
 	static void setupPDV(int pdv_started)
-					throws MalformedContentNameStringException, IOException
+			throws MalformedContentNameStringException, IOException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		CCNHandle handle;
@@ -109,9 +109,9 @@ public class Main {
 	 */
 	@SuppressWarnings("fallthrough")
 	public static void main(String[] args)
-					throws MalformedContentNameStringException, IOException,
-					ConfigurationException, PDCTransmissionException, PDCDatabaseException,
-					InvalidKeyException
+			throws MalformedContentNameStringException, IOException,
+			ConfigurationException, PDCTransmissionException, PDCDatabaseException,
+			InvalidKeyException
 	{
 		GlobalConfig config;
 		int pdv_started = 0;
@@ -119,16 +119,12 @@ public class Main {
 		final boolean SAVE_CONFIG = true;
 		PDVInstance test = null;
 		PublisherPublicKeyDigest digest = null;
-		KeyLocator key_locator = null;
 
 		if (args.length < 1)
 			usage();
 
-		if (args.length == 3) {
-			ContentName name = ContentName.fromURI(args[1]);
-			key_locator = new KeyLocator(name);
-			digest = new PublisherPublicKeyDigest(args[2]);
-		}
+		if (args.length == 2)
+			digest = new PublisherPublicKeyDigest(args[1]);
 
 		String arg = args[0];
 
@@ -156,7 +152,7 @@ public class Main {
 
 		//Disable annoying ccnx debug messages
 		org.ccnx.ccn.impl.support.Log.setDefaultLevel(
-						org.ccnx.ccn.impl.support.Log.FAC_ALL, Level.WARNING);
+				org.ccnx.ccn.impl.support.Log.FAC_ALL, Level.WARNING);
 
 		if (RESTORE_CONFIG) {
 			config = GlobalConfig.loadState();
@@ -178,25 +174,24 @@ public class Main {
 		if (SAVE_CONFIG)
 			config.storeStateRecursive();
 
-		KeyManager keymgr = config.getKeyManager();
-
 		switch (pdv_started) {
 		case -1:
 			DataStream ds = config.getApplication("myapp").getDataStream("myds");
 			fillDatabase(ds);
 			System.exit(0);
 		case 1:
-			if (!RESTORE_CONFIG && digest != null && key_locator != null) {
+//			if (!RESTORE_CONFIG && digest != null) {
+			if (digest != null) {
 				Log.debug("Setting up pdv2's key");
 				PDCReceiver receiver = config.getApplication("myapp").getDataStream(
-								"myds").getReceivers().iterator().next();
+						"myds").getReceivers().iterator().next();
 				receiver.setPublickeyDigest(digest);
-				receiver.setKeyLocator(key_locator);
 			}
 		/* fallthrough */
 		case 2:
-			Log.info("My Key: " + keymgr.getDefaultKeyLocator() + " " + keymgr.
-							getDefaultKeyID());
+			final PublisherPublicKeyDigest dsdigest = config.getApplication("myapp").
+					getDataStream("myds").getTransport().getEncryptor().getStreamKeyDigest();
+			Log.info("myds key: " + dsdigest.toString());
 		}
 
 		test.startListening();

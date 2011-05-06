@@ -65,6 +65,7 @@ public class PDCNode {
 
 	public void setPublickeyDigest(PublisherPublicKeyDigest digest)
 	{
+		Log.debug("Setting public key digest to: " + digest.toString());
 		this._publickey_digest = digest;
 	}
 

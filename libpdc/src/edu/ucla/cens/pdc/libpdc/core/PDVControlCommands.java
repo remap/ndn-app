@@ -16,8 +16,8 @@ import org.ccnx.ccn.protocol.Interest;
  *
  * @author Derek Kulinski
  */
-public class ReceiverControlCommands extends GenericCommand {
-	ReceiverControlCommands()
+public class PDVControlCommands extends GenericCommand {
+	PDVControlCommands()
 	{
 		super(Constants.STR_CONTROL);
 	}

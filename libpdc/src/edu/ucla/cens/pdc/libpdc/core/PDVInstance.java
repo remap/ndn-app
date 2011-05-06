@@ -31,9 +31,9 @@ final public class PDVInstance implements CCNFilterListener {
 	public PDVInstance()
 	{
 		try {
-			add_generic_command(new PublisherDataCommand());
-			add_generic_command(new PublisherControlCommands());
-			add_stream_command(new ReceiverControlCommands());
+			add_generic_command(new StreamDataCommand());
+			add_generic_command(new StreamControlCommands());
+			add_stream_command(new PDVControlCommands());
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error("Unable to instantiate PDVInstance class", ex);
@@ -114,8 +114,6 @@ final public class PDVInstance implements CCNFilterListener {
 
 		ContentName remain = postfix.subname(3, postfix.count() - 3);
 		StreamCommand cmd = _stream_commands.get(command_name);
-		Log.info(String.format("Firing %s(%s, %s, %s)\n", cmd.getCommandName(),
-				app.name, remain.toURIString(), interest));
 
 		return cmd.processCommand(ds, remain, interest);
 	}

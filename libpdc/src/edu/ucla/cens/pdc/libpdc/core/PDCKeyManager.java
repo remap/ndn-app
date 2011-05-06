@@ -205,18 +205,19 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 	public synchronized void storeState()
 			throws IOException
 	{
-		GlobalConfig config = GlobalConfig.getInstance();
-		SystemState.AsyncKey.Builder ak_builder = SystemState.AsyncKey.newBuilder();
+		final GlobalConfig config = GlobalConfig.getInstance();
+		final SystemState.AsyncKey.Builder ak_builder = SystemState.AsyncKey.
+				newBuilder();
 		CCNTime version;
 		PublicKey pub_key;
 		PrivateKey priv_key;
 
-		Log.debug("Storing public keys:");
+		Log.debug("Storing public keys");
 		for (final byte[] digest : _authenticated_public_key_digests) {
-			Log.debug("Saving " + digest.toString());
-			ak_builder.clear();
 			final PublisherPublicKeyDigest digest_obj = new PublisherPublicKeyDigest(
 					digest);
+			Log.debug("Saving " + digest_obj.toString());
+			ak_builder.clear();
 
 			version = _publicKeyCache.getPublicKeyVersionFromCache(digest_obj);
 			assert version != null;
@@ -229,16 +230,16 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 					getAlgorithm()));
 			ak_builder.setTimestamp(version.getTime());
 
-			config.saveConfig("keys", digest.toString(), ak_builder.build().
+			config.saveConfig("keys", digest_obj.toString(), ak_builder.build().
 					toByteArray());
 		}
 
 		Log.debug("Storing private keys");
 		for (final byte[] digest : _private_key_digests) {
-			Log.debug("Saving " + digest.toString());
-			ak_builder.clear();
 			final PublisherPublicKeyDigest digest_obj = new PublisherPublicKeyDigest(
 					digest);
+			Log.debug("Saving " + digest_obj.toString());
+			ak_builder.clear();
 
 			version = _publicKeyCache.getPublicKeyVersionFromCache(digest_obj);
 			assert version != null;
@@ -255,7 +256,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 					getAlgorithm()));
 			ak_builder.setTimestamp(version.getTime());
 
-			config.saveConfig("keys", digest.toString(), ak_builder.build().
+			config.saveConfig("keys", digest_obj.toString(), ak_builder.build().
 					toByteArray());
 		}
 

@@ -10,8 +10,6 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
@@ -32,8 +30,8 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  *
  * @author Derek Kulinski
  */
-public class PublisherControlCommands extends StreamCommand {
-	PublisherControlCommands()
+public class StreamControlCommands extends StreamCommand {
+	StreamControlCommands()
 			throws MalformedContentNameStringException
 	{
 		super(Constants.STR_CONTROL);
@@ -138,8 +136,7 @@ public class PublisherControlCommands extends StreamCommand {
 			return true;
 		}
 		catch (IOException ex) {
-			Logger.getLogger(PublisherControlCommands.class.getName()).
-					log(Level.SEVERE, null, ex);
+			Log.error("Unable to send the key: " + ex.getLocalizedMessage());
 		}
 
 		return false;
@@ -149,7 +146,7 @@ public class PublisherControlCommands extends StreamCommand {
 	@SuppressWarnings("CallToThreadDumpStack")
 	boolean processCommand(DataStream ds, ContentName postfix, Interest interest)
 	{
-		Log.debug("Got replication interest for: " + postfix.toURIString());
+		Log.debug("Got stream interest for: " + postfix.toString());
 
 		if (postfix.count() == 0) {
 			Log.error("No subcommand!");

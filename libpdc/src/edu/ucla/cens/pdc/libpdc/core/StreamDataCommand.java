@@ -16,8 +16,8 @@ import edu.ucla.cens.pdc.libpdc.util.Log;
  *
  * @author Derek Kulinski
  */
-public class PublisherDataCommand extends StreamCommand {
-	PublisherDataCommand()
+public class StreamDataCommand extends StreamCommand {
+	StreamDataCommand()
 			throws MalformedContentNameStringException
 	{
 		super(Constants.STR_DATA);

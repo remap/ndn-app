@@ -176,8 +176,6 @@ public class StreamTransport {
 		assert interest != null;
 		assert arguments != null;
 
-		Log.debug("Got list request for: " + arguments.toURIString());
-
 		// Content of the data packet
 		if (arguments.count() == 0)
 			ids = _stream.getStorage().getRangeIds();
