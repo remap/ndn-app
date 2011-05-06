@@ -58,7 +58,7 @@ public class DataEncryptorTest {
 		public TestKeyManager()
 						throws ConfigurationException, IOException
 		{
-			super("testing");
+			super(false);
 		}
 
 		@Override
