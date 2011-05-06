@@ -71,7 +71,7 @@ public class Main {
 		PDCPublisher node1 = new PDCPublisher("ccnx:/ucla.edu/apps/pdv1", "myds");
 		PDCReceiver node2 = new PDCReceiver("ccnx:/ucla.edu/apps/pdv2");
 
-		handle = CCNHandle.getHandle();
+		handle = config.getCCNHandle();
 
 		if (pdv_started == 1) {
 			config.setRoot(node1.uri);

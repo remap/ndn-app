@@ -20,11 +20,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.ContentName;
-import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
@@ -55,7 +54,7 @@ public class GlobalConfig implements iState {
 
 	@SuppressWarnings("LeakingThisInConstructor")
 	private GlobalConfig(SystemState.GlobalConfig state)
-					throws IOException
+			throws IOException
 	{
 		assert _instance == null;
 		assert state != null;
@@ -93,7 +92,7 @@ public class GlobalConfig implements iState {
 	}
 
 	private void setupObject()
-					throws IOException
+			throws IOException
 	{
 		PDCKeyManager keymanager;
 
@@ -140,7 +139,7 @@ public class GlobalConfig implements iState {
 
 		try {
 			constructor = _data_storage_class.getConstructor(app.getClass(),
-							String.class);
+					String.class);
 			store = constructor.newInstance(app, data_stream_id);
 		}
 		catch (Exception ex) {
@@ -182,7 +181,7 @@ public class GlobalConfig implements iState {
 	{
 		if (_root != null)
 			throw new UnsupportedOperationException(
-							"You can't change the root once it is already set");
+					"You can't change the root once it is already set");
 
 		_root = root;
 	}
@@ -196,6 +195,21 @@ public class GlobalConfig implements iState {
 		assert _root != null : "Root wasn't set";
 
 		return _root;
+	}
+
+	public CCNHandle getCCNHandle()
+	{
+		assert _key_manager != null;
+
+		try {
+			if (_ccn_handle == null)
+				_ccn_handle = CCNHandle.open(_key_manager);
+		}
+		catch (IOException ex) {
+			throw new RuntimeException("Unable to open handle", ex);
+		}
+
+		return _ccn_handle;
 	}
 
 	/**
@@ -291,20 +305,20 @@ public class GlobalConfig implements iState {
 	 * @throws IOException when there's an issue accessing the data
 	 */
 	public byte[] loadConfig(String group, String name)
-					throws IOException
+			throws IOException
 	{
 		return _config_storage.loadEntry(group, name);
 	}
 
 	public void saveConfig(iState object)
-					throws IOException
+			throws IOException
 	{
 		_config_storage.saveEntry(object.getStateGroupName(), object.getStateKey(),
-						object.stateToByteArray());
+				object.stateToByteArray());
 	}
 
 	public void saveConfig(String group, String name, byte[] byte_out)
-					throws IOException
+			throws IOException
 	{
 		_config_storage.saveEntry(group, name, byte_out);
 	}
@@ -349,13 +363,13 @@ public class GlobalConfig implements iState {
 	}
 
 	public void storeState()
-					throws IOException
+			throws IOException
 	{
 		saveConfig(this);
 	}
 
 	public void storeStateRecursive()
-					throws IOException
+			throws IOException
 	{
 		assert _key_manager != null : "Storing state needs to be done after key manager is instantienated";
 		_key_manager.storeStateRecursive();
@@ -367,7 +381,7 @@ public class GlobalConfig implements iState {
 	}
 
 	public static GlobalConfig loadState()
-					throws IOException
+			throws IOException
 	{
 		byte[] byte_in;
 		SystemState.GlobalConfig state;
@@ -386,7 +400,7 @@ public class GlobalConfig implements iState {
 	SystemState.GlobalConfig getObjectState()
 	{
 		SystemState.GlobalConfig.Builder builder = SystemState.GlobalConfig.
-						newBuilder();
+				newBuilder();
 
 		if (_root == null)
 			throw new RuntimeException("Root is not set");
@@ -416,4 +430,6 @@ public class GlobalConfig implements iState {
 	private transient final Map<String, Application> _applications = new HashMap<String, Application>();
 
 	private transient PDCKeyManager _key_manager = null;
+
+	private transient CCNHandle _ccn_handle = null;
 }

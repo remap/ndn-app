@@ -509,7 +509,7 @@ public class StreamTransport {
 
 	final private DataStream _stream;
 
-	final private DataEncryptor _encryptor;
+	final DataEncryptor _encryptor;
 
 	private transient CCNHandle _ccn_handle;
 

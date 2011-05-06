@@ -4,11 +4,11 @@
  */
 package edu.ucla.cens.pdc.libpdc.stream;
 
+import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
-import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
 import edu.ucla.cens.pdc.libpdc.iState;
@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
@@ -55,7 +56,7 @@ public class DataStream implements iDataStream, iState {
 			setupObject(handle, state);
 
 			try {
-				if (state.hasPublisher()) 
+				if (state.hasPublisher())
 					_publisher = new PDCPublisher(state.getPublisher());
 
 				for (SystemState.PDCReceiver rec_state : state.getReceiversList()) {
@@ -102,6 +103,20 @@ public class DataStream implements iDataStream, iState {
 		catch (PDCException ex) {
 			throw new Error("Unable to instantiate transmission class", ex);
 		}
+
+		try {
+			final GlobalConfig config = GlobalConfig.getInstance();
+			final ContentName key_name = _transport.base_name.append(
+					Constants.STR_CONTROL).append("key");
+			final KeyLocator locator = new KeyLocator(key_name);
+
+			config.getKeyManager().setKeyLocator(
+					_transport._encryptor._stream_key_digest, locator);
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to generate a key name", ex);
+		}
+
 
 		l.exiting(this.getClass().getName(), "setupObject()");
 	}
