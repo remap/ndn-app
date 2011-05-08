@@ -4,8 +4,6 @@
  */
 package edu.ucla.cens.pdc.libpdc.util;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import javax.crypto.SecretKey;
 import org.junit.After;
 import org.junit.AfterClass;

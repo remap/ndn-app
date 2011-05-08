@@ -33,6 +33,8 @@ public class EncryptionHelper {
 		KeyGenerator kg;
 		SecretKey secret_key;
 
+		initRandom();
+
 		try {
 			kg = KeyGenerator.getInstance("AES");
 		}
@@ -53,6 +55,8 @@ public class EncryptionHelper {
 				newBuilder();
 		Cipher cipher;
 		byte[] iv, ciphertext;
+
+		initRandom();
 
 		try {
 			cipher = Cipher.getInstance("AES/CTR/NoPadding");
