@@ -4,6 +4,8 @@
  */
 package edu.ucla.cens.pdc.libpdc.util;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
@@ -20,12 +22,87 @@ import org.bson.BSONDecoder;
 import org.bson.BSONEncoder;
 import org.bson.BSONObject;
 
-
 /**
  *
  * @author Derek Kulinski
  */
 public class EncryptionHelper {
+	public static SecretKey generateSymKey()
+			throws PDCEncryptionException
+	{
+		KeyGenerator kg;
+		SecretKey secret_key;
+
+		try {
+			kg = KeyGenerator.getInstance("AES");
+		}
+		catch (NoSuchAlgorithmException ex) {
+			throw new PDCEncryptionException("No AES available", ex);
+		}
+
+		kg.init(128, _random);
+		secret_key = kg.generateKey();
+
+		return secret_key;
+	}
+
+	public static byte[] encryptSymData(SecretKey key, byte[] data)
+			throws PDCEncryptionException
+	{
+		final EncryptedMessage.Symmetric.Builder builder = EncryptedMessage.Symmetric.
+				newBuilder();
+		Cipher cipher;
+		byte[] iv, ciphertext;
+
+		try {
+			cipher = Cipher.getInstance("AES/CTR/NoPadding");
+			cipher.init(Cipher.ENCRYPT_MODE, key, _random);
+
+			iv = cipher.getIV();
+			assert iv != null;
+			builder.setIv(ByteString.copyFrom(iv));
+
+			ciphertext = cipher.doFinal(data);
+			builder.setCipherText(ByteString.copyFrom(ciphertext));
+
+			return builder.build().toByteArray();
+		}
+		catch (GeneralSecurityException ex) {
+			throw new PDCEncryptionException("Unable to encrypt the data", ex);
+		}
+	}
+
+	public static byte[] decryptSymData(SecretKey key, byte[] input)
+			throws PDCEncryptionException
+	{
+		final EncryptedMessage.Symmetric message;
+		Cipher cipher;
+		byte[] iv, data;
+
+		try {
+			message = EncryptedMessage.Symmetric.parseFrom(input);
+		}
+		catch (InvalidProtocolBufferException ex) {
+			throw new PDCEncryptionException("Invalid input format", ex);
+		}
+
+		if (!message.hasIv())
+			throw new PDCEncryptionException("No IV provided in the message");
+		iv = message.getIv().toByteArray();
+
+		try {
+			cipher = Cipher.getInstance("AES/CTR/NoPadding");
+			cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
+
+			data = cipher.doFinal(message.getCipherText().toByteArray());
+
+			return data;
+		}
+		catch (GeneralSecurityException ex) {
+			throw new PDCEncryptionException("Unable to decrypt the data", ex);
+		}
+	}
+
 	public static byte[] wrapKey(PublicKey public_key, SecretKey secret_key)
 			throws PDCEncryptionException
 	{
@@ -144,4 +221,12 @@ public class EncryptionHelper {
 			throw new PDCEncryptionException("Unable to decrypt message", ex);
 		}
 	}
+
+	private static void initRandom()
+	{
+		if (_random == null)
+			_random = new SecureRandom();
+	}
+
+	private static SecureRandom _random = null;
 }

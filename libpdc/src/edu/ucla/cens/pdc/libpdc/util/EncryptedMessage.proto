@@ -1,0 +1,7 @@
+option java_package = "edu.ucla.cens.pdc.libpdc.util";
+option optimize_for = LITE_RUNTIME;
+
+message Symmetric {
+	required bytes cipher_text = 1;
+	optional bytes iv = 2;
+}
