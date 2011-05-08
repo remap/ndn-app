@@ -5,8 +5,6 @@
 package edu.ucla.cens.pdc.libpdc.stream;
 
 import com.google.protobuf.ByteString;
-import com.mongodb.BasicDBList;
-import com.mongodb.DBObject;
 import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
@@ -21,30 +19,16 @@ import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.util.LinkedList;
 import java.util.List;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.engines.TwofishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.bson.BSONDecoder;
-import org.bson.BSONEncoder;
-import org.bson.BSONObject;
 import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
@@ -121,11 +105,10 @@ public class DataEncryptor {
 
 	/**
 	 * Get hash of the stream's public key
-	 * @return hash of stream's public key
+	 * @return hash of stream's public key or null
 	 */
 	public PublisherPublicKeyDigest getStreamKeyDigest()
 	{
-		assert _stream_key_digest != null;
 		return _stream_key_digest;
 	}
 
@@ -248,7 +231,8 @@ public class DataEncryptor {
 		assert kmgr != null;
 
 		digest = node.getPublickeyDigest();
-		assert digest != null;
+		assert digest != null : "Digest of node " + node.uri.toURIString()
+				+ " is not available";
 
 		locator = _stream.getKeyLocator(node);
 		assert locator != null;
@@ -289,7 +273,8 @@ public class DataEncryptor {
 
 		PublicKey public_key;
 
-		Log.debug("Encrypting: >" + new String(data) + "<");
+		Log.debug("Encrypting: >" + new String(data) + "< using " + node.
+				getPublickeyDigest());
 
 		public_key = getPublicKey(node);
 		if (public_key == null)
@@ -297,7 +282,6 @@ public class DataEncryptor {
 
 		return EncryptionHelper.encryptAsymData(public_key, data);
 	}
-
 
 	public byte[] decryptAsymData(byte[] cipherText)
 			throws PDCEncryptionException

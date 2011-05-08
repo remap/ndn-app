@@ -19,10 +19,7 @@ import java.security.InvalidKeyException;
 import java.util.Date;
 import java.util.logging.Level;
 import org.ccnx.ccn.CCNHandle;
-import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.config.ConfigurationException;
-import org.ccnx.ccn.protocol.ContentName;
-import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
@@ -123,7 +120,7 @@ public class Main {
 		if (args.length < 1)
 			usage();
 
-		if (args.length == 2)
+		if (args.length >= 2)
 			digest = new PublisherPublicKeyDigest(args[1]);
 
 		String arg = args[0];
@@ -174,23 +171,22 @@ public class Main {
 		if (SAVE_CONFIG)
 			config.storeStateRecursive();
 
+		DataStream ds = config.getApplication("myapp").getDataStream("myds");
 		switch (pdv_started) {
 		case -1:
-			DataStream ds = config.getApplication("myapp").getDataStream("myds");
 			fillDatabase(ds);
 			System.exit(0);
 		case 1:
-//			if (!RESTORE_CONFIG && digest != null) {
 			if (digest != null) {
 				Log.debug("Setting up pdv2's key");
-				PDCReceiver receiver = config.getApplication("myapp").getDataStream(
-						"myds").getReceivers().iterator().next();
+				PDCReceiver receiver = ds.getReceivers().iterator().next();
 				receiver.setPublickeyDigest(digest);
+				ds.storeStateRecursive();
 			}
 		/* fallthrough */
 		case 2:
-			final PublisherPublicKeyDigest dsdigest = config.getApplication("myapp").
-					getDataStream("myds").getTransport().getEncryptor().getStreamKeyDigest();
+			final PublisherPublicKeyDigest dsdigest = ds.getTransport().getEncryptor().
+					getStreamKeyDigest();
 			Log.info("myds key: " + dsdigest.toString());
 		}
 
@@ -198,8 +194,22 @@ public class Main {
 
 		Log.debug("Listening");
 
-		if (pdv_started == 2)
-			config.getApplication("myapp").periodicPullStart(5);
-//			config.getApplication("myapp").getDataStream("myds").getTransport().fetchDataFromUplink();
+		if (pdv_started == 1) {
+			final PDCReceiver receiver = ds.getReceivers().iterator().next();
+			if (args.length >= 3)
+				ds.setupReceiver(receiver, args[2]);
+		} else if (pdv_started == 2) {
+			final PDCPublisher publisher = ds.getPublisher();
+			final String authenticator = ds.setupPublisher(publisher);
+			Log.info("Authenticator for the publisher: " + authenticator);
+
+//			config.getApplication("myapp").periodicPullStart(5);
+
+//			//first one will fail, but it'll obtain an encryption key
+//			config.getApplication("myapp").getDataStream("myds").getTransport().
+//					fetchDataFromUplink();
+//			config.getApplication("myapp").getDataStream("myds").getTransport().
+//					fetchDataFromUplink();
+		}
 	}
 }

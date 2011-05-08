@@ -8,6 +8,7 @@ import edu.ucla.cens.pdc.libpdc.datastructures.Authenticator;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import java.io.IOException;
 import org.ccnx.ccn.protocol.ContentName;
@@ -15,14 +16,22 @@ import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
+import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.transport.CommunicationHelper;
+import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.util.Log;
+import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Arrays;
+import org.ccnx.ccn.config.SystemConfiguration;
 import org.ccnx.ccn.impl.CCNFlowControl.SaveType;
+import org.ccnx.ccn.impl.support.DataUtils;
 import org.ccnx.ccn.io.content.PublicKeyObject;
 import org.ccnx.ccn.protocol.CCNTime;
+import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.KeyLocator;
+import org.ccnx.ccn.protocol.PublisherID;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
@@ -34,6 +43,84 @@ public class StreamControlCommands extends StreamCommand {
 			throws MalformedContentNameStringException
 	{
 		super(Constants.STR_CONTROL);
+	}
+
+	private boolean processSetup(DataStream ds, Interest interest)
+	{
+		final GlobalConfig config = GlobalConfig.getInstance();
+		final PDCPublisher publisher = ds.getPublisher();
+		ContentName name;
+		ContentObject co;
+
+		if (publisher == null) {
+			Log.warning("Got setup request, while a publisher wasn't set up");
+			return false;
+		}
+		try {
+			ds.getTransport().publishACK(interest);
+		}
+		catch (PDCTransmissionException ex) {
+			throw new RuntimeException(
+					"Error while trying to respond to the request with an ACK", ex);
+		}
+
+		try {
+			name = publisher.uri.append(ds.app.getAppName()).append(ds.data_stream_id).
+					append(Constants.STR_CONTROL).append("authenticator").append(config.
+					getRoot());
+
+			co = config.getCCNHandle().get(name, SystemConfiguration.LONG_TIMEOUT);
+			if (co == null) {
+				Log.error("Got no response when requesting authenticator");
+				return false;
+			}
+
+			//Verify if data is in check
+			if (!co.verify(config.getKeyManager())) {
+				Log.error("Authenticator content fails data verification");
+				return false;
+			}
+
+			final byte[] data = ds.getTransport().getEncryptor().decryptAsymData(co.
+					content());
+			final Authenticator auth = new Authenticator().fromBSON(data);
+
+			if (!Arrays.equals(auth.getKeyDigest(), co.signedInfo().getPublisher())) {
+				Log.error(
+						"Tempering detected! Data is signed with different key than one stored in authenticator");
+				return false;
+			}
+
+			if (!auth.getAuthenticator().equals(publisher.getAuthenticator())) {
+				Log.error("Authenticator value doesn't match");
+				return false;
+			}
+
+			Log.info("Adding key " + DataUtils.base64Encode(auth.getKeyDigest(),
+					PublisherID.PUBLISHER_ID_LEN * 2) + " to trusted keys.");
+			config.getKeyManager().authenticateKey(auth.getKeyDigest());
+
+			return true;
+		}
+		catch (GeneralSecurityException ex) {
+			Log.error("Problem while trying to verify data signature: " + ex.
+					getLocalizedMessage());
+		}
+		catch (IOException ex) {
+			Log.error("Communication problem: " + ex.getLocalizedMessage());
+		}
+		catch (PDCParseException ex) {
+			Log.error("Unable to parse data (malformaed string?): " + ex.
+					getLocalizedMessage());
+		}
+		catch (PDCEncryptionException ex) {
+			Log.error("Unable to decrypt message: " + ex.getLocalizedMessage());
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to form CCN name", ex);
+		}
+
+		return false;
 	}
 
 	boolean processAuthenticator(DataStream ds, ContentName receiver_uri,
@@ -59,8 +146,8 @@ public class StreamControlCommands extends StreamCommand {
 			return false;
 		}
 		try {
-			encrypted = ds.getTransport().getEncryptor().encryptAsymData(receiver,
-					auth);
+			final DataEncryptor encryptor = ds.getTransport().getEncryptor();
+			encrypted = encryptor.encryptAsymData(receiver, auth);
 		}
 		catch (PDCEncryptionException ex) {
 			Log.error("Error while encrypting data: " + ex.getMessage());
@@ -69,7 +156,8 @@ public class StreamControlCommands extends StreamCommand {
 
 		try {
 			return CommunicationHelper.publishEncryptedData(config.getCCNHandle(),
-					interest, receiver.getPublickeyDigest(), encrypted, 1);
+					interest, ds.getTransport().getEncryptor().getStreamKeyDigest(),
+					encrypted, 1);
 		}
 		catch (PDCTransmissionException ex) {
 			Log.error("Error while transmitting data: " + ex.getMessage());
@@ -125,6 +213,8 @@ public class StreamControlCommands extends StreamCommand {
 		assert key != null;
 		assert version != null;
 
+		Log.debug("About to send key: " + digest);
+
 		KeyLocator locator = new KeyLocator(interest.name(), digest);
 
 		try {
@@ -144,7 +234,6 @@ public class StreamControlCommands extends StreamCommand {
 	}
 
 	@Override
-	@SuppressWarnings("CallToThreadDumpStack")
 	boolean processCommand(DataStream ds, ContentName postfix, Interest interest)
 	{
 		Log.debug("Got stream interest for: " + postfix.toString());
@@ -160,7 +249,9 @@ public class StreamControlCommands extends StreamCommand {
 		try {
 			ContentName remainder = postfix.subname(1, postfix.count() - 1);
 
-			if (command.equals("authenticator"))
+			if (command.equals("setup"))
+				return processSetup(ds, interest);
+			else if (command.equals("authenticator"))
 				return processAuthenticator(ds, remainder, interest);
 			else if (command.equals("stream_info"))
 				return processStreamInfo(ds, remainder, interest);
@@ -175,10 +266,7 @@ public class StreamControlCommands extends StreamCommand {
 			}
 		}
 		catch (Exception ex) {
-			Log.error("Got problem: " + ex);
-			ex.printStackTrace();
+			throw new Error("Got problem", ex);
 		}
-
-		return false;
 	}
 }

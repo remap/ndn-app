@@ -9,6 +9,7 @@ import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
 import edu.ucla.cens.pdc.libpdc.iState;
@@ -222,6 +223,27 @@ public class DataStream implements iDataStream, iState {
 		catch (MalformedContentNameStringException ex) {
 			throw new Error("Unable to generate a valid key locator", ex);
 		}
+	}
+
+	public String setupPublisher(PDCPublisher publisher)
+	{
+		assert publisher != null;
+
+		final String auth_string = StringUtil.genrateRandomString(10);
+		publisher.setAuthenticator(auth_string);
+
+		return auth_string;
+	}
+
+	public boolean setupReceiver(PDCReceiver receiver, String auth_string)
+			throws PDCTransmissionException
+	{
+		assert receiver != null;
+		assert auth_string != null && !auth_string.isEmpty();
+
+		receiver.setAuthenticator(auth_string);
+
+		return _transport.initiateSetup(receiver);
 	}
 
 	@Override

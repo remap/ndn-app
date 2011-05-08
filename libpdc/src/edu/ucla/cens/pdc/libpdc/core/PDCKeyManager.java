@@ -141,9 +141,9 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 		}
 	}
 
-	public void authenticateKey(PublisherPublicKeyDigest digest)
+	public void authenticateKey(byte[] digest)
 	{
-		_authenticated_public_key_digests.add(digest.digest());
+		_authenticated_public_key_digests.add(digest);
 	}
 
 	public static KeyPair generateKeys()

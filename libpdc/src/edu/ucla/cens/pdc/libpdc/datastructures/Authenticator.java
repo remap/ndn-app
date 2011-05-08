@@ -13,6 +13,8 @@ import edu.ucla.cens.pdc.libpdc.iBSONExportable;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import org.bson.BSONDecoder;
 import org.bson.BSONEncoder;
+import org.bson.BSONObject;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
@@ -30,21 +32,26 @@ public class Authenticator implements iBSONExportable {
 	}
 
 	public Authenticator(DataStream stream, PDCReceiver receiver)
-					throws PDCException
+			throws PDCException
 	{
-		String authenticator;
-
 		assert stream != null;
 		assert receiver != null;
 
+		String authenticator;
+		PublisherPublicKeyDigest digest_obj;
+		byte[] digest;
+
+		digest_obj = stream.getTransport().getEncryptor().getStreamKeyDigest();
+		assert digest_obj != null;
+
+		digest = digest_obj.digest();
 		authenticator = receiver.getAuthenticator();
 		if (authenticator == null)
 			throw new PDCException("No authenticator set");
 
 		_data = new BasicDBObject();
 		_data.put(STR_AUTHENTICATOR, authenticator);
-		_data.put(STR_KEY_DIGEST,
-						stream.getTransport().getEncryptor().getStreamKeyDigest());
+		_data.put(STR_KEY_DIGEST, digest);
 	}
 
 	public String getAuthenticator()
@@ -55,12 +62,12 @@ public class Authenticator implements iBSONExportable {
 		return (String) _data.get(STR_AUTHENTICATOR);
 	}
 
-	public String getKeyDigest()
+	public byte[] getKeyDigest()
 	{
 		assert _data != null;
 		assert _data.containsField(STR_KEY_DIGEST);
 
-		return (String) _data.get(STR_KEY_DIGEST);
+		return (byte[]) _data.get(STR_KEY_DIGEST);
 	}
 
 	public byte[] toBSON()
@@ -75,12 +82,13 @@ public class Authenticator implements iBSONExportable {
 	}
 
 	public Authenticator fromBSON(byte[] data)
-					throws PDCParseException
+			throws PDCParseException
 	{
 		BSONDecoder decoder = new BSONDecoder();
 
 		try {
-			_data = (DBObject) decoder.readObject(data);
+			final BSONObject bo = decoder.readObject(data);
+			_data = new BasicDBObject(bo.toMap());
 		}
 		catch (RuntimeException ex) {
 			throw new PDCParseException("unable to parse data", ex);
