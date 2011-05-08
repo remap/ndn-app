@@ -17,10 +17,10 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
+import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -51,7 +51,7 @@ public class StreamTransport {
 		assert stream != null;
 
 		this._stream = stream;
-		this._encryptor = new DataEncryptor();
+		this._encryptor = new DataEncryptor(stream);
 		this._ccn_handle = handle;
 
 		try {
@@ -73,7 +73,7 @@ public class StreamTransport {
 		assert stream != null;
 
 		this._stream = stream;
-		this._encryptor = new DataEncryptor(state.getEncryptor());
+		this._encryptor = new DataEncryptor(stream, state.getEncryptor());
 		this._ccn_handle = handle;
 
 		try {
@@ -176,8 +176,6 @@ public class StreamTransport {
 		assert interest != null;
 		assert arguments != null;
 
-		Log.debug("Got list request for: " + arguments.toURIString());
-
 		// Content of the data packet
 		if (arguments.count() == 0)
 			ids = _stream.getStorage().getRangeIds();
@@ -198,6 +196,8 @@ public class StreamTransport {
 			throws PDCTransmissionException
 	{
 		String answer = "ACK";
+
+		//TODO: ACK shouldn't be marked as ENCR
 
 		return publishData(interest, answer.getBytes(), 1);
 	}
@@ -240,6 +240,36 @@ public class StreamTransport {
 		catch (Exception ex) {
 			throw new PDCTransmissionException("Error while publishing data", ex);
 		}
+	}
+
+	boolean initiateSetup(PDCReceiver receiver)
+			throws PDCTransmissionException
+	{
+		assert receiver != null;
+
+		ContentName name;
+		ContentObject co;
+
+		if (receiver.getAuthenticator() == null)
+			throw new PDCTransmissionException("Authenticator is not set");
+
+		try {
+			name = receiver.uri.append(_stream.app.getAppName()).append(
+					_stream.data_stream_id).append(Constants.STR_CONTROL).append("setup");
+			co = _ccn_handle.get(name, SystemConfiguration.MEDIUM_TIMEOUT);
+
+			if (co != null && new String(co.content()).equals("ACK"))
+				return true;
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to form a proper name for the request", ex);
+		}
+		catch (IOException ex) {
+			throw new PDCTransmissionException(
+					"Error when trying to express an interest", ex);
+		}
+
+		return false;
 	}
 
 	public synchronized void fetchStreamInfo()
@@ -509,7 +539,7 @@ public class StreamTransport {
 
 	final private DataStream _stream;
 
-	final private DataEncryptor _encryptor;
+	final DataEncryptor _encryptor;
 
 	private transient CCNHandle _ccn_handle;
 

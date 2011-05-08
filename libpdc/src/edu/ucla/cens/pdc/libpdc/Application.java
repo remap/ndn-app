@@ -43,7 +43,7 @@ public class Application implements iApplication, iState {
 			GlobalConfig config = GlobalConfig.getInstance();
 			byte[] byte_in;
 			SystemState.Application state;
-			CCNHandle handle = CCNHandle.getHandle();
+			CCNHandle handle = config.getCCNHandle();
 
 			byte_in = config.loadConfig("applications", name);
 			state = SystemState.Application.parseFrom(byte_in);

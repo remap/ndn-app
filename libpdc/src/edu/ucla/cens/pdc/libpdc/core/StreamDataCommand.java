@@ -16,16 +16,16 @@ import edu.ucla.cens.pdc.libpdc.util.Log;
  *
  * @author Derek Kulinski
  */
-public class PublisherDataCommand extends StreamCommand {
-	PublisherDataCommand()
-					throws MalformedContentNameStringException
+public class StreamDataCommand extends StreamCommand {
+	StreamDataCommand()
+			throws MalformedContentNameStringException
 	{
 		super(Constants.STR_DATA);
 	}
 
 	@Override
 	boolean processCommand(DataStream datastream, ContentName postfix,
-					Interest interest)
+			Interest interest)
 	{
 		String record_id;
 
@@ -35,8 +35,8 @@ public class PublisherDataCommand extends StreamCommand {
 		record_id = postfix.stringComponent(0);
 
 		Log.debug(String.format(
-						"Requested; app = %s, datastream = %s, record_id = %s",
-						datastream.app.getAppName(), datastream.data_stream_id, record_id));
+				"Requested; app = %s, datastream = %s, record_id = %s",
+				datastream.app.getAppName(), datastream.data_stream_id, record_id));
 		try {
 			return datastream.getTransport().publishDataRecord(interest, record_id);
 		}

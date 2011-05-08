@@ -5,8 +5,6 @@
 package edu.ucla.cens.pdc.libpdc.stream;
 
 import com.google.protobuf.ByteString;
-import com.mongodb.BasicDBList;
-import com.mongodb.DBObject;
 import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
@@ -16,35 +14,23 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
+import edu.ucla.cens.pdc.libpdc.transport.PDCNode;
+import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.util.LinkedList;
 import java.util.List;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.engines.TwofishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.bson.BSONDecoder;
-import org.bson.BSONEncoder;
-import org.bson.BSONObject;
 import org.ccnx.ccn.KeyManager;
+import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
@@ -52,29 +38,17 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  * @author Derek Kulinski
  */
 public class DataEncryptor {
-	private transient BufferedBlockCipher _cipher;
-
-	private byte[] _encrypt_key;
-
-	private transient byte[] _encrypt_iv;
-
-	private byte[] _decrypt_key;
-
-	private transient byte[] _decrypt_iv;
-
-	/**
-	 * keys associated with our stream
-	 */
-	protected PublisherPublicKeyDigest _stream_key_digest;
-
-	public DataEncryptor()
+	public DataEncryptor(DataStream stream)
 	{
+		_stream = stream;
 		setupObject();
 	}
 
-	public DataEncryptor(SystemState.DataEncryptor state)
-					throws PDCException
+	public DataEncryptor(DataStream stream, SystemState.DataEncryptor state)
+			throws PDCException
 	{
+		_stream = stream;
+
 		if (state.hasEncryptionKey())
 			_encrypt_key = state.getEncryptionKey().toByteArray();
 		if (state.hasDecryptionKey())
@@ -83,7 +57,7 @@ public class DataEncryptor {
 		if (state.hasStreamKeyDigest())
 			try {
 				_stream_key_digest = new PublisherPublicKeyDigest(
-								state.getStreamKeyDigest());
+						state.getStreamKeyDigest());
 			}
 			catch (IOException ex) {
 				throw new PDCException("Unable to generate stream key digest", ex);
@@ -129,23 +103,22 @@ public class DataEncryptor {
 		this._decrypt_key = key;
 	}
 
+	/**
+	 * Get hash of the stream's public key
+	 * @return hash of stream's public key or null
+	 */
 	public PublisherPublicKeyDigest getStreamKeyDigest()
 	{
 		return _stream_key_digest;
 	}
 
 	/**
-	 *
-	 * @param digest
-	 * @deprecated this won't be needed later, as the keys will be automatically
-	 * generated
+	 * Generate new asymmetric keys for the stream
+	 * Don't forget to save stream's state or the
+	 * keys will be lost
+	 * @return hash of stream's public key
 	 */
-	public void setStreamKeyDigest(PublisherPublicKeyDigest digest)
-	{
-		this._stream_key_digest = digest;
-	}
-
-	public PublisherPublicKeyDigest generateStreamKeys()
+	PublisherPublicKeyDigest generateStreamKeys()
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 
@@ -153,18 +126,20 @@ public class DataEncryptor {
 		assert keymgr != null;
 
 		_stream_key_digest = keymgr.generatePublisherKeys();
+		assert _stream_key_digest != null;
 
 		return _stream_key_digest;
 	}
 
 	public byte[] encryptRecord(iBSONExportable record)
-					throws PDCEncryptionException
+			throws PDCEncryptionException
 	{
+		assert record != null;
 		return encryptData(record.toBSON());
 	}
 
 	public byte[] encryptData(byte[] data)
-					throws PDCEncryptionException
+			throws PDCEncryptionException
 	{
 		byte[] ciphertext;
 		int output_len;
@@ -193,7 +168,7 @@ public class DataEncryptor {
 	}
 
 	public DataRecord decryptRecord(byte[] cipherText)
-					throws PDCEncryptionException
+			throws PDCEncryptionException
 	{
 		byte[] decrypted;
 
@@ -208,7 +183,7 @@ public class DataEncryptor {
 	}
 
 	public byte[] decryptData(byte[] cipherText)
-					throws PDCEncryptionException
+			throws PDCEncryptionException
 	{
 		byte[] buffer, decrypted;
 		int outputLen;
@@ -223,7 +198,7 @@ public class DataEncryptor {
 
 		buffer = new byte[_cipher.getOutputSize(cipherText.length)];
 		outputLen = _cipher.processBytes(cipherText, 0, cipherText.length, buffer,
-						0);
+				0);
 
 		try {
 			outputLen += _cipher.doFinal(buffer, outputLen);
@@ -238,180 +213,78 @@ public class DataEncryptor {
 		}
 	}
 
-	public static byte[] wrapKey(PublicKey public_key, SecretKey secret_key)
-					throws PDCEncryptionException
+	/**
+	 * Get node's public key
+	 * @param node node of which public key we want to get
+	 * @return public key or null
+	 */
+	PublicKey getPublicKey(PDCNode node)
 	{
-		String alg;
-		Cipher cipher;
+		assert node != null;
 
-		//CBC/PKCS1Padding or ISO9796d1Encoding, not sure what's better?
-		//XXX: why CBC or CFB are bad?
-		alg = public_key.getAlgorithm() + "/ECB/PKCS1Padding";
+		final GlobalConfig config = GlobalConfig.getInstance();
+		final KeyManager kmgr = config.getKeyManager();
+		PublicKey key;
+		PublisherPublicKeyDigest digest;
+		KeyLocator locator;
+
+		assert kmgr != null;
+
+		digest = node.getPublickeyDigest();
+		assert digest != null : "Digest of node " + node.uri.toURIString()
+				+ " is not available";
+
+		locator = _stream.getKeyLocator(node);
+		assert locator != null;
+
+		Log.debug("Obtaining key " + locator + " " + digest);
+
+		if (digest == null || locator == null) {
+			Log.warning("Don't have enough information to fetch public key of "
+					+ node.uri.toURIString());
+			return null;
+		}
 
 		try {
-			cipher = Cipher.getInstance(alg);
-			cipher.init(Cipher.WRAP_MODE, public_key);
-			return cipher.wrap(secret_key);
+			key = kmgr.getPublicKey(digest, locator);
+			if (key == null)
+				Log.warning("No key available " + locator + " " + digest);
 		}
-		catch (IllegalBlockSizeException ex) {
-			throw new PDCEncryptionException("Unable to wrap key in " + public_key.
-							toString(), ex);
+		catch (IOException ex) {
+			Log.error("Unable to obtain key for " + node.uri.toURIString() + ": "
+					+ ex.getMessage());
+			return null;
 		}
-		catch (InvalidKeyException ex) {
-			throw new PDCEncryptionException("Unable to wrap key in " + public_key.
-							toString(), ex);
-		}
-		catch (NoSuchAlgorithmException ex) {
-			throw new PDCEncryptionException("Unable to wrap key in " + public_key.
-							toString(), ex);
-		}
-		catch (NoSuchPaddingException ex) {
-			throw new PDCEncryptionException("Unable to wrap key in " + public_key.
-							toString(), ex);
-		}
+
+		return key;
 	}
 
-	public static SecretKey unwrapKey(PrivateKey private_key, byte[] wrapped_key)
-					throws PDCEncryptionException
+	public byte[] encryptAsymData(PDCNode node, iBSONExportable data)
+			throws PDCEncryptionException
 	{
-		String alg;
-		Cipher cipher;
-		SecretKey secret_key;
-
-		alg = private_key.getAlgorithm() + "/ECB/PKCS1Padding";
-		try {
-			cipher = Cipher.getInstance(alg);
-			cipher.init(Cipher.UNWRAP_MODE, private_key);
-			secret_key = (SecretKey) cipher.unwrap(wrapped_key, "AES",
-							Cipher.SECRET_KEY);
-
-			return secret_key;
-		}
-		catch (NoSuchPaddingException ex) {
-			throw new PDCEncryptionException("Unable to unwrap key", ex);
-		}
-		catch (InvalidKeyException ex) {
-			throw new PDCEncryptionException("Unable to unwrap key", ex);
-		}
-		catch (NoSuchAlgorithmException ex) {
-			throw new PDCEncryptionException("Unable to unwrap key", ex);
-		}
+		return encryptAsymData(node, data.toBSON());
 	}
 
-	public static byte[] encryptAsymData(PublicKey public_key, byte[] data)
-					throws PDCEncryptionException
+	public byte[] encryptAsymData(PDCNode node, byte[] data)
+			throws PDCEncryptionException
 	{
-		BSONEncoder encoder = new BSONEncoder();
-		DBObject obj = new BasicDBList();
-		SecureRandom random = new SecureRandom();
-		KeyGenerator kg;
-		Cipher cipher;
-		SecretKey secret_key;
-		byte[] ciphertext;
-		byte[] iv;
+		assert node != null;
+		assert data != null;
 
-		try {
-			kg = KeyGenerator.getInstance("AES");
-		}
-		catch (NoSuchAlgorithmException ex) {
-			throw new PDCEncryptionException("No AES available", ex);
-		}
+		PublicKey public_key;
 
-		kg.init(128, random);
-		secret_key = kg.generateKey();
+		Log.debug("Encrypting: >" + new String(data) + "< using " + node.
+				getPublickeyDigest());
 
-		obj.put("0", wrapKey(public_key, secret_key));
+		public_key = getPublicKey(node);
+		if (public_key == null)
+			throw new PDCEncryptionException("Public key not available");
 
-		try {
-			cipher = Cipher.getInstance("AES/CTR/PKCS7Padding");
-
-			iv = new byte[cipher.getBlockSize()];
-			random.nextBytes(iv);
-			obj.put("1", iv);
-
-			cipher.init(Cipher.ENCRYPT_MODE, secret_key, new IvParameterSpec(iv));
-
-			ciphertext = cipher.doFinal(data);
-			obj.put("2", ciphertext);
-
-			return encoder.encode(obj);
-		}
-		catch (InvalidAlgorithmParameterException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to "
-							+ public_key.toString(), ex);
-		}
-		catch (BadPaddingException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to "
-							+ public_key.toString(), ex);
-		}
-		catch (IllegalBlockSizeException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to "
-							+ public_key.toString(), ex);
-		}
-		catch (InvalidKeyException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to "
-							+ public_key.toString(), ex);
-		}
-		catch (NoSuchAlgorithmException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to "
-							+ public_key.toString(), ex);
-		}
-		catch (NoSuchPaddingException ex) {
-			throw new PDCEncryptionException("Unable to encrypt message to "
-							+ public_key.toString(), ex);
-		}
-	}
-
-	public static byte[] decryptAsymData(PrivateKey private_key, byte[] cipherText)
-					throws PDCEncryptionException
-	{
-		BSONDecoder decoder = new BSONDecoder();
-		Cipher cipher;
-		BSONObject obj;
-		SecretKey secret_key;
-		byte[] aes_ciphertext, iv;
-
-		assert private_key != null;
-
-		try {
-			obj = decoder.readObject(cipherText);
-		}
-		catch (RuntimeException ex) {
-			throw new PDCEncryptionException("invalida data", ex);
-		}
-
-		secret_key = unwrapKey(private_key, (byte[]) obj.get("0"));
-		iv = (byte[]) obj.get("1");
-		try {
-			cipher = Cipher.getInstance("AES/CTR/PKCS7Padding");
-			cipher.init(Cipher.DECRYPT_MODE, secret_key, new IvParameterSpec(iv));
-
-			aes_ciphertext = (byte[]) obj.get("2");
-
-			return cipher.doFinal(aes_ciphertext);
-		}
-		catch (InvalidAlgorithmParameterException ex) {
-			throw new PDCEncryptionException("Unable to decrypt message", ex);
-		}
-		catch (IllegalBlockSizeException ex) {
-			throw new PDCEncryptionException("Unable to decrypt message", ex);
-		}
-		catch (BadPaddingException ex) {
-			throw new PDCEncryptionException("Unable to decrypt message", ex);
-		}
-		catch (InvalidKeyException ex) {
-			throw new PDCEncryptionException("Unable to decrypt message", ex);
-		}
-		catch (NoSuchAlgorithmException ex) {
-			throw new PDCEncryptionException("Unable to decrypt message", ex);
-		}
-		catch (NoSuchPaddingException ex) {
-			throw new PDCEncryptionException("Unable to decrypt message", ex);
-		}
+		return EncryptionHelper.encryptAsymData(public_key, data);
 	}
 
 	public byte[] decryptAsymData(byte[] cipherText)
-					throws PDCEncryptionException
+			throws PDCEncryptionException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		KeyManager keymgr;
@@ -425,7 +298,7 @@ public class DataEncryptor {
 		private_key = keymgr.getSigningKey(_stream_key_digest);
 		assert private_key != null;
 
-		return decryptAsymData(private_key, cipherText);
+		return EncryptionHelper.decryptAsymData(private_key, cipherText);
 	}
 
 	private byte[] repeat(int size, String pattern)
@@ -470,17 +343,10 @@ public class DataEncryptor {
 	}
 
 // <editor-fold defaultstate="collapsed" desc="serialization code">
-	private void readObject(ObjectInputStream in)
-					throws IOException, ClassNotFoundException
-	{
-		in.defaultReadObject();
-		setupObject();
-	}
-
 	SystemState.DataEncryptor getObjectState()
 	{
 		SystemState.DataEncryptor.Builder builder = SystemState.DataEncryptor.
-						newBuilder();
+				newBuilder();
 
 		if (_encrypt_key != null)
 			builder.setEncryptionKey(ByteString.copyFrom(_encrypt_key));
@@ -494,4 +360,21 @@ public class DataEncryptor {
 		return builder.build();
 	}
 // </editor-fold>
+
+	private transient final DataStream _stream;
+
+	private transient BufferedBlockCipher _cipher;
+
+	private byte[] _encrypt_key;
+
+	private transient byte[] _encrypt_iv;
+
+	private byte[] _decrypt_key;
+
+	private transient byte[] _decrypt_iv;
+
+	/**
+	 * keys associated with our stream
+	 */
+	protected PublisherPublicKeyDigest _stream_key_digest;
 }

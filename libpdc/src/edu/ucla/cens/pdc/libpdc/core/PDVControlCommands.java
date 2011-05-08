@@ -16,8 +16,8 @@ import org.ccnx.ccn.protocol.Interest;
  *
  * @author Derek Kulinski
  */
-public class ReceiverControlCommands extends GenericCommand {
-	ReceiverControlCommands()
+public class PDVControlCommands extends GenericCommand {
+	PDVControlCommands()
 	{
 		super(Constants.STR_CONTROL);
 	}
@@ -53,19 +53,12 @@ public class ReceiverControlCommands extends GenericCommand {
 			return false;
 		}
 
-		if (command.equals("setup"))
-			return setupCommand(ds, interest);
-		else if (command.equals("pull"))
+		if (command.equals("pull"))
 			return pullCommand(ds, interest);
 
 		Log.error("Unknown command '" + command + "'!");
 
 		return false;
-	}
-
-	private boolean setupCommand(DataStream ds, Interest interest)
-	{
-		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
 	private boolean pullCommand(DataStream ds, Interest interest)

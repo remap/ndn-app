@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.ccnx.ccn.CCNFilterListener;
-import org.ccnx.ccn.CCNHandle;
-import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
@@ -23,42 +21,36 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  */
 final public class PDVInstance implements CCNFilterListener {
 	final private Map<String, GenericCommand> _generic_commands = new HashMap<String, GenericCommand>(
-					1);
+			1);
 
 	final private Map<String, StreamCommand> _stream_commands = new HashMap<String, StreamCommand>(
-					2);
+			2);
 
 	final private GlobalConfig _config = GlobalConfig.getInstance();
 
-	final static CCNHandle ccn_handle = CCNHandle.getHandle();
-
 	public PDVInstance()
-					throws MalformedContentNameStringException
 	{
-		GlobalConfig config = GlobalConfig.getInstance();
-		KeyManager keymanager;
-
-		keymanager = config.getKeyManager();
-		assert keymanager != null;
-
-		ccn_handle.getNetworkManager().setKeyManager(keymanager);
-
-		add_generic_command(new PublisherDataCommand());
-		add_generic_command(new PublisherControlCommands());
-		add_stream_command(new ReceiverControlCommands());
+		try {
+			add_generic_command(new StreamDataCommand());
+			add_generic_command(new StreamControlCommands());
+			add_stream_command(new PDVControlCommands());
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to instantiate PDVInstance class", ex);
+		}
 	}
 
 	public void startListening()
-					throws MalformedContentNameStringException, IOException
+			throws MalformedContentNameStringException, IOException
 	{
 		ContentName root = _config.getRoot();
-		ccn_handle.registerFilter(root, this);
+		_config.getCCNHandle().registerFilter(root, this);
 	}
 
 	public void stopListening()
 	{
 		ContentName root = _config.getRoot();
-		ccn_handle.unregisterFilter(root, this);
+		_config.getCCNHandle().unregisterFilter(root, this);
 	}
 
 	public boolean handleInterest(Interest interest)
@@ -94,13 +86,15 @@ final public class PDVInstance implements CCNFilterListener {
 		app_name = postfix.stringComponent(0);
 		app = _config.getApplication(app_name);
 		if (app == null) {
-			Log.warning("Application " + app_name + " doesn't exist.");
+			Log.warning("Application " + app_name
+					+ " doesn't exist.");
 			return false;
 		}
 
 		if (postfix.stringComponent(1).equals("control"))
 			//TODO: implement it (receiver side)
-			throw new UnsupportedOperationException("Not implemented yet");
+			throw new UnsupportedOperationException(
+					"Not implemented yet");
 
 		if (postfix.count() < 4)
 			return false;
@@ -120,8 +114,6 @@ final public class PDVInstance implements CCNFilterListener {
 
 		ContentName remain = postfix.subname(3, postfix.count() - 3);
 		StreamCommand cmd = _stream_commands.get(command_name);
-		Log.info(String.format("Firing %s(%s, %s, %s)\n", cmd.getCommandName(),
-						app.name, remain.toURIString(), interest));
 
 		return cmd.processCommand(ds, remain, interest);
 	}

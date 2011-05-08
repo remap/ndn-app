@@ -19,9 +19,11 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.ccnx.ccn.CCNHandle;
+import org.ccnx.ccn.ContentVerifier;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.config.UserConfiguration;
 import org.ccnx.ccn.impl.security.crypto.util.MinimalCertificateGenerator;
@@ -31,23 +33,26 @@ import org.ccnx.ccn.impl.security.keys.PublicKeyCache;
 import org.ccnx.ccn.impl.security.keys.SecureKeyCache;
 import org.ccnx.ccn.protocol.CCNTime;
 import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
  * @author Derek Kulinski
  */
-public class PDCKeyManager extends BasicKeyManager implements iState {
+public class PDCKeyManager extends BasicKeyManager implements iState, ContentVerifier {
 	public PDCKeyManager()
-					throws ConfigurationException, IOException
+			throws ConfigurationException, IOException
 	{
 		this(true);
 	}
 
 	public PDCKeyManager(boolean restore)
-					throws ConfigurationException, IOException
+			throws ConfigurationException, IOException
 	{
 		super();
+
+		_restore = restore;
 
 		if (!restore)
 			return;
@@ -65,31 +70,22 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 		state = SystemState.KeyManager.parseFrom(byte_in);
 
 		_defaultKeyID = new PublisherPublicKeyDigest(state.getDefaultKeyId().
-						toByteArray());
+				toByteArray());
 
-		_public_key_digests = new HashSet<PublisherPublicKeyDigest>(state.
-						getPublicKeyDigestsCount() * 2);
-		_private_key_digests = new HashSet<PublisherPublicKeyDigest>(state.
-						getPrivateKeyDigestsCount() * 2);
+		_authenticated_public_key_digests = Collections.synchronizedSet(new HashSet<byte[]>(state.
+				getPublicKeyDigestsCount() * 2));
+		_private_key_digests = new HashSet<byte[]>(state.getPrivateKeyDigestsCount()
+				* 2);
 
 		for (final ByteString key_digest : state.getPublicKeyDigestsList())
-			_public_key_digests.add(new PublisherPublicKeyDigest(key_digest.
-							toByteArray()));
+			_authenticated_public_key_digests.add(key_digest.toByteArray());
 		for (final ByteString key_digest : state.getPrivateKeyDigestsList())
-			_private_key_digests.add(new PublisherPublicKeyDigest(key_digest.
-							toByteArray()));
-	}
-
-	public PDCKeyManager(String name)
-					throws ConfigurationException, IOException
-	{
-		super(null, "pdv_keys", name.concat(".conf"), name.concat(".key"), null,
-						null, null);
+			_private_key_digests.add(key_digest.toByteArray());
 	}
 
 	@Override
 	public synchronized void initialize()
-					throws ConfigurationException, IOException
+			throws ConfigurationException, IOException
 	{
 		if (_initialized)
 			return;
@@ -103,7 +99,8 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 		else {
 			Log.info("Generating my default keys");
 			_defaultKeyID = generatePublisherKeys();
-			storeStateRecursive();
+			if (_restore)
+				storeStateRecursive();
 		}
 
 		_initialized = true;
@@ -120,6 +117,33 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 //		// If we haven't been called off, initialize the key server
 //		if (UserConfiguration.publishKeys())
 //			initializeKeyServer(_handle);
+	}
+
+	@Override
+	public ContentVerifier getDefaultVerifier()
+	{
+		return this;
+	}
+
+	public boolean verify(ContentObject content)
+	{
+		final byte[] co_digest = content.signedInfo().getPublisherKeyID().digest();
+
+		if (!_authenticated_public_key_digests.contains(co_digest))
+			return false;
+
+		try {
+			return content.verify(this);
+		}
+		catch (Exception ex) {
+			Log.warning("Error while verifying content: " + ex.getLocalizedMessage());
+			return false;
+		}
+	}
+
+	public void authenticateKey(byte[] digest)
+	{
+		_authenticated_public_key_digests.add(digest);
 	}
 
 	public static KeyPair generateKeys()
@@ -139,12 +163,12 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 	}
 
 	public static X509Certificate generateSSCert(KeyPair key_pair,
-					ContentName name)
+			ContentName name)
 	{
 		try {
 			return MinimalCertificateGenerator.GenerateUserCertificate(key_pair,
-							"CN=" + name.toString(),
-							MinimalCertificateGenerator.MSEC_IN_YEAR);
+					"CN=" + name.toString(),
+					MinimalCertificateGenerator.MSEC_IN_YEAR);
 		}
 		catch (Exception ex) {
 			throw new Error("Unable to generate certificate", ex);
@@ -165,7 +189,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 
 		_privateKeyCache.addMyPrivateKey(digest.digest(), key_pair.getPrivate());
 		_publicKeyCache.remember(key_pair.getPublic(), version);
-		_private_key_digests.add(digest);
+		_private_key_digests.add(digest.digest());
 
 		return digest;
 	}
@@ -182,56 +206,61 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 	}
 
 	public synchronized void storeState()
-					throws IOException
+			throws IOException
 	{
-		GlobalConfig config = GlobalConfig.getInstance();
-		SystemState.AsyncKey.Builder ak_builder = SystemState.AsyncKey.newBuilder();
+		final GlobalConfig config = GlobalConfig.getInstance();
+		final SystemState.AsyncKey.Builder ak_builder = SystemState.AsyncKey.
+				newBuilder();
 		CCNTime version;
 		PublicKey pub_key;
 		PrivateKey priv_key;
 
-		Log.debug("Storing public keys:");
-		for (final PublisherPublicKeyDigest digest : _public_key_digests) {
-			Log.debug("Saving " + digest.toString());
+		Log.debug("Storing public keys");
+		for (final byte[] digest : _authenticated_public_key_digests) {
+			final PublisherPublicKeyDigest digest_obj = new PublisherPublicKeyDigest(
+					digest);
+			Log.debug("Saving " + digest_obj.toString());
 			ak_builder.clear();
 
-			version = _publicKeyCache.getPublicKeyVersionFromCache(digest);
+			version = _publicKeyCache.getPublicKeyVersionFromCache(digest_obj);
 			assert version != null;
 
-			pub_key = _publicKeyCache.getPublicKeyFromCache(digest);
+			pub_key = _publicKeyCache.getPublicKeyFromCache(digest_obj);
 			assert pub_key != null;
 
 			ak_builder.setPublicKey(ByteString.copyFrom(pub_key.getEncoded()));
 			ak_builder.setAlgorithm(SystemState.AsyncKey.KeyAlg.valueOf(pub_key.
-							getAlgorithm()));
+					getAlgorithm()));
 			ak_builder.setTimestamp(version.getTime());
 
-			config.saveConfig("keys", digest.toString(), ak_builder.build().
-							toByteArray());
+			config.saveConfig("keys", digest_obj.toString(), ak_builder.build().
+					toByteArray());
 		}
 
 		Log.debug("Storing private keys");
-		for (final PublisherPublicKeyDigest digest : _private_key_digests) {
-			Log.debug("Saving " + digest.toString());
+		for (final byte[] digest : _private_key_digests) {
+			final PublisherPublicKeyDigest digest_obj = new PublisherPublicKeyDigest(
+					digest);
+			Log.debug("Saving " + digest_obj.toString());
 			ak_builder.clear();
 
-			version = _publicKeyCache.getPublicKeyVersionFromCache(digest);
+			version = _publicKeyCache.getPublicKeyVersionFromCache(digest_obj);
 			assert version != null;
 
-			pub_key = _publicKeyCache.getPublicKeyFromCache(digest);
+			pub_key = _publicKeyCache.getPublicKeyFromCache(digest_obj);
 			assert pub_key != null;
 
-			priv_key = _privateKeyCache.getPrivateKey(digest.digest());
+			priv_key = _privateKeyCache.getPrivateKey(digest);
 			assert priv_key != null;
 
 			ak_builder.setPublicKey(ByteString.copyFrom(pub_key.getEncoded()));
 			ak_builder.setPrivateKey(ByteString.copyFrom(priv_key.getEncoded()));
 			ak_builder.setAlgorithm(SystemState.AsyncKey.KeyAlg.valueOf(pub_key.
-							getAlgorithm()));
+					getAlgorithm()));
 			ak_builder.setTimestamp(version.getTime());
 
-			config.saveConfig("keys", digest.toString(), ak_builder.build().
-							toByteArray());
+			config.saveConfig("keys", digest_obj.toString(), ak_builder.build().
+					toByteArray());
 		}
 
 		Log.debug("Storing keymanager state");
@@ -239,7 +268,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 	}
 
 	public void storeStateRecursive()
-					throws IOException
+			throws IOException
 	{
 		storeState();
 	}
@@ -251,11 +280,11 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 		assert _defaultKeyID != null;
 		builder.setDefaultKeyId(ByteString.copyFrom(_defaultKeyID.digest()));
 
-		for (PublisherPublicKeyDigest key_digest : _public_key_digests)
-			builder.addPublicKeyDigests(ByteString.copyFrom(key_digest.digest()));
+		for (byte[] key_digest : _authenticated_public_key_digests)
+			builder.addPublicKeyDigests(ByteString.copyFrom(key_digest));
 
-		for (PublisherPublicKeyDigest key_digest : _private_key_digests)
-			builder.addPrivateKeyDigests(ByteString.copyFrom(key_digest.digest()));
+		for (byte[] key_digest : _private_key_digests)
+			builder.addPrivateKeyDigests(ByteString.copyFrom(key_digest));
 
 		return builder.build();
 	}
@@ -266,7 +295,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 	}
 
 	private static SystemState.AsyncKey restoreKey(PublisherPublicKeyDigest digest)
-					throws IOException, ConfigurationException
+			throws IOException, ConfigurationException
 	{
 		final GlobalConfig config = GlobalConfig.getInstance();
 		byte[] data_in;
@@ -275,31 +304,31 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 		data_in = config.loadConfig("keys", digest.toString());
 		if (data_in == null)
 			throw new ConfigurationException("No public key stored with hash: "
-							+ digest.toString());
+					+ digest.toString());
 
 		ak_state = SystemState.AsyncKey.parseFrom(data_in);
 
 		if (!ak_state.hasTimestamp())
 			throw new ConfigurationException("No timestamp available for key: "
-							+ digest.toString());
+					+ digest.toString());
 
 		return ak_state;
 	}
 
 	private static PublicKey producePublicKey(SystemState.AsyncKey ak_state)
-					throws ConfigurationException
+			throws ConfigurationException
 	{
 		try {
 			final KeyFactory key_factory = KeyFactory.getInstance(ak_state.
-							getAlgorithm().name());
+					getAlgorithm().name());
 			final X509EncodedKeySpec key_spec = new X509EncodedKeySpec(ak_state.
-							getPublicKey().toByteArray());
+					getPublicKey().toByteArray());
 
 			return key_factory.generatePublic(key_spec);
 		}
 		catch (NoSuchAlgorithmException ex) {
 			throw new ConfigurationException("Unsupported algorithm for public key",
-							ex);
+					ex);
 		}
 		catch (InvalidKeySpecException ex) {
 			throw new ConfigurationException("Unable to restore the public key", ex);
@@ -307,13 +336,13 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 	}
 
 	private static PrivateKey producePrivateKey(SystemState.AsyncKey ak_state)
-					throws ConfigurationException
+			throws ConfigurationException
 	{
 		try {
 			final KeyFactory key_factory = KeyFactory.getInstance(ak_state.
-							getAlgorithm().name());
+					getAlgorithm().name());
 			final PKCS8EncodedKeySpec key_spec = new PKCS8EncodedKeySpec(ak_state.
-							getPrivateKey().toByteArray());
+					getPrivateKey().toByteArray());
 //			final X509EncodedKeySpec key_spec = new X509EncodedKeySpec(ak_state.
 //							getPrivateKey().toByteArray());
 
@@ -321,7 +350,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 		}
 		catch (NoSuchAlgorithmException ex) {
 			throw new ConfigurationException("Unsupported algorithm for private key",
-							ex);
+					ex);
 		}
 		catch (InvalidKeySpecException ex) {
 			throw new ConfigurationException("Unable to restore the private key", ex);
@@ -329,7 +358,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 	}
 
 	protected void loadKeys()
-					throws IOException, ConfigurationException
+			throws IOException, ConfigurationException
 	{
 		SystemState.AsyncKey ak_state;
 		PublicKey pub_key;
@@ -339,11 +368,13 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 		Log.debug("Restoring keys");
 
 		Log.debug("Restoring public keys");
-		for (final PublisherPublicKeyDigest digest : _public_key_digests) {
-			ak_state = restoreKey(digest);
+		for (final byte[] digest : _authenticated_public_key_digests) {
+			final PublisherPublicKeyDigest digest_obj = new PublisherPublicKeyDigest(
+					digest);
+			ak_state = restoreKey(digest_obj);
 			if (ak_state.hasPrivateKey())
 				Log.warning("Key with id " + digest.toString()
-								+ "has also a private key, an error?");
+						+ "has also a private key, an error?");
 
 			pub_key = producePublicKey(ak_state);
 			version = new CCNTime(ak_state.getTimestamp());
@@ -352,18 +383,20 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 		}
 
 		Log.debug("Restoring private keys");
-		for (final PublisherPublicKeyDigest digest : _private_key_digests) {
-			ak_state = restoreKey(digest);
+		for (final byte[] digest : _private_key_digests) {
+			final PublisherPublicKeyDigest digest_obj = new PublisherPublicKeyDigest(
+					digest);
+			ak_state = restoreKey(digest_obj);
 			if (!ak_state.hasPrivateKey())
 				throw new ConfigurationException("A private key for " + digest
-								+ " is missing");
+						+ " is missing");
 
 			pub_key = producePublicKey(ak_state);
 			priv_key = producePrivateKey(ak_state);
 			version = new CCNTime(ak_state.getTimestamp());
 
 			_publicKeyCache.remember(pub_key, version);
-			_privateKeyCache.addMyPrivateKey(digest.digest(), priv_key);
+			_privateKeyCache.addMyPrivateKey(digest, priv_key);
 		}
 
 		assert _defaultKeyID != null;
@@ -372,35 +405,40 @@ public class PDCKeyManager extends BasicKeyManager implements iState {
 
 		if (pub_key == null || priv_key == null)
 			throw new ConfigurationException(
-							"My default public and/or private key is missing!");
+					"My default public and/or private key is missing!");
 	}
 //</editor-fold>
 
+//<editor-fold defaultstate="collapsed" desc="disabled methods from the parent">
 	@Override
 	protected KeyStoreInfo loadKeyStore()
-					throws ConfigurationException, IOException
+			throws ConfigurationException, IOException
 	{
 		throw new UnsupportedOperationException(
-						"This method of loading data is unsupported in this class");
+				"This method of loading data is unsupported in this class");
 	}
 
 	@Override
 	protected boolean loadValuesFromKeystore(KeyStoreInfo keyStoreInfo)
-					throws ConfigurationException
+			throws ConfigurationException
 	{
 		throw new UnsupportedOperationException(
-						"This method of loading data is unsupported in this class");
+				"This method of loading data is unsupported in this class");
 	}
 
 	@Override
 	protected boolean loadValuesFromConfiguration(KeyStoreInfo keyStoreInfo)
-					throws ConfigurationException
+			throws ConfigurationException
 	{
 		throw new UnsupportedOperationException(
-						"This method of loading data is unsupported in this class");
+				"This method of loading data is unsupported in this class");
 	}
+//</editor-fold>
 
-	private Set<PublisherPublicKeyDigest> _public_key_digests = new HashSet<PublisherPublicKeyDigest>();
+	private Set<byte[]> _authenticated_public_key_digests = Collections.
+			synchronizedSet(new HashSet<byte[]>());
 
-	private Set<PublisherPublicKeyDigest> _private_key_digests = new HashSet<PublisherPublicKeyDigest>();
+	private Set<byte[]> _private_key_digests = new HashSet<byte[]>();
+
+	private final boolean _restore;
 }

@@ -19,10 +19,7 @@ import java.security.InvalidKeyException;
 import java.util.Date;
 import java.util.logging.Level;
 import org.ccnx.ccn.CCNHandle;
-import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.config.ConfigurationException;
-import org.ccnx.ccn.protocol.ContentName;
-import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
@@ -60,7 +57,7 @@ public class Main {
 	}
 
 	static void setupPDV(int pdv_started)
-					throws MalformedContentNameStringException, IOException
+			throws MalformedContentNameStringException, IOException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		CCNHandle handle;
@@ -71,7 +68,7 @@ public class Main {
 		PDCPublisher node1 = new PDCPublisher("ccnx:/ucla.edu/apps/pdv1", "myds");
 		PDCReceiver node2 = new PDCReceiver("ccnx:/ucla.edu/apps/pdv2");
 
-		handle = CCNHandle.getHandle();
+		handle = config.getCCNHandle();
 
 		if (pdv_started == 1) {
 			config.setRoot(node1.uri);
@@ -109,9 +106,9 @@ public class Main {
 	 */
 	@SuppressWarnings("fallthrough")
 	public static void main(String[] args)
-					throws MalformedContentNameStringException, IOException,
-					ConfigurationException, PDCTransmissionException, PDCDatabaseException,
-					InvalidKeyException
+			throws MalformedContentNameStringException, IOException,
+			ConfigurationException, PDCTransmissionException, PDCDatabaseException,
+			InvalidKeyException
 	{
 		GlobalConfig config;
 		int pdv_started = 0;
@@ -119,16 +116,12 @@ public class Main {
 		final boolean SAVE_CONFIG = true;
 		PDVInstance test = null;
 		PublisherPublicKeyDigest digest = null;
-		KeyLocator key_locator = null;
 
 		if (args.length < 1)
 			usage();
 
-		if (args.length == 3) {
-			ContentName name = ContentName.fromURI(args[1]);
-			key_locator = new KeyLocator(name);
-			digest = new PublisherPublicKeyDigest(args[2]);
-		}
+		if (args.length >= 2)
+			digest = new PublisherPublicKeyDigest(args[1]);
 
 		String arg = args[0];
 
@@ -156,7 +149,7 @@ public class Main {
 
 		//Disable annoying ccnx debug messages
 		org.ccnx.ccn.impl.support.Log.setDefaultLevel(
-						org.ccnx.ccn.impl.support.Log.FAC_ALL, Level.WARNING);
+				org.ccnx.ccn.impl.support.Log.FAC_ALL, Level.WARNING);
 
 		if (RESTORE_CONFIG) {
 			config = GlobalConfig.loadState();
@@ -178,33 +171,45 @@ public class Main {
 		if (SAVE_CONFIG)
 			config.storeStateRecursive();
 
-		KeyManager keymgr = config.getKeyManager();
-
+		DataStream ds = config.getApplication("myapp").getDataStream("myds");
 		switch (pdv_started) {
 		case -1:
-			DataStream ds = config.getApplication("myapp").getDataStream("myds");
 			fillDatabase(ds);
 			System.exit(0);
 		case 1:
-			if (!RESTORE_CONFIG && digest != null && key_locator != null) {
+			if (digest != null) {
 				Log.debug("Setting up pdv2's key");
-				PDCReceiver receiver = config.getApplication("myapp").getDataStream(
-								"myds").getReceivers().iterator().next();
+				PDCReceiver receiver = ds.getReceivers().iterator().next();
 				receiver.setPublickeyDigest(digest);
-				receiver.setKeyLocator(key_locator);
+				ds.storeStateRecursive();
 			}
 		/* fallthrough */
 		case 2:
-			Log.info("My Key: " + keymgr.getDefaultKeyLocator() + " " + keymgr.
-							getDefaultKeyID());
+			final PublisherPublicKeyDigest dsdigest = ds.getTransport().getEncryptor().
+					getStreamKeyDigest();
+			Log.info("myds key: " + dsdigest.toString());
 		}
 
 		test.startListening();
 
 		Log.debug("Listening");
 
-		if (pdv_started == 2)
-			config.getApplication("myapp").periodicPullStart(5);
-//			config.getApplication("myapp").getDataStream("myds").getTransport().fetchDataFromUplink();
+		if (pdv_started == 1) {
+			final PDCReceiver receiver = ds.getReceivers().iterator().next();
+			if (args.length >= 3)
+				ds.setupReceiver(receiver, args[2]);
+		} else if (pdv_started == 2) {
+			final PDCPublisher publisher = ds.getPublisher();
+			final String authenticator = ds.setupPublisher(publisher);
+			Log.info("Authenticator for the publisher: " + authenticator);
+
+//			config.getApplication("myapp").periodicPullStart(5);
+
+//			//first one will fail, but it'll obtain an encryption key
+//			config.getApplication("myapp").getDataStream("myds").getTransport().
+//					fetchDataFromUplink();
+//			config.getApplication("myapp").getDataStream("myds").getTransport().
+//					fetchDataFromUplink();
+		}
 	}
 }

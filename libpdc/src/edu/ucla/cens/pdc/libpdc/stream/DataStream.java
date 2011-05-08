@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc.stream;
 
+import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.datastructures.StreamInfo;
@@ -12,6 +13,7 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
 import edu.ucla.cens.pdc.libpdc.iState;
+import edu.ucla.cens.pdc.libpdc.transport.PDCNode;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
@@ -24,7 +26,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  *
@@ -55,7 +59,7 @@ public class DataStream implements iDataStream, iState {
 			setupObject(handle, state);
 
 			try {
-				if (state.hasPublisher()) 
+				if (state.hasPublisher())
 					_publisher = new PDCPublisher(state.getPublisher());
 
 				for (SystemState.PDCReceiver rec_state : state.getReceiversList()) {
@@ -102,6 +106,20 @@ public class DataStream implements iDataStream, iState {
 		catch (PDCException ex) {
 			throw new Error("Unable to instantiate transmission class", ex);
 		}
+
+		try {
+			final GlobalConfig config = GlobalConfig.getInstance();
+			final ContentName key_name = _transport.base_name.append(
+					Constants.STR_CONTROL).append("key");
+			final KeyLocator locator = new KeyLocator(key_name);
+
+			config.getKeyManager().setKeyLocator(
+					_transport._encryptor._stream_key_digest, locator);
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to generate a key name", ex);
+		}
+
 
 		l.exiting(this.getClass().getName(), "setupObject()");
 	}
@@ -179,6 +197,53 @@ public class DataStream implements iDataStream, iState {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Generate a key locator to fetch public key of another node
+	 * @param node node of which KeyLocator we want
+	 * @return key locator
+	 */
+	KeyLocator getKeyLocator(PDCNode node)
+	{
+		assert node != null;
+
+		PublisherPublicKeyDigest digest;
+		ContentName name;
+
+		digest = node.getPublickeyDigest();
+		assert digest != null;
+
+		try {
+			name = node.uri.append(app.getAppName()).append(data_stream_id).append(
+					Constants.STR_CONTROL).append("key");
+
+			return new KeyLocator(name, digest);
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to generate a valid key locator", ex);
+		}
+	}
+
+	public String setupPublisher(PDCPublisher publisher)
+	{
+		assert publisher != null;
+
+		final String auth_string = StringUtil.genrateRandomString(10);
+		publisher.setAuthenticator(auth_string);
+
+		return auth_string;
+	}
+
+	public boolean setupReceiver(PDCReceiver receiver, String auth_string)
+			throws PDCTransmissionException
+	{
+		assert receiver != null;
+		assert auth_string != null && !auth_string.isEmpty();
+
+		receiver.setAuthenticator(auth_string);
+
+		return _transport.initiateSetup(receiver);
 	}
 
 	@Override
