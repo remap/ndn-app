@@ -4,30 +4,24 @@
  */
 package edu.ucla.cens.pdc.libpdc.util;
 
+import com.google.protobuf.ByteString;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
+import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
-import org.bouncycastle.crypto.BlockCipher;
-import org.bouncycastle.crypto.BufferedBlockCipher;
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
-import org.bouncycastle.crypto.engines.AESEngine;
-import org.bouncycastle.crypto.modes.CBCBlockCipher;
-import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
-import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.util.encoders.Base64;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import org.bouncycastle.util.Arrays;
 import org.ccnx.ccn.protocol.ContentName;
-import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
  *
@@ -35,196 +29,172 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  */
 public class SignedInterest {
 	private SecureRandom _random;
-	private Key _symmetricKey = null;
-	private BufferedBlockCipher _cipher;
-	private Set<String> _nonces = new LinkedHashSet<String>();
+
+	private SecretKey _symmetricKey = null;
+
+	private Cipher _cipher;
+
+	private Set<byte[]> _nonces = new LinkedHashSet<byte[]>();
 
 	public SignedInterest()
-					throws NoSuchAlgorithmException
+			throws GeneralSecurityException
 	{
 		this(genKey());
 	}
 
-	public SignedInterest(Key key)
-					throws NoSuchAlgorithmException
+	public SignedInterest(SecretKey key)
+			throws GeneralSecurityException
 	{
 		_random = SecureRandom.getInstance("SHA1PRNG");
-
-		BlockCipher engine = new AESEngine();
-		BlockCipher mode = new CBCBlockCipher(engine);
-		_cipher = new PaddedBufferedBlockCipher(mode);
-
+		_cipher = Cipher.getInstance("AES/CTR/NoPadding");
 		_symmetricKey = key;
 	}
 
-	public String signName(ContentName name)
+	public byte[] signName(ContentName name)
 	{
-		ContentName result;
-		String nonce, crc;
-		byte[] encrypted;
+		final EncryptedMessage.SignedInterest.Builder builder = EncryptedMessage.SignedInterest.
+				newBuilder();
+		byte[] nonce, crc, encrypted;
 
 		assert name != null;
 
 		try {
-			// prepend nonce
+			builder.setCommand(name.toString());
+
 			nonce = genNonce();
-			result = ContentName.ROOT.append(nonce).append(name);
+			builder.setNonce(ByteString.copyFrom(nonce));
 
-			// prepend crc
-			crc = genChecksum(result.toString());
-			result = ContentName.ROOT.append(crc).append(result);
+			crc = genChecksum(nonce, name.toString());
+			builder.setCrc(ByteString.copyFrom(crc));
 
-			encrypted = encrypt(result.toString().getBytes());
+			encrypted = encrypt(builder.build().toByteArray());
 
-			return new String(encrypted);
+			return encrypted;
 		}
-		catch (MalformedContentNameStringException ex) {
-			throw new Error("Error while appeding a nonce", ex);
+		catch (GeneralSecurityException ex) {
+			throw new RuntimeException("Problem while trying to encrypt the data", ex);
 		}
 	}
 
-	public ContentName verifyName(String name)
+	public ContentName verifyName(byte[] name)
 	{
-		byte[] decrypted;
+		EncryptedMessage.SignedInterest interest;
+		byte[] decrypted, nonce, crc, newcrc;
 		ContentName decName;
-		String crc, nonce;
 
 		// Decrypt the command
-		decrypted = decrypt(name.getBytes());
 		try {
-			decName = ContentName.fromNative(new String(decrypted));
+			decrypted = decrypt(name);
+			interest = EncryptedMessage.SignedInterest.parseFrom(decrypted);
+
+			decName = ContentName.fromNative(interest.getCommand());
+			nonce = interest.getNonce().toByteArray();
+			crc = interest.getCrc().toByteArray();
+
+			newcrc = genChecksum(nonce, decName.toString());
+			if (!Arrays.areEqual(crc, newcrc))
+				return null;
+
+			// Check the nonce
+			if (_nonces.contains(nonce))
+				return null;
+
+			_nonces.add(nonce);
 		}
-		catch (MalformedContentNameStringException ex) {
+		catch (Exception ex) {
 			return null;
 		}
 
-		// Make sure we have at least 3 components
-		// <hash>/<nonce>/<name>
-		if (decName.count() < 3)
-			return null;
-
-		// Verify checksum
-		crc = genChecksum(decName.subname(1, decName.count() - 1).toString());
-		if (!crc.equals(decName.stringComponent(0)))
-			return null;
-
-		// Check the nonce
-		nonce = decName.stringComponent(1);
-		if (_nonces.contains(nonce))
-			return null;
-
-		_nonces.add(nonce);
-
-		return decName.subname(2, decName.count() - 2);
+		return decName;
 	}
 
+	/**
+	 * Get the key used for signing the interests
+	 * @return Key
+	 */
 	public Key getKey()
 	{
 		assert _symmetricKey != null;
 		return _symmetricKey;
 	}
 
-	private static Key genKey()
-					throws NoSuchAlgorithmException
+	private static SecretKey genKey()
+			throws NoSuchAlgorithmException
 	{
 		KeyGenerator kg = KeyGenerator.getInstance("AES");
 		return kg.generateKey();
 	}
 
-	private String genChecksum(String text)
+	private byte[] genChecksum(byte[] nonce, String text)
 	{
 		byte[] input = text.getBytes();
 		Checksum cksum = new Adler32();
 
 		cksum.reset();
+		cksum.update(nonce, 0, nonce.length);
 		cksum.update(input, 0, input.length);
 
-		// Generate base64 encoding
+		// Generate byte array
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		DataOutputStream dos = new DataOutputStream(bos);
 		try {
 			dos.writeLong(cksum.getValue());
 			dos.flush();
-			return new String(Base64.encode(bos.toByteArray()));
+			return bos.toByteArray();
 		}
 		catch (IOException ex) {
 			throw new Error("Unable to generate base64 encoding", ex);
 		}
-
-//		return Long.toHexString(cksum.getValue());
 	}
 
-	private String genNonce()
+	private byte[] genNonce()
 	{
 		byte[] nonce = new byte[8];
 
 		_random.nextBytes(nonce);
 
-		return new String(nonce);
+		return nonce;
 	}
 
-	private byte[] encrypt(byte[] input)
+	byte[] encrypt(byte[] input)
+			throws GeneralSecurityException
 	{
-		byte[] buffer;
-		int outputLen;
+		byte[] ciphertext, iv, result;
+
+		assert _symmetricKey != null;
+		_cipher.init(Cipher.ENCRYPT_MODE, _symmetricKey);
+
+		ciphertext = _cipher.doFinal(input);
+		iv = _cipher.getIV();
+
+		assert iv != null;
+		assert _cipher.getBlockSize() == iv.length;
+
+		result = new byte[ciphertext.length + iv.length];
+
+		System.arraycopy(iv, 0, result, 0, iv.length);
+		System.arraycopy(ciphertext, 0, result, iv.length, ciphertext.length);
+
+		return result;
+	}
+
+	byte[] decrypt(byte[] input)
+			throws GeneralSecurityException
+	{
+		byte[] iv, ciphertext;
 
 		assert _symmetricKey != null;
 
-		_cipher.init(true, new KeyParameter(_symmetricKey.getEncoded()));
-		buffer = new byte[_cipher.getOutputSize(input.length)];
+		iv = new byte[_cipher.getBlockSize()];
+		ciphertext = new byte[input.length - iv.length];
 
-		try {
-			outputLen = _cipher.processBytes(input, 0, input.length, buffer, 0);
-			outputLen += _cipher.doFinal(buffer, outputLen);
+		assert iv.length + ciphertext.length == input.length;
 
-			return buffer;
-		}
-		catch (DataLengthException ex) {
-			Logger.getLogger(SignedInterest.class.getName()).log(Level.SEVERE, null,
-							ex);
-		}
-		catch (IllegalStateException ex) {
-			Logger.getLogger(SignedInterest.class.getName()).log(Level.SEVERE, null,
-							ex);
-		}
-		catch (InvalidCipherTextException ex) {
-			Logger.getLogger(SignedInterest.class.getName()).log(Level.SEVERE, null,
-							ex);
-		}
+		System.arraycopy(input, 0, iv, 0, iv.length);
+		System.arraycopy(input, iv.length, ciphertext, 0, ciphertext.length);
 
-		return null;
-	}
+		_cipher.init(Cipher.DECRYPT_MODE, _symmetricKey, new IvParameterSpec(iv));
 
-	private byte[] decrypt(byte[] input)
-	{
-		byte[] buffer, decrypted;
-		int outputLen;
-
-		assert _symmetricKey != null;
-
-		_cipher.init(false, new KeyParameter(_symmetricKey.getEncoded()));
-		buffer = new byte[_cipher.getOutputSize(input.length)];
-
-		try {
-			outputLen = _cipher.processBytes(input, 0, input.length, buffer, 0);
-			outputLen += _cipher.doFinal(buffer, outputLen);
-			decrypted = new byte[outputLen];
-			System.arraycopy(buffer, 0, decrypted, 0, outputLen);
-
-			return decrypted;
-		}
-		catch (DataLengthException ex) {
-			Logger.getLogger(SignedInterest.class.getName()).log(Level.SEVERE, null,
-							ex);
-		}
-		catch (IllegalStateException ex) {
-			Logger.getLogger(SignedInterest.class.getName()).log(Level.SEVERE, null,
-							ex);
-		}
-		catch (InvalidCipherTextException ex) {
-			Logger.getLogger(SignedInterest.class.getName()).log(Level.SEVERE, null,
-							ex);
-		}
-		return null;
+		return _cipher.doFinal(ciphertext);
 	}
 }

@@ -360,6 +360,468 @@ public final class EncryptedMessage {
     // @@protoc_insertion_point(class_scope:Symmetric)
   }
   
+  public interface SignedInterestOrBuilder
+      extends com.google.protobuf.MessageLiteOrBuilder {
+    
+    // required string command = 1;
+    boolean hasCommand();
+    String getCommand();
+    
+    // required bytes nonce = 2;
+    boolean hasNonce();
+    com.google.protobuf.ByteString getNonce();
+    
+    // required bytes crc = 3;
+    boolean hasCrc();
+    com.google.protobuf.ByteString getCrc();
+  }
+  public static final class SignedInterest extends
+      com.google.protobuf.GeneratedMessageLite
+      implements SignedInterestOrBuilder {
+    // Use SignedInterest.newBuilder() to construct.
+    private SignedInterest(Builder builder) {
+      super(builder);
+    }
+    private SignedInterest(boolean noInit) {}
+    
+    private static final SignedInterest defaultInstance;
+    public static SignedInterest getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public SignedInterest getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    private int bitField0_;
+    // required string command = 1;
+    public static final int COMMAND_FIELD_NUMBER = 1;
+    private Object command_;
+    public boolean hasCommand() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public String getCommand() {
+      Object ref = command_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          command_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getCommandBytes() {
+      Object ref = command_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        command_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
+    // required bytes nonce = 2;
+    public static final int NONCE_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString nonce_;
+    public boolean hasNonce() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    public com.google.protobuf.ByteString getNonce() {
+      return nonce_;
+    }
+    
+    // required bytes crc = 3;
+    public static final int CRC_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString crc_;
+    public boolean hasCrc() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    public com.google.protobuf.ByteString getCrc() {
+      return crc_;
+    }
+    
+    private void initFields() {
+      command_ = "";
+      nonce_ = com.google.protobuf.ByteString.EMPTY;
+      crc_ = com.google.protobuf.ByteString.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      if (!hasCommand()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasNonce()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasCrc()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getCommandBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, nonce_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, crc_);
+      }
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getCommandBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, nonce_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, crc_);
+      }
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    @java.lang.Override
+    protected Object writeReplace() throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
+    public static edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageLite.Builder<
+          edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest, Builder>
+        implements edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterestOrBuilder {
+      // Construct using edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+      
+      private void maybeForceBuilderInitialization() {
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+      
+      public Builder clear() {
+        super.clear();
+        command_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        nonce_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        crc_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest getDefaultInstanceForType() {
+        return edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest.getDefaultInstance();
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest build() {
+        edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+      
+      private edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return result;
+      }
+      
+      public edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest buildPartial() {
+        edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest result = new edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.command_ = command_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.nonce_ = nonce_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.crc_ = crc_;
+        result.bitField0_ = to_bitField0_;
+        return result;
+      }
+      
+      public Builder mergeFrom(edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest other) {
+        if (other == edu.ucla.cens.pdc.libpdc.util.EncryptedMessage.SignedInterest.getDefaultInstance()) return this;
+        if (other.hasCommand()) {
+          setCommand(other.getCommand());
+        }
+        if (other.hasNonce()) {
+          setNonce(other.getNonce());
+        }
+        if (other.hasCrc()) {
+          setCrc(other.getCrc());
+        }
+        return this;
+      }
+      
+      public final boolean isInitialized() {
+        if (!hasCommand()) {
+          
+          return false;
+        }
+        if (!hasNonce()) {
+          
+          return false;
+        }
+        if (!hasCrc()) {
+          
+          return false;
+        }
+        return true;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              
+              return this;
+            default: {
+              if (!parseUnknownField(input, extensionRegistry, tag)) {
+                
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              command_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              nonce_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              crc_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      }
+      
+      private int bitField0_;
+      
+      // required string command = 1;
+      private Object command_ = "";
+      public boolean hasCommand() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      public String getCommand() {
+        Object ref = command_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          command_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setCommand(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        command_ = value;
+        
+        return this;
+      }
+      public Builder clearCommand() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        command_ = getDefaultInstance().getCommand();
+        
+        return this;
+      }
+      void setCommand(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000001;
+        command_ = value;
+        
+      }
+      
+      // required bytes nonce = 2;
+      private com.google.protobuf.ByteString nonce_ = com.google.protobuf.ByteString.EMPTY;
+      public boolean hasNonce() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      public com.google.protobuf.ByteString getNonce() {
+        return nonce_;
+      }
+      public Builder setNonce(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        nonce_ = value;
+        
+        return this;
+      }
+      public Builder clearNonce() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        nonce_ = getDefaultInstance().getNonce();
+        
+        return this;
+      }
+      
+      // required bytes crc = 3;
+      private com.google.protobuf.ByteString crc_ = com.google.protobuf.ByteString.EMPTY;
+      public boolean hasCrc() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      public com.google.protobuf.ByteString getCrc() {
+        return crc_;
+      }
+      public Builder setCrc(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        crc_ = value;
+        
+        return this;
+      }
+      public Builder clearCrc() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        crc_ = getDefaultInstance().getCrc();
+        
+        return this;
+      }
+      
+      // @@protoc_insertion_point(builder_scope:SignedInterest)
+    }
+    
+    static {
+      defaultInstance = new SignedInterest(true);
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:SignedInterest)
+  }
+  
   
   static {
   }
