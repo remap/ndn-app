@@ -5,6 +5,7 @@
 package edu.ucla.cens.pdc.libpdc.core;
 
 import edu.ucla.cens.pdc.libpdc.Application;
+import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.io.IOException;
@@ -31,9 +32,10 @@ final public class PDVInstance implements CCNFilterListener {
 	public PDVInstance()
 	{
 		try {
-			add_generic_command(new StreamDataCommand());
-			add_generic_command(new StreamControlCommands());
-			add_stream_command(new PDVControlCommands());
+			add_stream_command(new StreamDataCommand());
+			add_stream_command(new StreamControlCommands());
+			add_generic_command(new PDVControlCommands());
+                        add_generic_command(new ManageCommand());
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error("Unable to instantiate PDVInstance class", ex);
@@ -45,6 +47,7 @@ final public class PDVInstance implements CCNFilterListener {
 	{
 		ContentName root = _config.getRoot();
 		_config.getCCNHandle().registerFilter(root, this);
+                Log.info("PDV Instance Root: " + root.toURIString());
 	}
 
 	public void stopListening()
@@ -67,6 +70,10 @@ final public class PDVInstance implements CCNFilterListener {
 		 * Receiver commands:
 		 * <app_id>/control/setup/<stream>
 		 * <app_id>/control/pull/<stream>
+                 *
+                 * Manage commands:
+                 * manage/list/apps
+                 * manage/list/datastreams/<app_id>
 		 */
 
 		ContentName root, name, postfix;
@@ -78,10 +85,22 @@ final public class PDVInstance implements CCNFilterListener {
 		name = interest.name();
 		postfix = name.postfix(root);
 
-		Log.debug("Got interest: " + name + ", postfix: " + postfix);
+		Log.info("Got interest: " + name + ", postfix: " + postfix);
 
 		if (postfix == null || postfix.count() < 3)
 			return false;
+
+                //check for manage command
+                if(postfix.stringComponent(0).equals(Constants.STR_MANAGE))
+                {
+                    GenericCommand cmd = this._generic_commands.get(Constants.STR_MANAGE);
+                    if(cmd == null)
+                    {
+                        Log.error("manage command not supported by this PDV Instance.");
+                        return false;
+                    }
+                    return cmd.processCommand(postfix.subname(1, 3), interest);
+                }
 
 		app_name = postfix.stringComponent(0);
 		app = _config.getApplication(app_name);
@@ -118,12 +137,12 @@ final public class PDVInstance implements CCNFilterListener {
 		return cmd.processCommand(ds, remain, interest);
 	}
 
-	private void add_generic_command(StreamCommand command)
+	private void add_stream_command(StreamCommand command)
 	{
 		_stream_commands.put(command.getCommandName(), command);
 	}
 
-	private void add_stream_command(GenericCommand command)
+	private void add_generic_command(GenericCommand command)
 	{
 		_generic_commands.put(command.getCommandName(), command);
 	}

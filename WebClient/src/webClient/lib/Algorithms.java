@@ -31,7 +31,19 @@ public class Algorithms
         }
         md.reset();
         md.update(str.getBytes());
-        return new String(md.digest());
+        byte[] md5bytes = md.digest();
+
+        //convert it to a hex string
+        StringBuffer md5strBuf = new StringBuffer();
+        for(int i = 0; i < md5bytes.length; i++)
+        {
+            String hex = Integer.toHexString(0xFF & md5bytes[i]);
+            if(hex.length() == 1) //check to see if a leading zero got chopped off
+                md5strBuf.append('0');
+            md5strBuf.append(hex);
+        }
+
+        return md5strBuf.toString();
     }
 
     /**
@@ -55,5 +67,19 @@ public class Algorithms
         md.reset();;
         md.update(bytes);
         return md.digest();
+    }
+
+    public String hexify(byte[] bytes)
+    {
+        String retStr = "";
+        
+        for(int i = 0; i + 4 <= bytes.length; i += 4)
+        {
+            byte[] current = {bytes[i], bytes[i+1], bytes[i+2], bytes[i+3]};
+
+
+        }
+
+        return null;
     }
 }

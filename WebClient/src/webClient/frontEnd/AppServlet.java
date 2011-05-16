@@ -45,7 +45,8 @@ public class AppServlet extends HttpServlet {
 					HttpServletResponse response)
 	{
 		Collection<String> apps;
-		try {
+		try
+                {
 			//get the list of apps
 			PDCApps appGetter = new PDCApps();
 			apps = appGetter.getUserApps(this._userHash);

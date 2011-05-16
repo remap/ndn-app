@@ -9,7 +9,7 @@ import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.frontEnd.WebClientServer;
-import webClient.lib.CollectionTransport;
+import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
 import webClient.log.Log;
 import webClient.session.SessionManager;
 import webClient.ndn.test.PDCDataStreamTest;
@@ -41,13 +41,14 @@ public class PDCDataStreams
     {
         String pdv_uri = SessionManager.getSession(userHash).getPDV_URI();
 
-        Log.write("Retrieving data streams for " + appID);
+        Log.write("Retrieving data streams " + pdv_uri + "/manage/list/datastreams/" + appID);
 
-        ContentObject streams = this._ccnHandle.get(ContentName.fromURI(pdv_uri + "/datastreams"),// + appID),
+        ContentObject streams = this._ccnHandle.get(ContentName.fromURI(pdv_uri + "/manage/list/datastreams/" + appID),
                 WebClientServer.DEFAULT_TIMEOUT);
 
-        if(streams == null)
-            streams = PDCDataStreamTest.getDataStreams(ContentName.fromURI(pdv_uri));
+        if(streams == null) //communication error
+            return null;
+        
         return decodeStreamsCO(streams);
     }
 
