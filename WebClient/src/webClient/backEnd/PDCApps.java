@@ -14,7 +14,7 @@ import webClient.session.SessionManager;
 import java.security.PublicKey;
 import webClient.exceptions.NoSuchUserHashException;
 import webClient.lib.Algorithms;
-import webClient.lib.CollectionTransport;
+import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
 import webClient.log.Log;
 import webClient.session.Session;
 
@@ -52,16 +52,16 @@ public class PDCApps
             throw new NoSuchUserHashException();
 
         //public key hash
-        PublicKey key = SessionManager.getSession(userHash).getPublicKey();
-        String pubKeyHash = new String(Algorithms.md5Hash(key.getEncoded())); //TODO set correct encoding?
+        //PublicKey key = SessionManager.getSession(userHash).getPublicKey();
+        //String pubKeyHash = new String(Algorithms.md5Hash(key.getEncoded())); //TODO set correct encoding?
 
         //<pdv_uri>/<WC_PUB_Key hash>/apps
-        String uri = session.getPDV_URI() /*+ "/" + pubKeyHash*/ + "/apps";
+        String uri = session.getPDV_URI() /*+ "/" + pubKeyHash*/ + "/manage/list/apps";
 
         ContentObject apps;
         try
         {
-            Log.write("Sending interest for list of apps.");
+            Log.write("Sending interest for list of apps to: " + uri);
             //TODO can't use signed interests yet since they don't extend interests...
             //SignedInterest interest = session.getSignedInterest(uri);
             //apps = this._ccnHandle.get(interest, WebClientServer.DEFAULT_TIMEOUT); //COMPILE ERROR b/c SignedInterest does not extend Interest...

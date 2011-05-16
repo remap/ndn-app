@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.ContentName;
@@ -224,6 +225,17 @@ public class GlobalConfig implements iState {
 
 		return _applications.get(name);
 	}
+
+        /**
+         * Retrieve the list of applications
+         * @return the list of apps as a set of strings
+         */
+        public synchronized Set<String> getAppList()
+        {
+            assert _root != null : "Root wasn't set";
+
+            return _applications.keySet();
+        }
 
 	/**
 	 * Provide proper DataStream object based on the given URI

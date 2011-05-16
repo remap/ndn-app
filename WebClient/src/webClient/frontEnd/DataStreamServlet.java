@@ -44,6 +44,7 @@ public class DataStreamServlet extends HttpServlet
     private void printDataStreams(HttpServletRequest request, HttpServletResponse response)
     {
         String appID = request.getParameter(VarNames.APPLICATION);
+        SessionManager.getSession(this.m_userHash).setCurrentApp(appID);
 
         //get the data streams
         PDCDataStreams streamGetter = new PDCDataStreams();
