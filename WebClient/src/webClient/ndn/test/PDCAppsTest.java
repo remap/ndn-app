@@ -12,7 +12,7 @@ import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.lib.BasicCCNFilterListenerImpl;
-import webClient.lib.CollectionTransport;
+import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
 
 /**
  * This class simulates the PDV app listing functionality

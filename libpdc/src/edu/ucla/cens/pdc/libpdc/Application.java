@@ -120,6 +120,15 @@ public class Application implements iApplication, iState {
 		return _data_stream.values().iterator();
 	}
 
+        /**
+         * TODO maybe make this part of the interface?
+         * @return
+         */
+        public synchronized Set<String> getDataStreamList()
+        {
+                return _data_stream.keySet();
+        }
+
 	synchronized private boolean performPull()
 	{
 		Iterator<String> iter;

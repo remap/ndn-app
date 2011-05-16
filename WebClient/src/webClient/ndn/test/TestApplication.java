@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  * This class is a very basic implementation of iApplication for testing purposes
@@ -82,4 +83,12 @@ public class TestApplication implements iApplication {
 		return Database.getDatabase(Database.db_type.DATA, m_appName).getCollection(
 						id);
 	}
+
+    public PublisherPublicKeyDigest getKeyDigest() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void setKeyDigest(PublisherPublicKeyDigest digest) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

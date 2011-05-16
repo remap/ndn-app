@@ -3,6 +3,7 @@ package webClient.session;
 import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.util.SignedInterest;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -21,11 +22,11 @@ public class Session
 {
     public Session(SecretKey symmetricKey)
     {
-        this.keyPair = Security.generateKeyPair(512);
+        //this.keyPair = Security.generateKeyPair(512);
         this.symmetricKey = symmetricKey;
-        this.symmetricEncryptor = new DataEncryptor();
-        this.symmetricEncryptor.setDecryptKey(this.symmetricKey.getEncoded());
-        this.symmetricEncryptor.setEncryptKey(this.symmetricKey.getEncoded());
+        //this.symmetricEncryptor = new DataEncryptor();
+       /// this.symmetricEncryptor.setDecryptKey(this.symmetricKey.getEncoded());
+        //this.symmetricEncryptor.setEncryptKey(this.symmetricKey.getEncoded());
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -34,9 +35,9 @@ public class Session
      * the symmetric key and data encryptor
      */
     private SecretKey symmetricKey;
-    private DataEncryptor symmetricEncryptor;
+    //private DataEncryptor symmetricEncryptor;
 
-    public byte[] encryptData(byte[] data) throws PDCEncryptionException
+    /*public byte[] encryptData(byte[] data) throws PDCEncryptionException
     {
         return this.symmetricEncryptor.encryptData(data);
     }
@@ -44,7 +45,7 @@ public class Session
     public byte[] decryptData(byte[] data) throws PDCEncryptionException
     {
         return this.symmetricEncryptor.decryptData(data);
-    }
+    }*/
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -191,11 +192,11 @@ public class Session
      * @return - the signed interest
      * @throws MalformedContentNameStringException - if the uri given is no good
      */
-    public SignedInterest getSignedInterest(String uri) throws MalformedContentNameStringException
+    public SignedInterest getSignedInterest(String uri) throws MalformedContentNameStringException, GeneralSecurityException
     {
         try 
         {
-            SignedInterest theInterest = new SignedInterest(keyPair.getPrivate());
+            SignedInterest theInterest = new SignedInterest();
             //TODO: not 100% sure if this is how you use signed interests
             theInterest.signName(ContentName.fromURI(uri));
             return theInterest;
@@ -212,12 +213,12 @@ public class Session
     }
     //TODO function to sign a packet w/ private key
 
-    public byte[] decryptBytes(byte[] bytes) throws PDCEncryptionException
+    /*public byte[] decryptBytes(byte[] bytes) throws PDCEncryptionException
     {
         DataEncryptor decryptor = new DataEncryptor();
         decryptor.setDecryptKey(keyPair.getPrivate().getEncoded());
         return decryptor.decryptData(bytes);
-    }
+    }*/
 
     ////////////////////////////////////////////////////////////////////////////
 }

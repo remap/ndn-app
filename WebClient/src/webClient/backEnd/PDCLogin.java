@@ -75,18 +75,13 @@ public class PDCLogin implements CCNFilterListener
         try
         {
             //encrypt data
-            DataEncryptor encryptor = new DataEncryptor();
-            encryptor.setEncryptKey(null /* TODO: use PDV public key */);
-            byte[] encryptedBytes = encryptor.encryptRecord(this._credentials);
-            coCredentials = ContentObject.buildContentObject(_namespace, encryptedBytes);
+            //DataEncryptor encryptor = new DataEncryptor();
+            //encryptor.setEncryptKey(null /* TODO: use PDV public key */);
+            //byte[] encryptedBytes = encryptor.encryptRecord(this._credentials);
+            coCredentials = ContentObject.buildContentObject(_namespace, this._credentials.toBSON());
 
             //sign data
             coCredentials.sign(this._keys.getPrivate());
-        }
-        catch (PDCEncryptionException ex)
-        {
-            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
         }
         catch (InvalidKeyException ex)
         {
@@ -172,7 +167,7 @@ public class PDCLogin implements CCNFilterListener
      * @param response - the PDV's response as a content object
      * @return - the PDV's response as a boolean.
      */
-    private AuthenticationResponse decodeAuthorizationResponse(ContentObject response) throws PDCEncryptionException
+    /*private AuthenticationResponse decodeAuthorizationResponse(ContentObject response) throws PDCEncryptionException
     {
         //decrypt response
         DataEncryptor decryptor = new DataEncryptor();
@@ -183,5 +178,5 @@ public class PDCLogin implements CCNFilterListener
         ar.fromBSON(bytes);
 
         return ar;
-    }
+    }*/
 }

@@ -65,8 +65,8 @@ public class PDCDataRecords
         {
             return null;
         }
-        byte[] data = session.decryptBytes(coDataRecords.content());
-        String dataStr = new String(data);
+        //byte[] data = session.decryptBytes(coDataRecords.content());
+        String dataStr = new String(coDataRecords.content());
         String[] records = dataStr.split("\n");
         List recordList = Arrays.asList(records);
 
@@ -99,7 +99,7 @@ public class PDCDataRecords
                 WebClientServer.DEFAULT_TIMEOUT);
 
        //decrypt bytes
-        byte[] content = session.decryptBytes(coRecord.content());
+        //byte[] content = session.decryptBytes(coRecord.content());
 
         DataRecord theRecord = new DataRecord();
         theRecord.fromBSON(coRecord.content());
