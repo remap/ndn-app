@@ -1,4 +1,4 @@
-package webClient.lib;
+package edu.ucla.cens.pdc.libpdc.util;
 
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
 import java.security.PublicKey;
@@ -14,7 +14,7 @@ import org.bson.BSONObject;
  * translated to BSON before being sent via NDN
  * @author Alexander Bonomo
  */
-public class Credentials implements iBSONExportable, BSONObject
+public class WCCredentials implements iBSONExportable, BSONObject
 {
     Map<String, Object> credentialsAndKey;
 
@@ -23,17 +23,23 @@ public class Credentials implements iBSONExportable, BSONObject
     private static final String passwordKey = "password";
     private static final String pubkeyKey   = "pubkey";
 
-    public Credentials(String username, String password, PublicKey pubKey)
+    //empty constructor
+    public WCCredentials()
+    {
+        
+    }
+
+    public WCCredentials(String username, String password, PublicKey pubKey)
     {
         this.credentialsAndKey = new LinkedHashMap<String, Object>();
-        this.credentialsAndKey.put(Credentials.usernameKey, username);
-        this.credentialsAndKey.put(Credentials.passwordKey, password);
-        this.credentialsAndKey.put(Credentials.pubkeyKey, pubKey);
+        this.credentialsAndKey.put(WCCredentials.usernameKey, username);
+        this.credentialsAndKey.put(WCCredentials.passwordKey, password);
+        this.credentialsAndKey.put(WCCredentials.pubkeyKey, pubKey);
     }
 
     public String getUsername()
     {
-        return (String) this.credentialsAndKey.get(Credentials.usernameKey);
+        return (String) this.credentialsAndKey.get(WCCredentials.usernameKey);
     }
 
     /**
@@ -45,12 +51,12 @@ public class Credentials implements iBSONExportable, BSONObject
      */
     public String getPassword()
     {
-        return (String) this.credentialsAndKey.get(Credentials.passwordKey);
+        return (String) this.credentialsAndKey.get(WCCredentials.passwordKey);
     }
 
     public PublicKey getPublicKey()
     {
-        return (PublicKey) this.credentialsAndKey.get(Credentials.pubkeyKey);
+        return (PublicKey) this.credentialsAndKey.get(WCCredentials.pubkeyKey);
     }
     
     public byte[] toBSON()
@@ -66,7 +72,7 @@ public class Credentials implements iBSONExportable, BSONObject
         }
     }
 
-    public Credentials fromBSON(byte[] data)
+    public WCCredentials fromBSON(byte[] data)
     {
         try
         {

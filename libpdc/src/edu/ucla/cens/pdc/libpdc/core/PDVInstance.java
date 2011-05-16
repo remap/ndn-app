@@ -74,6 +74,9 @@ final public class PDVInstance implements CCNFilterListener {
                  * Manage commands:
                  * manage/list/apps
                  * manage/list/datastreams/<app_id>
+                 * manage/list/datarecords/<app_id>/<ds_id>                 *
+                 * manage/login
+                 * manage/login/isAuthenticated
 		 */
 
 		ContentName root, name, postfix;
@@ -87,7 +90,7 @@ final public class PDVInstance implements CCNFilterListener {
 
 		Log.info("Got interest: " + name + ", postfix: " + postfix);
 
-		if (postfix == null || postfix.count() < 3)
+		if (postfix == null || postfix.count() < 2)
 			return false;
 
                 //check for manage command
@@ -99,7 +102,7 @@ final public class PDVInstance implements CCNFilterListener {
                         Log.error("manage command not supported by this PDV Instance.");
                         return false;
                     }
-                    return cmd.processCommand(postfix.subname(1, 3), interest);
+                    return cmd.processCommand(postfix.subname(1, postfix.count() - 1), interest);
                 }
 
 		app_name = postfix.stringComponent(0);

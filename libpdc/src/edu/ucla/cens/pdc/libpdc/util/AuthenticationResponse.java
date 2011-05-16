@@ -1,6 +1,9 @@
-package webClient.lib;
+package edu.ucla.cens.pdc.libpdc.util;
 
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
+import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
+import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,13 +52,13 @@ public class AuthenticationResponse implements iBSONExportable, BSONObject
         {
             try
             {
-                SecretKey key = Security.generateSymmKey("DES");
+                SecretKey key = EncryptionHelper.generateSymKey();
                 this.classVars.put(AuthenticationResponse.symkeyKey, key);
             }
-            catch (NoSuchAlgorithmException ex)
+            catch (PDCEncryptionException ex)
             {
-                //this should never happen
                 Logger.getLogger(AuthenticationResponse.class.getName()).log(Level.SEVERE, null, ex);
+                Log.error("Error generating symmetric key: " + ex.getLocalizedMessage());
             }
         }
         else

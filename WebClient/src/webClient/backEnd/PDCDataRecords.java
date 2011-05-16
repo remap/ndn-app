@@ -3,6 +3,7 @@ package webClient.backEnd;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
+import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,8 +55,8 @@ public class PDCDataRecords
         Log.write("Retrieving list of data records.");
 
         ContentObject coDataRecords = this._ccnHandle.get(ContentName.fromURI
-                (pdv_uri + "/" + appName + "/" + dsName +
-                PDCCommands.DATA_RECORD_LIST), WebClientServer.DEFAULT_TIMEOUT/2);
+                (pdv_uri + PDCCommands.DATA_RECORD_LIST + "/" + appName + "/" + dsName
+                ), WebClientServer.DEFAULT_TIMEOUT/2);
 
         if(coDataRecords == null)
             return null;
@@ -66,11 +67,10 @@ public class PDCDataRecords
             return null;
         }
         //byte[] data = session.decryptBytes(coDataRecords.content());
-        String dataStr = new String(coDataRecords.content());
-        String[] records = dataStr.split("\n");
-        List recordList = Arrays.asList(records);
+        CollectionTransport<String> ctRecords = new CollectionTransport<String>();
+        ctRecords.fromBSON(coDataRecords.content());
 
-        return recordList;
+        return ctRecords.toCollection();
     }
 
     /**

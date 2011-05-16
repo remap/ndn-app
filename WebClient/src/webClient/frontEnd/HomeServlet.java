@@ -94,27 +94,16 @@ public class HomeServlet extends HttpServlet
         String username = request.getParameter("login");
         String password = request.getParameter("password");
 
-        boolean isAuthenticatedUser = pdcLogin.isUserAuthenticated(pdv_uri, username, password);
-
-        //if the user is authenticated, register a new session 
-        if(isAuthenticatedUser)
-        {
-            Log.write(username + " successfully logged in.");
-            try 
-            {
-                _userHash = username; //Algorithms.md5HashStr(pdv_uri + username + password);
-                SessionManager.registerSession(_userHash, Security.generateSymmKey("DES"));
-                SessionManager.getSession(_userHash).setPDV_URI(pdv_uri);
-            }
-            catch (NoSuchAlgorithmException ex)
-            {
-                //this should never happen...
-                Logger.getLogger(HomeServlet.class.getName()).log(Level.SEVERE, null, ex);
-                return false;
-            }
+        boolean isAuth = pdcLogin.isUserAuthenticated(pdv_uri, username, password);
+        this._userHash = Algorithms.md5HashStr(pdv_uri + username + password);
+        try {
+            SessionManager.registerSession(this._userHash, Security.generateSymmKey("DES"));
+            SessionManager.getSession(this._userHash).setPDV_URI(pdv_uri);
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(HomeServlet.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
-
-        return isAuthenticatedUser;
+        return isAuth;
     }
 
     

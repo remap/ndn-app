@@ -15,8 +15,9 @@ import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.frontEnd.WebClientServer;
-import webClient.lib.AuthenticationResponse;
-import webClient.lib.Credentials;
+import webClient.lib.Algorithms;
+import edu.ucla.cens.pdc.libpdc.util.AuthenticationResponse;
+import edu.ucla.cens.pdc.libpdc.util.WCCredentials;
 import webClient.lib.Security;
 import webClient.session.SessionManager;
 
@@ -32,7 +33,7 @@ public class PDCLogin implements CCNFilterListener
 
     private KeyPair _keys;
 
-    private Credentials _credentials;
+    private WCCredentials _credentials;
     
     /**
      * Constructor
@@ -123,18 +124,20 @@ public class PDCLogin implements CCNFilterListener
         try
         {
             //create the credentials
-            this._credentials = new Credentials(userName, password, this._keys.getPublic());
+            this._credentials = new WCCredentials(userName, password, this._keys.getPublic());
 
             //start listening before we send just in case
             this.startListening();
 
+            //TODO use signed interests
+            String dottedNamespace = (WebClientServer.getNDNNamespace()).replace('/', '.');
             ContentObject ack = this._ccnHandle.get(ContentName.fromURI(pdv_uri +
-                    "/<" + WebClientServer.getNDNNamespace() + ">"), WebClientServer.DEFAULT_TIMEOUT);
+                    "manage/login/" + dottedNamespace), WebClientServer.DEFAULT_TIMEOUT);
 
             //TODO check for null ack also verify ack
 
             ContentObject coIsAuthenticated = this._ccnHandle.get(
-                    ContentName.fromURI(pdv_uri + "/isAuthenticated"),
+                    ContentName.fromURI(pdv_uri + "manage/login/isAuthenticated"),
                     WebClientServer.DEFAULT_TIMEOUT);
 
             AuthenticationResponse ar = decodeAuthorizationResponse(coIsAuthenticated);
@@ -143,8 +146,8 @@ public class PDCLogin implements CCNFilterListener
                 return false;
 
             //register a new session
-            String userHash = userName;//Algorithms.md5HashStr(pdv_uri + username + password);
-            SessionManager.registerSession(userHash);
+            String userHash = Algorithms.md5HashStr(pdv_uri + userName + password);
+            SessionManager.registerSession(userHash, ar.getSymmetricKey());
             SessionManager.getSession(userHash).setPDV_URI(pdv_uri);
 
             return true;
@@ -167,16 +170,16 @@ public class PDCLogin implements CCNFilterListener
      * @param response - the PDV's response as a content object
      * @return - the PDV's response as a boolean.
      */
-    /*private AuthenticationResponse decodeAuthorizationResponse(ContentObject response) throws PDCEncryptionException
+    private AuthenticationResponse decodeAuthorizationResponse(ContentObject response) throws PDCEncryptionException
     {
         //decrypt response
-        DataEncryptor decryptor = new DataEncryptor();
-        decryptor.setDecryptKey(this._keys.getPrivate().getEncoded());
-        byte[] bytes = decryptor.decryptData(response.content());
+        //DataEncryptor decryptor = new DataEncryptor();
+        //decryptor.setDecryptKey(this._keys.getPrivate().getEncoded());
+        byte[] bytes = response.content();//decryptor.decryptData(response.content());
 
         AuthenticationResponse ar = new AuthenticationResponse();
         ar.fromBSON(bytes);
 
         return ar;
-    }*/
+    }//*/
 }
