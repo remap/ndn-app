@@ -64,7 +64,8 @@ final public class MongoDataStorage extends Storage {
 			return _last_entry;
 
 		fields = new BasicDBObject("_id", 1);
-		sort = new BasicDBObject("$natural", -1);
+//		sort = new BasicDBObject("$natural", -1);
+		sort = new BasicDBObject("_id", -1);
 
 		// Get _id of the first newest row
 		cur = _coll.find(null, fields);
