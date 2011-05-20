@@ -9,6 +9,7 @@ import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.io.IOException;
+import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
 import org.ccnx.ccn.CCNFilterListener;
@@ -48,6 +49,8 @@ final public class PDVInstance implements CCNFilterListener {
 		ContentName root = _config.getRoot();
 		_config.getCCNHandle().registerFilter(root, this);
                 Log.info("PDV Instance Root: " + root.toURIString());
+
+                printKeyToLog(this._config.getKeyManager().getKeysForWC().getPublic(), "Public Key: ");
 	}
 
 	public void stopListening()
@@ -149,4 +152,25 @@ final public class PDVInstance implements CCNFilterListener {
 	{
 		_generic_commands.put(command.getCommandName(), command);
 	}
+
+        public static void printKeyToLog(Key key, String message)
+        {
+            byte[] keyBytes = key.getEncoded();
+            if(keyBytes == null)
+            {
+                Log.info("Couldn't get key bytes.");
+                return;
+            }
+
+            StringBuffer keyBuf = new StringBuffer();
+            for(int i = 0; i < keyBytes.length; i++)
+            {
+                String hex = Integer.toHexString(0xFF & keyBytes[i]);
+                if(hex.length() == 1)
+                    keyBuf.append('0');
+                keyBuf.append(hex);
+            }
+
+            Log.info(message + keyBuf.toString());
+        }
 }

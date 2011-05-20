@@ -18,6 +18,7 @@ public class LoginServlet extends HttpServlet
             throws ServletException, IOException
     {
         String pdv_uri = request.getParameter(VarNames.PDV_URI);
+        String pdv_key = request.getParameter(VarNames.PDV_PUBKEY);
         
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
@@ -33,6 +34,7 @@ public class LoginServlet extends HttpServlet
             + "<input type=\"hidden\" name=\"action\" value=\"login\">\n"
             + "<input type=\"hidden\" name=\"hide\" value=\"\">\n"
             + "<input type=\"hidden\" name=\"" + VarNames.PDV_URI + "\" value=\"" + pdv_uri + "\">\n"
+            + "<input type=\"hidden\" name=\"" + VarNames.PDV_PUBKEY + "\" value=\"" + pdv_key + "\">\n"
             + "<center><table>\n"
             + "<tr><td><font face=\"verdana,arial\" size=-1>Login:</td><td><input type=\"text\" name=\"login\"></td></tr>\n"
             + "<tr><td><font face=\"verdana,arial\" size=-1>Password:</td><td><input type=\"password\" name=\"password\"></td></tr>\n"

@@ -5,7 +5,9 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.CCNFilterListener;
@@ -16,9 +18,19 @@ import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.frontEnd.WebClientServer;
 import webClient.lib.Algorithms;
+import webClient.exceptions.NoPDVResponseException;
 import edu.ucla.cens.pdc.libpdc.util.AuthenticationResponse;
+import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.WCCredentials;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import org.ccnx.ccn.config.SystemConfiguration;
+import org.ccnx.ccn.config.UserConfiguration;
 import webClient.lib.Security;
+import webClient.log.Log;
 import webClient.session.SessionManager;
 
 /**
@@ -30,11 +42,11 @@ public class PDCLogin implements CCNFilterListener
 {
     private CCNHandle _ccnHandle;
     private ContentName _namespace;
-
     private KeyPair _keys;
+    private static WCCredentials _credentials;
+    private String _userHash;
+    private PublicKey _pdvKey;
 
-    private WCCredentials _credentials;
-    
     /**
      * Constructor
      *
@@ -42,7 +54,8 @@ public class PDCLogin implements CCNFilterListener
      * the web client's public key
      * @throws MalformedContentNameStringException - if the namespace given is no good
      */
-    public PDCLogin(String namespace) throws MalformedContentNameStringException
+    public PDCLogin(String namespace, String pdv_uri, String pdv_key, String userName, String password)
+            throws MalformedContentNameStringException, NoPDVResponseException
     {
         //get a handle and a content name
         this._ccnHandle = CCNHandle.getHandle();
@@ -50,14 +63,31 @@ public class PDCLogin implements CCNFilterListener
 
         //get public/private key pairs
         this._keys = Security.generateKeyPair(512);
+        Log.write("WC's public key: " + Algorithms.bytesToHexStr(_keys.getPublic().getEncoded()));
+
+        //convert the hex string representation of the key to a PublicKey object
+        byte[] keyBytes = Algorithms.hexStrToBytes(pdv_key);
+        _pdvKey = Algorithms.bytesToPubKey(keyBytes);
+        Log.write("PDV public key: " + Algorithms.bytesToHexStr(_pdvKey.getEncoded()));
+
+        //get the user hash value
+        this._userHash = Algorithms.md5HashStr(pdv_uri + userName + password);
+
+        //begin logon process
+        //this.startLogon(pdv_uri, userName, password);
     }
 
+    public String getUserHash()
+    {
+        return this._userHash;
+    }
     /**
      * Begin listening for interests on the namespace specified in the constructor
      * @throws IOException
      */
     public void startListening() throws IOException
     {
+        Log.write("PDCLogin listening for interests to: " + this._namespace.toURIString());
         _ccnHandle.registerFilter(this._namespace, this);
     }
 
@@ -69,39 +99,24 @@ public class PDCLogin implements CCNFilterListener
      */
     public boolean handleInterest(Interest interest)
     {
-        if(this._credentials == null)
-            return false; //TODO correct return value?
-
-        ContentObject coCredentials;
+        Log.write("Received interest: " + interest.toString());
         try
         {
-            //encrypt data
-            //DataEncryptor encryptor = new DataEncryptor();
-            //encryptor.setEncryptKey(null /* TODO: use PDV public key */);
-            //byte[] encryptedBytes = encryptor.encryptRecord(this._credentials);
-            coCredentials = ContentObject.buildContentObject(_namespace, this._credentials.toBSON());
+            //encrypt and make the content object
+            byte[] content = EncryptionHelper.encryptAsymData(_pdvKey, this._keys.getPublic().getEncoded());
+            ContentObject coWCPubKey = ContentObject.buildContentObject(_namespace, content);
 
             //sign data
-            coCredentials.sign(this._keys.getPrivate());
+            coWCPubKey.sign(this._keys.getPrivate());            
+            
+            this._ccnHandle.put(coWCPubKey);
+            
+            Log.write("sent WC public key.");
         }
-        catch (InvalidKeyException ex)
+        catch (Exception ex)
         {
             Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
-        }
-        catch (SignatureException ex)
-        {
-            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
-        }
-
-        try
-        {
-            this._ccnHandle.put(coCredentials);
-        }
-        catch (IOException ex)
-        {
-            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
+            Log.write(ex.getLocalizedMessage());
             return false;
         }
 
@@ -119,36 +134,34 @@ public class PDCLogin implements CCNFilterListener
      */
     public boolean isUserAuthenticated(String pdv_uri, String userName, String password) throws PDCEncryptionException
     {
-        return true;
-        /* commented out until login functionality is implemented in the PDC
+        //return true;
+        //* commented out until login functionality is implemented in the PDC
         try
         {
-            //create the credentials
-            this._credentials = new WCCredentials(userName, password, this._keys.getPublic());
-
-            //start listening before we send just in case
-            this.startListening();
-
-            //TODO use signed interests
-            String dottedNamespace = (WebClientServer.getNDNNamespace()).replace('/', '.');
-            ContentObject ack = this._ccnHandle.get(ContentName.fromURI(pdv_uri +
-                    "manage/login/" + dottedNamespace), WebClientServer.DEFAULT_TIMEOUT);
-
-            //TODO check for null ack also verify ack
-
             ContentObject coIsAuthenticated = this._ccnHandle.get(
-                    ContentName.fromURI(pdv_uri + "manage/login/isAuthenticated"),
+                    ContentName.fromURI(pdv_uri + "/manage/login/isAuthenticated/" + _userHash),
                     WebClientServer.DEFAULT_TIMEOUT);
+
+            //check for null response
+            /*if(coIsAuthenticated == null)
+            {
+                Log.write("No response from PDV instance on status of login.");
+                return false;
+            }
 
             AuthenticationResponse ar = decodeAuthorizationResponse(coIsAuthenticated);
 
-            if(!ar.isAuthenticated())
+            if(ar == null || !ar.isAuthenticated())
                 return false;
+             */
 
+            SecretKey symmKey = (new SecretKeySpec(coIsAuthenticated.content(), "AES"));//EncryptionHelper.unwrapKey(this._keys.getPrivate(), coIsAuthenticated.content());
+            
             //register a new session
-            String userHash = Algorithms.md5HashStr(pdv_uri + userName + password);
-            SessionManager.registerSession(userHash, ar.getSymmetricKey());
-            SessionManager.getSession(userHash).setPDV_URI(pdv_uri);
+            SessionManager.registerSession(_userHash, symmKey);
+            SessionManager.getSession(_userHash).setPDV_URI(pdv_uri);
+
+            Log.write("Successfully logged in. Session key: " + Algorithms.bytesToHexStr(symmKey.getEncoded()));
 
             return true;
         }
@@ -163,6 +176,35 @@ public class PDCLogin implements CCNFilterListener
             return false;
         }
         //*/
+    }
+
+    private void startLogon(String pdv_uri, String userName, String password) throws NoPDVResponseException
+    {
+        try
+        {
+            //create the credentials
+           this._credentials = new WCCredentials(userName, password, this._keys.getPublic());
+
+            //start listening before we send just in case
+            this.startListening();
+
+            //TODO use signed interests
+
+            String dottedNamespace = (WebClientServer.getNDNNamespace()).replace('/', '.');
+            String interestURI = pdv_uri + "/manage/login/" + dottedNamespace + "/" + _userHash;
+            Log.write("Sending interest to: " + interestURI);
+            ContentObject ack = this._ccnHandle.get(ContentName.fromURI(interestURI), WebClientServer.DEFAULT_TIMEOUT);
+
+            //check for null ack
+            if (ack == null) {
+                Log.write("No response from PDV instance to log in.");
+                throw new NoPDVResponseException();
+            }
+        } catch (MalformedContentNameStringException ex) {
+            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**

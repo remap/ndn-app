@@ -7,17 +7,27 @@ package edu.ucla.cens.pdc.libpdc.core;
 import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
 import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
 import edu.ucla.cens.pdc.libpdc.util.AuthenticationResponse;
+import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.WCCredentials;
 import java.io.IOException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Collection;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.config.SystemConfiguration;
+import javax.crypto.SecretKey;
+import org.ccnx.ccn.config.SystemConfiguration;
+import org.ccnx.ccn.config.UserConfiguration;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
@@ -41,8 +51,10 @@ public class ManageCommand extends GenericCommand
     public static final String STR_isAuth  = "isAuthenticated";
 
     //private member variables
-    private GlobalConfig _globalConfig;
-    private WCCredentials _credentials;
+    private GlobalConfig    _globalConfig;
+    private WCCredentials   _credentials;
+    private PublicKey       _wcPubKey;
+
 
     public ManageCommand()
     {
@@ -57,8 +69,13 @@ public class ManageCommand extends GenericCommand
      * /list/datastreams/<app_name>
      * /list/datarecords/<app_name>/<datastream_name>
      *
+<<<<<<< HEAD
      * /login/<dottedWC>
      * /login/isAuthenticated
+=======
+     * /login/<dottedWC>/<user_hash>
+     * /login/isAuthenticated/<user_hash>
+>>>>>>> my_changes
      */
 
     @Override
@@ -85,6 +102,12 @@ public class ManageCommand extends GenericCommand
         return false;
     }
 
+    /**
+     * Handle list command
+     * @param postfix
+     * @param interest
+     * @return
+     */
     private boolean handleListCmd(ContentName postfix, Interest interest)
     {
         //make sure there are enough components in the postfix
@@ -193,6 +216,15 @@ public class ManageCommand extends GenericCommand
         return false;
     }
 
+    /**
+     * Handle login commands
+     * @param postfix
+     * @param interest
+     * @return
+     *
+     * /login/<dottedWC>/<user_hash>
+     * /login/isAuthenticated/<user_hash>
+     */
     private boolean handleLoginCmd(ContentName postfix, Interest interest)
     {
         //make sure there are enough components in the postfix
@@ -204,46 +236,89 @@ public class ManageCommand extends GenericCommand
 
         if(postfix.stringComponent(1).equals(STR_isAuth))
         {
-            if(this._credentials == null)
+            try
             {
-                try {
-                    Thread.sleep(SystemConfiguration.MEDIUM_TIMEOUT);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+                /*if(this._wcPubKey == null)
+                {
+                    try {
+                        Thread.sleep(SystemConfiguration.MEDIUM_TIMEOUT);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
-            }
-            if(this._credentials == null)
-                return false;
+                if(this._wcPubKey == null)
+                {
+                    Log.error("WC public key not yet known.");
+                    return false;
+                }*/
+                //TODO use CommunicationHelper
+                //AuthenticationResponse ar = new AuthenticationResponse(true);
+                SecretKey symmKey = this._globalConfig.getKeyManager().getWCSymmKey();
+                if(symmKey == null)
+                {
+                    symmKey = EncryptionHelper.generateSymKey();
+                    this._globalConfig.getKeyManager().addWCSymmKey(symmKey);
+                }
 
-            //TODO use CommunicationHelper
-            AuthenticationResponse ar = new AuthenticationResponse(true);
-            ContentObject co = ContentObject.buildContentObject(interest.name(), ar.toBSON());
-            try {
+                PDVInstance.printKeyToLog(symmKey, "Symmetric key: ");
+                //byte[] content = EncryptionHelper.wrapKey(_wcPubKey, symmKey);
+                ContentObject co = ContentObject.buildContentObject(interest.name(), symmKey.getEncoded());
                 this._globalConfig.getCCNHandle().put(co);
+                
+
+                return true;
             } catch (IOException ex) {
+                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (PDCEncryptionException ex) {
                 Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            return true;
+            return false;
         }
 
-        //otherwise the final string component will have the dotted WC namespace
+        //otherwise the next string component will have the dotted WC namespace
         try 
         {
             //send ack
-            ContentObject co = ContentObject.buildContentObject(interest.name(), null);
+            String ack = "ACK";
+            ContentObject co = ContentObject.buildContentObject(interest.name(), ack.getBytes());
             this._globalConfig.getCCNHandle().put(co);
 
             //send interest
-            String wcNamespace = postfix.stringComponent(1).replace('.', '/');
-            ContentObject coCredentials = this._globalConfig.getCCNHandle().get(
+            String wcNamespace = "ccnx:" + postfix.stringComponent(1).replace('.', '/');
+            Log.info("Sending interest for credentials: " + wcNamespace + "/login");
+            ContentObject coWCPubKey = this._globalConfig.getCCNHandle().get(
                     ContentName.fromURI(wcNamespace + "/login"), SystemConfiguration.MEDIUM_TIMEOUT);
 
-            //TODO decrypt with private key...
+            if(coWCPubKey == null)
+            {
+                Log.warning("No credentials received from Web Client.");
+                return false;
+            }
 
-            _credentials = _credentials.fromBSON(coCredentials.content());
-
+            byte[] wcPubKeyBytes = EncryptionHelper.decryptAsymData(this._globalConfig.getKeyManager().getKeysForWC().getPrivate(), coWCPubKey.content());
+            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(wcPubKeyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance(UserConfiguration.defaultKeyAlgorithm());
+            this._wcPubKey = keyFactory.generatePublic(pubKeySpec);
+            
+            //_credentials.fromBSON(coWCPubKey.content());
+            Log.info("WC PublicKey Received: " + _wcPubKey);
         } 
+        catch (InvalidKeySpecException ex)
+        {
+            Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+            Log.error(ex.getLocalizedMessage());
+        }
+        catch (NoSuchAlgorithmException ex)
+        {
+            Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+            Log.error(ex.getLocalizedMessage());
+        }        
+        catch (PDCEncryptionException ex)
+        {
+            Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+            Log.error(ex.getLocalizedMessage());
+        }
         catch (MalformedContentNameStringException ex)
         {
             Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);

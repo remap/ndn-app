@@ -1,23 +1,15 @@
 package edu.ucla.cens.pdc.libpdc.util;
 
-import edu.ucla.cens.pdc.libpdc.iBSONExportable;
+import edu.ucla.cens.pdc.libpdc.transport.BasicBSONExportableImpl;
 import java.security.PublicKey;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import org.bson.BSONDecoder;
-import org.bson.BSONEncoder;
-import org.bson.BSONObject;
 
 /**
  * This class holds the user's credentials as well as the WC's public key and is
  * translated to BSON before being sent via NDN
  * @author Alexander Bonomo
  */
-public class WCCredentials implements iBSONExportable, BSONObject
+public class WCCredentials extends BasicBSONExportableImpl
 {
-    Map<String, Object> credentialsAndKey;
-
     //the keys for the map
     private static final String usernameKey = "username";
     private static final String passwordKey = "password";
@@ -31,15 +23,14 @@ public class WCCredentials implements iBSONExportable, BSONObject
 
     public WCCredentials(String username, String password, PublicKey pubKey)
     {
-        this.credentialsAndKey = new LinkedHashMap<String, Object>();
-        this.credentialsAndKey.put(WCCredentials.usernameKey, username);
-        this.credentialsAndKey.put(WCCredentials.passwordKey, password);
-        this.credentialsAndKey.put(WCCredentials.pubkeyKey, pubKey);
+        this.classVars.put(WCCredentials.usernameKey, username);
+        this.classVars.put(WCCredentials.passwordKey, password);
+        this.classVars.put(WCCredentials.pubkeyKey, pubKey);
     }
 
     public String getUsername()
     {
-        return (String) this.credentialsAndKey.get(WCCredentials.usernameKey);
+        return (String) this.classVars.get(WCCredentials.usernameKey);
     }
 
     /**
@@ -51,87 +42,11 @@ public class WCCredentials implements iBSONExportable, BSONObject
      */
     public String getPassword()
     {
-        return (String) this.credentialsAndKey.get(WCCredentials.passwordKey);
+        return (String) this.classVars.get(WCCredentials.passwordKey);
     }
 
     public PublicKey getPublicKey()
     {
-        return (PublicKey) this.credentialsAndKey.get(WCCredentials.pubkeyKey);
+        return (PublicKey) this.classVars.get(WCCredentials.pubkeyKey);
     }
-    
-    public byte[] toBSON()
-    {
-        try
-        {
-            BSONEncoder encoder = new BSONEncoder();
-            return encoder.encode(this);
-        }
-        catch(RuntimeException re)
-        {
-            return null;
-        }
-    }
-
-    public WCCredentials fromBSON(byte[] data)
-    {
-        try
-        {
-            BSONDecoder decoder = new BSONDecoder();
-            this.putAll(decoder.readObject(data));
-
-            return this;
-        }
-        catch(RuntimeException e)
-        {
-            return null;
-        }
-    }
-
-    public Object put(String string, Object o)
-    {
-        return this.credentialsAndKey.put(string, o);
-    }
-
-    public void putAll(BSONObject bsono) 
-    {
-        this.putAll(bsono.toMap());
-    }
-
-    public void putAll(Map map)
-    {
-        this.credentialsAndKey.putAll(map);
-    }
-
-    public Object get(String string)
-    {
-        if(!this.credentialsAndKey.containsKey(string))
-            return null;
-        return this.credentialsAndKey.get(string);
-    }
-
-    public Map toMap()
-    {
-        return this.credentialsAndKey;
-    }
-
-    public Object removeField(String string) 
-    {
-        return this.credentialsAndKey.remove(string);
-    }
-
-    public boolean containsKey(String string)
-    {
-        return this.credentialsAndKey.containsKey(string);
-    }
-
-    public boolean containsField(String string) 
-    {
-        return this.credentialsAndKey.containsKey(string);
-    }
-
-    public Set<String> keySet()
-    {
-        return this.credentialsAndKey.keySet();
-    }
-
 }

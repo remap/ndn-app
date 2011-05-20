@@ -16,7 +16,7 @@ public class WebClientServer
     public static final long DEFAULT_TIMEOUT = 10000;
 
     private static int port         = 8081;
-    private static String namespace = "/ucla.edu/webclient";
+    private static String namespace = "/ucla/edu/webclient";
 
     public static String getNDNNamespace()
     {

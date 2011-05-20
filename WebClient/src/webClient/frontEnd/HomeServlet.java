@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.backEnd.PDCLogin;
+import webClient.exceptions.NoPDVResponseException;
 import webClient.lib.Algorithms;
 import webClient.lib.Security;
 import webClient.log.Log;
@@ -32,7 +33,16 @@ public class HomeServlet extends HttpServlet
         PDCLogin pdcLogin;
         try
         {
-            pdcLogin = new PDCLogin(WebClientServer.getNDNNamespace() + "/login");
+            String pdv_uri = request.getParameter(VarNames.PDV_URI);
+            String pdv_key = request.getParameter(VarNames.PDV_PUBKEY);
+            String username = request.getParameter("login");
+            String password = request.getParameter("password");
+            pdcLogin = new PDCLogin(WebClientServer.getNDNNamespace() + "/login", pdv_uri, pdv_key, username, password);
+        }
+        catch (NoPDVResponseException ex)
+        {
+            Logger.getLogger(HomeServlet.class.getName()).log(Level.SEVERE, null, ex);
+            return;
         }
         catch(MalformedContentNameStringException e)
         {
@@ -95,14 +105,14 @@ public class HomeServlet extends HttpServlet
         String password = request.getParameter("password");
 
         boolean isAuth = pdcLogin.isUserAuthenticated(pdv_uri, username, password);
-        this._userHash = Algorithms.md5HashStr(pdv_uri + username + password);
-        try {
+        this._userHash = pdcLogin.getUserHash();
+        /*try {
             SessionManager.registerSession(this._userHash, Security.generateSymmKey("DES"));
             SessionManager.getSession(this._userHash).setPDV_URI(pdv_uri);
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(HomeServlet.class.getName()).log(Level.SEVERE, null, ex);
             return false;
-        }
+        }*/
         return isAuth;
     }
 

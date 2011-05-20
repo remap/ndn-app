@@ -1,8 +1,13 @@
 package webClient.lib;
 
+import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.logging.Level;
+import org.ccnx.ccn.config.UserConfiguration;
 import org.eclipse.jetty.util.log.Logger;
 
 /**
@@ -69,17 +74,48 @@ public class Algorithms
         return md.digest();
     }
 
-    public String hexify(byte[] bytes)
+    public static String bytesToHexStr(byte[] bytes)
     {
-        String retStr = "";
+        StringBuffer buff = new StringBuffer();
         
-        for(int i = 0; i + 4 <= bytes.length; i += 4)
+        for(int i = 0; i < bytes.length; i++)
         {
-            byte[] current = {bytes[i], bytes[i+1], bytes[i+2], bytes[i+3]};
-
-
+            String hex = Integer.toHexString(0xFF & bytes[i]);
+            if(hex.length() == 1)
+                buff.append('0');
+            buff.append(hex);
         }
 
+        return buff.toString();
+    }
+
+    public static byte[] hexStrToBytes(String hex)
+    {
+        byte[] keyBytes = new byte[hex.length() / 2];
+        for(int i = 0; i < hex.length(); i += 2)
+        {
+            keyBytes[i/2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+                    + Character.digit(hex.charAt(i+1), 16));
+        }
+        return keyBytes;
+    }
+
+    public static PublicKey bytesToPubKey(byte[] bytes)
+    {
+        X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(bytes);
+        try
+        {
+            KeyFactory keyFactory = KeyFactory.getInstance(UserConfiguration.defaultKeyAlgorithm());
+            return keyFactory.generatePublic(pubKeySpec);
+        }
+        catch (InvalidKeySpecException ex)
+        {
+            java.util.logging.Logger.getLogger(Algorithms.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        catch (NoSuchAlgorithmException ex)
+        {
+            java.util.logging.Logger.getLogger(Algorithms.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return null;
     }
 }
