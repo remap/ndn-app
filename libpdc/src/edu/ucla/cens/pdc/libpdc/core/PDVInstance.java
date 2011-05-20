@@ -9,6 +9,7 @@ import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.io.IOException;
+import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
 import org.ccnx.ccn.CCNFilterListener;
@@ -48,6 +49,8 @@ final public class PDVInstance implements CCNFilterListener {
 		ContentName root = _config.getRoot();
 		_config.getCCNHandle().registerFilter(root, this);
                 Log.info("PDV Instance Root: " + root.toURIString());
+
+                printKeyToLog(this._config.getKeyManager().getKeysForWC().getPublic(), "Public Key: ");
 	}
 
 	public void stopListening()
@@ -74,6 +77,9 @@ final public class PDVInstance implements CCNFilterListener {
                  * Manage commands:
                  * manage/list/apps
                  * manage/list/datastreams/<app_id>
+                 * manage/list/datarecords/<app_id>/<ds_id>                 *
+                 * manage/login
+                 * manage/login/isAuthenticated
 		 */
 
 		ContentName root, name, postfix;
@@ -87,7 +93,7 @@ final public class PDVInstance implements CCNFilterListener {
 
 		Log.info("Got interest: " + name + ", postfix: " + postfix);
 
-		if (postfix == null || postfix.count() < 3)
+		if (postfix == null || postfix.count() < 2)
 			return false;
 
                 //check for manage command
@@ -99,7 +105,7 @@ final public class PDVInstance implements CCNFilterListener {
                         Log.error("manage command not supported by this PDV Instance.");
                         return false;
                     }
-                    return cmd.processCommand(postfix.subname(1, 3), interest);
+                    return cmd.processCommand(postfix.subname(1, postfix.count() - 1), interest);
                 }
 
 		app_name = postfix.stringComponent(0);
@@ -146,4 +152,25 @@ final public class PDVInstance implements CCNFilterListener {
 	{
 		_generic_commands.put(command.getCommandName(), command);
 	}
+
+        public static void printKeyToLog(Key key, String message)
+        {
+            byte[] keyBytes = key.getEncoded();
+            if(keyBytes == null)
+            {
+                Log.info("Couldn't get key bytes.");
+                return;
+            }
+
+            StringBuffer keyBuf = new StringBuffer();
+            for(int i = 0; i < keyBytes.length; i++)
+            {
+                String hex = Integer.toHexString(0xFF & keyBytes[i]);
+                if(hex.length() == 1)
+                    keyBuf.append('0');
+                keyBuf.append(hex);
+            }
+
+            Log.info(message + keyBuf.toString());
+        }
 }

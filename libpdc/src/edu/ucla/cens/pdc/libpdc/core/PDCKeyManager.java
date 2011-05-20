@@ -22,6 +22,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import javax.crypto.SecretKey;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.ContentVerifier;
 import org.ccnx.ccn.config.ConfigurationException;
@@ -193,6 +194,21 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 
 		return digest;
 	}
+
+        public SecretKey getWCSymmKey() //TODO will want to add userID parameter
+        {
+            return this._WCSymmKey;
+        }
+
+        public void addWCSymmKey(SecretKey key) //TODO will want to add userID parameter
+        {
+            this._WCSymmKey = key;
+        }
+
+        public KeyPair getKeysForWC()
+        {
+            return this._keysForWC;
+        }
 
 //<editor-fold defaultstate="collapsed" desc="serialization code">
 	final public String getStateGroupName()
@@ -441,4 +457,8 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 	private Set<byte[]> _private_key_digests = new HashSet<byte[]>();
 
 	private final boolean _restore;
+
+        //TODO will eventually want a map of users to keys
+        private SecretKey _WCSymmKey;
+        private final KeyPair _keysForWC  = generateKeys();
 }

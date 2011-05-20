@@ -19,9 +19,11 @@ public class PDVServlet extends HttpServlet
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
 
-        response.getWriter().println("<h1>Enter URI of desired PDV instance:</h1> <br>");
+        response.getWriter().println("Enter URI of desired PDV instance: <br>");
         response.getWriter().println("<form method=\"post\" action=\"" + request.getRequestURL().toString() + PageDirectory.LOGIN + "\" name=pdvform>");
-        response.getWriter().println("<input type=\"text\" name=\"" + VarNames.PDV_URI + "\"> <br>");
+        response.getWriter().println("<input type=\"text\" name=\"" + VarNames.PDV_URI + "\"> <br> <br>");
+        response.getWriter().println("Enter PDV's public key: <br>");
+        response.getWriter().println("<input type=\"text\" name=\"" + VarNames.PDV_PUBKEY + "\"> <br>");
         response.getWriter().println("<input type=\"submit\" value=\"Enter\">");
     }
 }

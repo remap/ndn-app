@@ -33,6 +33,7 @@ public class DataStreamServlet extends HttpServlet
 
         this.m_userHash = request.getParameter(VarNames.USER_HASH);
 
+        //printAddRemoveStreams(request, response);
         printDataStreams(request, response);
     }
 
@@ -58,25 +59,46 @@ public class DataStreamServlet extends HttpServlet
         {
             Logger.getLogger(DataStreamServlet.class.getName()).log(Level.SEVERE, null, ex);
             return;
-        }        catch (MalformedContentNameStringException ex)
+        }
+        catch (MalformedContentNameStringException ex)
         {
             Logger.getLogger(DataStreamServlet.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
 
-        //print a link for each stream
-        for(String ds : dataStreams)
+        try
         {
-            try
+            response.getWriter().println("<h2> Streams: </h2>");
+            //print a link for each stream
+            for(String ds : dataStreams)
             {
                 response.getWriter().println("<a href=\"" + request.getRequestURL().toString()
-                        + "/dataStream?" + VarNames.USER_HASH + "=" + this.m_userHash + "&"
-                        + VarNames.DATA_STREAM + "=" + ds + "\"> " + ds + "</a> <br />");
+                    + "/dataStream?" + VarNames.USER_HASH + "=" + this.m_userHash + "&"
+                    + VarNames.DATA_STREAM + "=" + ds + "\"> " + ds + "</a> <br />");
             }
-            catch (IOException ex)
-            {
-                Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        }
+        catch (IOException ex)
+        {
+            Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void printAddRemoveStreams(HttpServletRequest request, HttpServletResponse response)
+    {
+        try
+        {
+            //print add stream
+            response.getWriter().println("Add Stream: " + "<form method=\"post\" action=\"" + request.getRequestURL().toString() + "/add" + "\" name=pdvform>");
+            response.getWriter().println("<input type=\"text\" name=\"" + VarNames.DATA_STREAM + "\">");
+            response.getWriter().println("<input type=\"submit\" value=\"Add\"> <br />");
+
+            response.getWriter().print("<br /> To remove a stream click "
+                    + "<a href=\"" + request.getRequestURL().toString() + "/remove?"
+                    + VarNames.USER_HASH + "=" + this.m_userHash + "\">here. </a> <br /> <br />");
+        }
+        catch (IOException ex)
+        {
+            Logger.getLogger(DataStreamServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

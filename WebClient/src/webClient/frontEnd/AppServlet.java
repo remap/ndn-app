@@ -31,8 +31,8 @@ public class AppServlet extends HttpServlet {
 		if (this._userHash == null)
 			response.getWriter().println("<h1> user hash not transferred. </h1>");
 
-		response.getWriter().println("<h1> View and download your data. </h1>");
-
+		response.getWriter().println("<h1> Your Apps. </h1>");
+                
 		printApps(request, response);
 	}
 

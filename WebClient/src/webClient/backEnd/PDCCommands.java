@@ -8,5 +8,6 @@ package webClient.backEnd;
  */
 public class PDCCommands
 {
-    public static final String DATA_RECORD_LIST = "/control/list";
+    public static final String DATA_RECORD_LIST = "/manage/list/datarecords";
+    public static final String LOGIN            = "/manage/login";
 }
