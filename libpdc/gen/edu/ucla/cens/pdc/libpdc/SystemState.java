@@ -41,12 +41,12 @@ public final class SystemState {
     private int bitField0_;
     // optional string root = 1;
     public static final int ROOT_FIELD_NUMBER = 1;
-    private Object root_;
+    private java.lang.Object root_;
     public boolean hasRoot() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     public String getRoot() {
-      Object ref = root_;
+      java.lang.Object ref = root_;
       if (ref instanceof String) {
         return (String) ref;
       } else {
@@ -60,7 +60,7 @@ public final class SystemState {
       }
     }
     private com.google.protobuf.ByteString getRootBytes() {
-      Object ref = root_;
+      java.lang.Object ref = root_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8((String) ref);
@@ -132,8 +132,10 @@ public final class SystemState {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -335,12 +337,12 @@ public final class SystemState {
       private int bitField0_;
       
       // optional string root = 1;
-      private Object root_ = "";
+      private java.lang.Object root_ = "";
       public boolean hasRoot() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       public String getRoot() {
-        Object ref = root_;
+        java.lang.Object ref = root_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
           root_ = s;
@@ -575,8 +577,10 @@ public final class SystemState {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -1121,8 +1125,10 @@ public final class SystemState {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -1495,12 +1501,12 @@ public final class SystemState {
     private int bitField0_;
     // required string name = 1;
     public static final int NAME_FIELD_NUMBER = 1;
-    private Object name_;
+    private java.lang.Object name_;
     public boolean hasName() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     public String getName() {
-      Object ref = name_;
+      java.lang.Object ref = name_;
       if (ref instanceof String) {
         return (String) ref;
       } else {
@@ -1514,7 +1520,7 @@ public final class SystemState {
       }
     }
     private com.google.protobuf.ByteString getNameBytes() {
-      Object ref = name_;
+      java.lang.Object ref = name_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8((String) ref);
@@ -1608,8 +1614,10 @@ public final class SystemState {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -1829,12 +1837,12 @@ public final class SystemState {
       private int bitField0_;
       
       // required string name = 1;
-      private Object name_ = "";
+      private java.lang.Object name_ = "";
       public boolean hasName() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       public String getName() {
-        Object ref = name_;
+        java.lang.Object ref = name_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
           name_ = s;
@@ -1994,12 +2002,12 @@ public final class SystemState {
     private int bitField0_;
     // required string data_stream_id = 1;
     public static final int DATA_STREAM_ID_FIELD_NUMBER = 1;
-    private Object dataStreamId_;
+    private java.lang.Object dataStreamId_;
     public boolean hasDataStreamId() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     public String getDataStreamId() {
-      Object ref = dataStreamId_;
+      java.lang.Object ref = dataStreamId_;
       if (ref instanceof String) {
         return (String) ref;
       } else {
@@ -2013,7 +2021,7 @@ public final class SystemState {
       }
     }
     private com.google.protobuf.ByteString getDataStreamIdBytes() {
-      Object ref = dataStreamId_;
+      java.lang.Object ref = dataStreamId_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8((String) ref);
@@ -2145,8 +2153,10 @@ public final class SystemState {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -2406,12 +2416,12 @@ public final class SystemState {
       private int bitField0_;
       
       // required string data_stream_id = 1;
-      private Object dataStreamId_ = "";
+      private java.lang.Object dataStreamId_ = "";
       public boolean hasDataStreamId() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       public String getDataStreamId() {
-        Object ref = dataStreamId_;
+        java.lang.Object ref = dataStreamId_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
           dataStreamId_ = s;
@@ -2701,8 +2711,10 @@ public final class SystemState {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -2998,12 +3010,12 @@ public final class SystemState {
     
     // optional string stream_key_digest = 3;
     public static final int STREAM_KEY_DIGEST_FIELD_NUMBER = 3;
-    private Object streamKeyDigest_;
+    private java.lang.Object streamKeyDigest_;
     public boolean hasStreamKeyDigest() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     public String getStreamKeyDigest() {
-      Object ref = streamKeyDigest_;
+      java.lang.Object ref = streamKeyDigest_;
       if (ref instanceof String) {
         return (String) ref;
       } else {
@@ -3017,7 +3029,7 @@ public final class SystemState {
       }
     }
     private com.google.protobuf.ByteString getStreamKeyDigestBytes() {
-      Object ref = streamKeyDigest_;
+      java.lang.Object ref = streamKeyDigest_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8((String) ref);
@@ -3078,8 +3090,10 @@ public final class SystemState {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -3334,12 +3348,12 @@ public final class SystemState {
       }
       
       // optional string stream_key_digest = 3;
-      private Object streamKeyDigest_ = "";
+      private java.lang.Object streamKeyDigest_ = "";
       public boolean hasStreamKeyDigest() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       public String getStreamKeyDigest() {
-        Object ref = streamKeyDigest_;
+        java.lang.Object ref = streamKeyDigest_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
           streamKeyDigest_ = s;
@@ -3416,12 +3430,12 @@ public final class SystemState {
     private int bitField0_;
     // required string uri = 1;
     public static final int URI_FIELD_NUMBER = 1;
-    private Object uri_;
+    private java.lang.Object uri_;
     public boolean hasUri() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     public String getUri() {
-      Object ref = uri_;
+      java.lang.Object ref = uri_;
       if (ref instanceof String) {
         return (String) ref;
       } else {
@@ -3435,7 +3449,7 @@ public final class SystemState {
       }
     }
     private com.google.protobuf.ByteString getUriBytes() {
-      Object ref = uri_;
+      java.lang.Object ref = uri_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8((String) ref);
@@ -3448,12 +3462,12 @@ public final class SystemState {
     
     // optional string key_digest = 2;
     public static final int KEY_DIGEST_FIELD_NUMBER = 2;
-    private Object keyDigest_;
+    private java.lang.Object keyDigest_;
     public boolean hasKeyDigest() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     public String getKeyDigest() {
-      Object ref = keyDigest_;
+      java.lang.Object ref = keyDigest_;
       if (ref instanceof String) {
         return (String) ref;
       } else {
@@ -3467,7 +3481,7 @@ public final class SystemState {
       }
     }
     private com.google.protobuf.ByteString getKeyDigestBytes() {
-      Object ref = keyDigest_;
+      java.lang.Object ref = keyDigest_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8((String) ref);
@@ -3480,12 +3494,12 @@ public final class SystemState {
     
     // optional string key_locator = 3;
     public static final int KEY_LOCATOR_FIELD_NUMBER = 3;
-    private Object keyLocator_;
+    private java.lang.Object keyLocator_;
     public boolean hasKeyLocator() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     public String getKeyLocator() {
-      Object ref = keyLocator_;
+      java.lang.Object ref = keyLocator_;
       if (ref instanceof String) {
         return (String) ref;
       } else {
@@ -3499,7 +3513,7 @@ public final class SystemState {
       }
     }
     private com.google.protobuf.ByteString getKeyLocatorBytes() {
-      Object ref = keyLocator_;
+      java.lang.Object ref = keyLocator_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8((String) ref);
@@ -3564,8 +3578,10 @@ public final class SystemState {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -3776,12 +3792,12 @@ public final class SystemState {
       private int bitField0_;
       
       // required string uri = 1;
-      private Object uri_ = "";
+      private java.lang.Object uri_ = "";
       public boolean hasUri() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       public String getUri() {
-        Object ref = uri_;
+        java.lang.Object ref = uri_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
           uri_ = s;
@@ -3812,12 +3828,12 @@ public final class SystemState {
       }
       
       // optional string key_digest = 2;
-      private Object keyDigest_ = "";
+      private java.lang.Object keyDigest_ = "";
       public boolean hasKeyDigest() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       public String getKeyDigest() {
-        Object ref = keyDigest_;
+        java.lang.Object ref = keyDigest_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
           keyDigest_ = s;
@@ -3848,12 +3864,12 @@ public final class SystemState {
       }
       
       // optional string key_locator = 3;
-      private Object keyLocator_ = "";
+      private java.lang.Object keyLocator_ = "";
       public boolean hasKeyLocator() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       public String getKeyLocator() {
-        Object ref = keyLocator_;
+        java.lang.Object ref = keyLocator_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
           keyLocator_ = s;
@@ -3972,8 +3988,10 @@ public final class SystemState {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -4259,12 +4277,12 @@ public final class SystemState {
     
     // optional string stream_id = 2;
     public static final int STREAM_ID_FIELD_NUMBER = 2;
-    private Object streamId_;
+    private java.lang.Object streamId_;
     public boolean hasStreamId() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     public String getStreamId() {
-      Object ref = streamId_;
+      java.lang.Object ref = streamId_;
       if (ref instanceof String) {
         return (String) ref;
       } else {
@@ -4278,7 +4296,7 @@ public final class SystemState {
       }
     }
     private com.google.protobuf.ByteString getStreamIdBytes() {
-      Object ref = streamId_;
+      java.lang.Object ref = streamId_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8((String) ref);
@@ -4339,8 +4357,10 @@ public final class SystemState {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -4588,12 +4608,12 @@ public final class SystemState {
       }
       
       // optional string stream_id = 2;
-      private Object streamId_ = "";
+      private java.lang.Object streamId_ = "";
       public boolean hasStreamId() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       public String getStreamId() {
-        Object ref = streamId_;
+        java.lang.Object ref = streamId_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
           streamId_ = s;
