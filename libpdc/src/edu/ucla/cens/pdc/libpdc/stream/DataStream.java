@@ -72,7 +72,7 @@ public class DataStream implements iDataStream, iState {
 
 		} else {
 			Log.info(String.format("Generating new data stream %s for %s",
-					data_stream_id, app.getAppName()));
+					name, app.getAppName()));
 
 			this.app = app;
 			this.data_stream_id = name;
@@ -89,7 +89,7 @@ public class DataStream implements iDataStream, iState {
 			SystemState.DataStream state)
 	{
 		assert app != null;
-		assert data_stream_id != null && !data_stream_id.isEmpty();
+		assert data_stream_id != null && !data_stream_id.equals("");
 		assert !data_stream_id.startsWith("/") : "stream id: " + data_stream_id;
 
 		_store = GlobalConfig.setupDataStorage(app, data_stream_id);
@@ -251,7 +251,7 @@ public class DataStream implements iDataStream, iState {
 			throws PDCTransmissionException
 	{
 		assert receiver != null;
-		assert auth_string != null && !auth_string.isEmpty();
+		assert auth_string != null && !auth_string.equals("");
 
 		receiver.setAuthenticator(auth_string);
 
