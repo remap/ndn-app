@@ -23,6 +23,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.LinkedList;
 import java.util.List;
+import javax.crypto.SecretKey;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.engines.TwofishEngine;
@@ -51,6 +52,7 @@ public class DataEncryptor {
 
 		if (state.hasEncryptionKey())
 			_encrypt_key = state.getEncryptionKey().toByteArray();
+
 		if (state.hasDecryptionKey())
 			_decrypt_key = state.getDecryptionKey().toByteArray();
 
@@ -144,9 +146,10 @@ public class DataEncryptor {
 		byte[] ciphertext;
 		int output_len;
 
-		if (_encrypt_key == null)
-			throw new PDCEncryptionException("No encryption key set");
-
+		if (_encrypt_key == null) {
+			Log.info("No symmetric key set previously, generating a new one");
+			generateNewKey();
+		}
 
 		_cipher.init(true, new KeyParameter(_encrypt_key));
 //		_cipher.reset();
@@ -315,6 +318,17 @@ public class DataEncryptor {
 		}
 
 		return result;
+	}
+
+	public void generateNewKey()
+	{
+		try {
+			SecretKey key = EncryptionHelper.generateSymKey("TwoFish", 256);
+			_encrypt_key = key.getEncoded();
+		}
+		catch (PDCEncryptionException ex) {
+			throw new Error("Unable to generate new key", ex);
+		}
 	}
 
 	private byte[] generateIV(iApplication app, String data_stream)

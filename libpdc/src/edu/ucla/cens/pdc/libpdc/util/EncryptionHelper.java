@@ -30,19 +30,25 @@ public class EncryptionHelper {
 	public static SecretKey generateSymKey()
 			throws PDCEncryptionException
 	{
+		return generateSymKey("AES", 128);
+	}
+
+	public static SecretKey generateSymKey(String algorithm, int bits)
+			throws PDCEncryptionException
+	{
 		KeyGenerator kg;
 		SecretKey secret_key;
 
 		initRandom();
 
 		try {
-			kg = KeyGenerator.getInstance("AES");
+			kg = KeyGenerator.getInstance(algorithm);
 		}
 		catch (NoSuchAlgorithmException ex) {
-			throw new PDCEncryptionException("No AES available", ex);
+			throw new PDCEncryptionException("No " + algorithm + " available", ex);
 		}
 
-		kg.init(128, _random);
+		kg.init(bits, _random);
 		secret_key = kg.generateKey();
 
 		return secret_key;
