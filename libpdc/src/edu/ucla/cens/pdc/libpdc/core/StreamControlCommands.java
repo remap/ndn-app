@@ -255,10 +255,12 @@ public class StreamControlCommands extends StreamCommand {
 				return processAuthenticator(ds, remainder, interest);
 			else if (command.equals("stream_info"))
 				return processStreamInfo(ds, remainder, interest);
-			else if (command.equals("list"))
-				return ds.getTransport().publishRecordList(interest, remainder);
 			else if (command.equals("key"))
 				return processKey(ds, remainder, interest);
+			else if (command.equals("pull"))
+				return ds.getTransport().initiateFetchingDataFromUplink(interest);
+			else if (command.equals("list"))
+				return ds.getTransport().publishRecordList(interest, remainder);
 			else {
 				Log.info("Invalid request: " + interest.name().toURIString());
 

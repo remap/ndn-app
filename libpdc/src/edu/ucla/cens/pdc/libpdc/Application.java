@@ -156,7 +156,7 @@ public class Application implements iApplication, iState {
 
 			try {
 				Log.debug("Making " + ds.data_stream_id + " fetch data from the uplink");
-				return ds.getTransport().fetchDataFromUplink();
+				return ds.fetchNewData();
 			}
 			catch (PDCTransmissionException ex) {
 				Log.error("Unable to fetch data from uplink: " + ex.getMessage());

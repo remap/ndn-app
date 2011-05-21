@@ -10,6 +10,7 @@ import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.stream.StreamTransport;
 import java.util.Collection;
 import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
  *
@@ -29,11 +30,10 @@ public interface iDataStream {
 	 */
 	public StreamTransport getTransport();
 
-	/**
-	 * @deprecated should be moved to PDCPublisher
-	 * @return
-	 */
 	public ContentName getPublisherStreamURI();
+
+	public ContentName getReceiverStreamURI(PDCReceiver receiver)
+			throws MalformedContentNameStringException;
 
 	public void setPublisher(PDCPublisher node);
 

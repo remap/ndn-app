@@ -12,6 +12,7 @@ import edu.ucla.cens.pdc.libpdc.iDataStream;
 import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
 import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
+import edu.ucla.cens.pdc.libpdc.util.MiscFuncs;
 import edu.ucla.cens.pdc.libpdc.util.WCCredentials;
 import java.io.IOException;
 import java.security.KeyFactory;
@@ -253,7 +254,7 @@ public class ManageCommand extends GenericCommand
                     this._globalConfig.getKeyManager().addWCSymmKey(symmKey);
                 }
 
-                PDVInstance.printKeyToLog(symmKey, "Symmetric key: ");
+                MiscFuncs.printKeyToLog(symmKey, "Symmetric key: ");
                 //byte[] content = EncryptionHelper.wrapKey(_wcPubKey, symmKey);
                 ContentObject co = ContentObject.buildContentObject(interest.name(), symmKey.getEncoded());
                 this._globalConfig.getCCNHandle().put(co);

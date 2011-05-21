@@ -4242,9 +4242,9 @@ public final class SystemState {
     boolean hasBase();
     edu.ucla.cens.pdc.libpdc.SystemState.PDCNode getBase();
     
-    // optional string stream_id = 2;
-    boolean hasStreamId();
-    String getStreamId();
+    // optional string stream_id = 2 [deprecated = true];
+    @java.lang.Deprecated boolean hasStreamId();
+    @java.lang.Deprecated String getStreamId();
   }
   public static final class PDCPublisher extends
       com.google.protobuf.GeneratedMessageLite
@@ -4275,13 +4275,13 @@ public final class SystemState {
       return base_;
     }
     
-    // optional string stream_id = 2;
+    // optional string stream_id = 2 [deprecated = true];
     public static final int STREAM_ID_FIELD_NUMBER = 2;
     private java.lang.Object streamId_;
-    public boolean hasStreamId() {
+    @java.lang.Deprecated public boolean hasStreamId() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
-    public String getStreamId() {
+    @java.lang.Deprecated public String getStreamId() {
       java.lang.Object ref = streamId_;
       if (ref instanceof String) {
         return (String) ref;
@@ -4607,12 +4607,12 @@ public final class SystemState {
         return this;
       }
       
-      // optional string stream_id = 2;
+      // optional string stream_id = 2 [deprecated = true];
       private java.lang.Object streamId_ = "";
-      public boolean hasStreamId() {
+      @java.lang.Deprecated public boolean hasStreamId() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
-      public String getStreamId() {
+      @java.lang.Deprecated public String getStreamId() {
         java.lang.Object ref = streamId_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
@@ -4622,7 +4622,7 @@ public final class SystemState {
           return (String) ref;
         }
       }
-      public Builder setStreamId(String value) {
+      @java.lang.Deprecated public Builder setStreamId(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -4631,7 +4631,7 @@ public final class SystemState {
         
         return this;
       }
-      public Builder clearStreamId() {
+      @java.lang.Deprecated public Builder clearStreamId() {
         bitField0_ = (bitField0_ & ~0x00000002);
         streamId_ = getDefaultInstance().getStreamId();
         

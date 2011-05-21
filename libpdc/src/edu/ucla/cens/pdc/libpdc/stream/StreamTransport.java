@@ -272,6 +272,26 @@ public class StreamTransport {
 		return false;
 	}
 
+	public boolean initiateFetchingDataFromUplink(Interest interest)
+	{
+		try {
+			publishACK(interest);
+		}
+		catch (PDCTransmissionException ex) {
+			Log.error("Error while sending ack: " + ex.getLocalizedMessage());
+		}
+
+		try {
+			fetchNewData();
+		}
+		catch (PDCTransmissionException ex) {
+			Log.error("Error while pulling new records: " + ex.getLocalizedMessage());
+			return false;
+		}
+
+		return true;
+	}
+
 	public synchronized void fetchStreamInfo()
 			throws PDCTransmissionException
 	{
@@ -433,7 +453,22 @@ public class StreamTransport {
 		}
 	}
 
-	public boolean fetchDataFromUplink()
+	void requestPull(PDCReceiver receiver)
+			throws PDCTransmissionException, MalformedContentNameStringException,
+			IOException
+	{
+		ContentName pull_uri;
+
+		if (!_stream._receivers.contains(receiver))
+			return;
+
+		pull_uri = _stream.getReceiverStreamURI(receiver);
+		pull_uri = pull_uri.append(Constants.STR_CONTROL).append("pull");
+
+		_ccn_handle.get(pull_uri, SystemConfiguration.LONG_TIMEOUT);
+	}
+
+	boolean fetchNewData()
 			throws PDCTransmissionException
 	{
 		PDCPublisher publisher;
@@ -496,6 +531,12 @@ public class StreamTransport {
 		return true;
 	}
 
+	/**
+	 * This method counts failures so we know when to give up
+	 * when trying to request a key
+	 * @param success was the attempt successful?
+	 * @return returns true if we should give up
+	 */
 	private boolean isFinalFailure(boolean success)
 	{
 		if (!success && _invalid_key_retry-- > 0)

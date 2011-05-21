@@ -276,9 +276,6 @@ public class DataEncryptor {
 
 		PublicKey public_key;
 
-		Log.debug("Encrypting: >" + new String(data) + "< using " + node.
-				getPublickeyDigest());
-
 		public_key = getPublicKey(node);
 		if (public_key == null)
 			throw new PDCEncryptionException("Public key not available");
