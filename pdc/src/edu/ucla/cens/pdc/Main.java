@@ -22,6 +22,8 @@ import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
 
 /**
  *
@@ -166,6 +168,8 @@ public class Main {
 		if (!RESTORE_CONFIG)
 			setupPDV(pdv_started);
 
+		Signal.handle(new Signal("INT"), new IntHander());
+
 		if (pdv_started > 0)
 			test = new PDVInstance();
 
@@ -212,6 +216,25 @@ public class Main {
 //					fetchDataFromUplink();
 //			config.getApplication("myapp").getDataStream("myds").getTransport().
 //					fetchDataFromUplink();
+		}
+	}
+
+	static class IntHander implements SignalHandler {
+		public void handle(Signal signal)
+		{
+			System.out.println("Saving the configuration ...");
+			final GlobalConfig config = GlobalConfig.getInstance();
+
+			try {
+				config.storeStateRecursive();
+			}
+			catch (IOException ex) {
+				System.out.println("Error while saving the data: " + ex.
+						getLocalizedMessage());
+			}
+
+			config.getCCNHandle().close();
+			System.exit(0);
 		}
 	}
 }
