@@ -22,6 +22,8 @@ import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
 
 /**
  *
@@ -65,7 +67,7 @@ public class Main {
 		Application n1_app = null, n2_app = null;
 		DataStream n1_ds = null, n2_ds = null;
 
-		PDCPublisher node1 = new PDCPublisher("ccnx:/ucla.edu/apps/pdv1", "myds");
+		PDCPublisher node1 = new PDCPublisher("ccnx:/ucla.edu/apps/pdv1");
 		PDCReceiver node2 = new PDCReceiver("ccnx:/ucla.edu/apps/pdv2");
 
 		handle = config.getCCNHandle();
@@ -75,7 +77,7 @@ public class Main {
 
 			n1_app = new Application("myapp", false);
 			n1_ds = new DataStream(handle, n1_app, "myds", false);
-			n1_ds.getTransport().getEncryptor().setEncryptKey(key.clone());
+//			n1_ds.getTransport().getEncryptor().setEncryptKey(key.clone());
 			n1_ds.addReceiver(node2);
 
 			n1_app.addDataStream(n1_ds);
@@ -144,6 +146,8 @@ public class Main {
 			MongoConfigStorage.setPrefix("pdv2_");
 		}
 
+		GlobalConfig.setFeatures(GlobalConfig.FEAT_SHARING
+				| GlobalConfig.FEAT_MANAGE);
 		GlobalConfig.setConfigStorage(MongoConfigStorage.class);
 		GlobalConfig.setDataStorage(MongoDataStorage.class);
 
@@ -163,6 +167,8 @@ public class Main {
 
 		if (!RESTORE_CONFIG)
 			setupPDV(pdv_started);
+
+		Signal.handle(new Signal("INT"), new IntHander());
 
 		if (pdv_started > 0)
 			test = new PDVInstance();
@@ -210,6 +216,25 @@ public class Main {
 //					fetchDataFromUplink();
 //			config.getApplication("myapp").getDataStream("myds").getTransport().
 //					fetchDataFromUplink();
+		}
+	}
+
+	static class IntHander implements SignalHandler {
+		public void handle(Signal signal)
+		{
+			System.out.println("Saving the configuration ...");
+			final GlobalConfig config = GlobalConfig.getInstance();
+
+			try {
+				config.storeStateRecursive();
+			}
+			catch (IOException ex) {
+				System.out.println("Error while saving the data: " + ex.
+						getLocalizedMessage());
+			}
+
+			config.getCCNHandle().close();
+			System.exit(0);
 		}
 	}
 }

@@ -4,6 +4,8 @@
  */
 package edu.ucla.cens.pdc.libpdc.util;
 
+import edu.ucla.cens.pdc.libpdc.core.PDCKeyManager;
+import java.security.KeyPair;
 import javax.crypto.SecretKey;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -57,7 +59,6 @@ public class EncryptionHelperTest {
 //		// TODO review the generated test code and remove the default call to fail.
 //		fail("The test case is a prototype.");
 //	}
-
 	/**
 	 * Test of encryptSymData method, of class EncryptionHelper.
 	 */
@@ -74,6 +75,21 @@ public class EncryptionHelperTest {
 
 		ciphertext = EncryptionHelper.encryptSymData(key, data);
 		result = EncryptionHelper.decryptSymData(key, ciphertext);
+
+		assertArrayEquals(data, result);
+	}
+
+	@Test
+	public void testEncryptAsymData()
+			throws Exception
+	{
+		String hex_string = "305c300d06092a864886f70d0101010500034b003048024100a36d9f331404f67ee529af359cb475b5f47fd54d2bf640e62d591ec1edc839b967d3c20249cdb5cf218bbda2159323461e6eb0b6c8f6e39939bdf2618af0c9530203010001";
+		byte[] data = hexStrToBytes(hex_string);
+		byte[] ciphertext, result;
+		KeyPair keys = PDCKeyManager.generateKeys();
+
+		ciphertext = EncryptionHelper.encryptAsymData(keys.getPublic(), data);
+		result = EncryptionHelper.decryptAsymData(keys.getPrivate(), ciphertext);
 
 		assertArrayEquals(data, result);
 	}
@@ -162,4 +178,14 @@ public class EncryptionHelperTest {
 //		// TODO review the generated test code and remove the default call to fail.
 //		fail("The test case is a prototype.");
 //	}
+	private static byte[] hexStrToBytes(String hex)
+	{
+		byte[] keyBytes = new byte[hex.length() / 2];
+
+		for (int i = 0; i < hex.length(); i += 2)
+			keyBytes[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+					+ Character.digit(hex.charAt(i + 1), 16));
+
+		return keyBytes;
+	}
 }

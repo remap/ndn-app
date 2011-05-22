@@ -1,6 +1,10 @@
-package webClient.lib;
+package edu.ucla.cens.pdc.libpdc.util;
 
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.iBSONExportable;
+import edu.ucla.cens.pdc.libpdc.transport.BasicBSONExportableImpl;
+import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
+import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,11 +25,8 @@ import org.bson.BSONObject;
  *
  * @author Alexander Bonomo
  */
-public class AuthenticationResponse implements iBSONExportable, BSONObject
+public class AuthenticationResponse extends BasicBSONExportableImpl
 {
-    //map of the class variables
-    private Map<String, Object> classVars = new LinkedHashMap<String, Object>();
-
     //keys for the map
     private static final String isAuthenticatedKey  = "isAuthenticated";
     private static final String symkeyKey           = "symkey";
@@ -49,13 +50,13 @@ public class AuthenticationResponse implements iBSONExportable, BSONObject
         {
             try
             {
-                SecretKey key = Security.generateSymmKey("DES");
+                SecretKey key = EncryptionHelper.generateSymKey();
                 this.classVars.put(AuthenticationResponse.symkeyKey, key);
             }
-            catch (NoSuchAlgorithmException ex)
+            catch (PDCEncryptionException ex)
             {
-                //this should never happen
                 Logger.getLogger(AuthenticationResponse.class.getName()).log(Level.SEVERE, null, ex);
+                Log.error("Error generating symmetric key: " + ex.getLocalizedMessage());
             }
         }
         else
@@ -80,80 +81,4 @@ public class AuthenticationResponse implements iBSONExportable, BSONObject
         return (SecretKey) this.classVars.get(AuthenticationResponse.symkeyKey);
     }
     
-    public byte[] toBSON()
-    {
-        try
-        {
-            BSONEncoder encoder = new BSONEncoder();
-            return encoder.encode(this);
-        }
-        catch(RuntimeException e)
-        {
-            return null;
-        }
-    }
-
-    public AuthenticationResponse fromBSON(byte[] data)
-    {
-        try
-        {
-            BSONDecoder decoder = new BSONDecoder();
-            this.putAll(decoder.readObject(data));
-
-            return this;
-        }
-        catch(RuntimeException e)
-        {
-            return null;
-        }
-    }
-
-    public Object put(String string, Object o) 
-    {
-        return this.classVars.put(string, o);
-    }
-
-    public void putAll(BSONObject bsono)
-    {
-        this.putAll(bsono.toMap());
-    }
-
-    public void putAll(Map map)
-    {
-        this.classVars.putAll(map);
-    }
-
-    public Object get(String string)
-    {
-        if(this.containsKey(string))
-            return this.classVars.get(string);
-        else
-            return null;
-    }
-
-    public Map toMap()
-    {
-        return this.classVars;
-    }
-
-    public Object removeField(String string)
-    {
-        return this.classVars.remove(string);
-    }
-
-    public boolean containsKey(String string)
-    {
-        return this.classVars.containsKey(string);
-    }
-
-    public boolean containsField(String string)
-    {
-        return this.classVars.containsKey(string);
-    }
-
-    public Set<String> keySet()
-    {
-        return this.classVars.keySet();
-    }
-
 }

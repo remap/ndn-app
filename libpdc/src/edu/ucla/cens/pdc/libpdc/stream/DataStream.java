@@ -16,14 +16,13 @@ import edu.ucla.cens.pdc.libpdc.iState;
 import edu.ucla.cens.pdc.libpdc.transport.PDCNode;
 import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
+import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.KeyLocator;
@@ -72,8 +71,8 @@ public class DataStream implements iDataStream, iState {
 			}
 
 		} else {
-			l.log(Level.FINER, "Generating new data stream {0} for {1}",
-					new Object[]{data_stream_id, app.getAppName()});
+			Log.info(String.format("Generating new data stream %s for %s",
+					name, app.getAppName()));
 
 			this.app = app;
 			this.data_stream_id = name;
@@ -89,10 +88,8 @@ public class DataStream implements iDataStream, iState {
 	protected final void setupObject(CCNHandle handle,
 			SystemState.DataStream state)
 	{
-		l.entering(this.getClass().getName(), "setupObject()");
-
 		assert app != null;
-		assert data_stream_id != null && !data_stream_id.isEmpty();
+		assert data_stream_id != null && !data_stream_id.equals("");
 		assert !data_stream_id.startsWith("/") : "stream id: " + data_stream_id;
 
 		_store = GlobalConfig.setupDataStorage(app, data_stream_id);
@@ -119,9 +116,6 @@ public class DataStream implements iDataStream, iState {
 		catch (MalformedContentNameStringException ex) {
 			throw new Error("Unable to generate a key name", ex);
 		}
-
-
-		l.exiting(this.getClass().getName(), "setupObject()");
 	}
 
 	public Storage getStorage()
@@ -149,17 +143,35 @@ public class DataStream implements iDataStream, iState {
 
 		uri = _publisher.uri;
 		assert uri != null : "Publisher should always have URI";
-		assert _publisher.getStreamId() != null : "Publisher needs to have stream URI present";
 
 		try {
-			result = uri.append(app.getAppName()).append(_publisher.getStreamId());
+			result = uri.append(app.getAppName()).append(data_stream_id);
 			return result;
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error(
 					String.format("Unable to create %s/%s/%s", uri, app.getAppName(),
-					_publisher.getStreamId()), ex);
+					data_stream_id), ex);
 		}
+	}
+
+	public ContentName getReceiverStreamURI(PDCReceiver receiver)
+			throws MalformedContentNameStringException
+	{
+		ContentName uri, result;
+
+		assert app != null;
+		assert receiver != null;
+
+		if (!_receivers.contains(receiver))
+			throw new Error("Got not my receiver (bug?)");
+
+		uri = receiver.uri;
+		assert uri != null;
+
+		result = uri.append(app.getAppName()).append(data_stream_id);
+
+		return result;
 	}
 
 	public void setPublisher(PDCPublisher node)
@@ -229,6 +241,8 @@ public class DataStream implements iDataStream, iState {
 	{
 		assert publisher != null;
 
+		Log.info("### GENERATING AND GIVING AUTHENTICATOR TO THE USER ### (Step 2)");
+
 		final String auth_string = StringUtil.genrateRandomString(10);
 		publisher.setAuthenticator(auth_string);
 
@@ -239,11 +253,43 @@ public class DataStream implements iDataStream, iState {
 			throws PDCTransmissionException
 	{
 		assert receiver != null;
-		assert auth_string != null && !auth_string.isEmpty();
+		assert auth_string != null && !auth_string.equals("");
 
 		receiver.setAuthenticator(auth_string);
 
 		return _transport.initiateSetup(receiver);
+	}
+
+	public void requestPull()
+	{
+		for (PDCReceiver receiver : _receivers)
+			try {
+				requestPull(receiver);
+			}
+			catch (PDCTransmissionException ex) {
+				Log.error("Error while trying to pull data from " + receiver.uri.
+						toURIString() + ": " + ex.getLocalizedMessage());
+			}
+	}
+
+	public void requestPull(PDCReceiver receiver)
+			throws PDCTransmissionException
+	{
+		try {
+			_transport.requestPull(receiver);
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new PDCTransmissionException(ex.getLocalizedMessage(), ex);
+		}
+		catch (IOException ex) {
+			throw new PDCTransmissionException(ex.getLocalizedMessage(), ex);
+		}
+	}
+
+	public boolean fetchNewData()
+			throws PDCTransmissionException
+	{
+		return _transport.fetchNewData();
 	}
 
 	@Override
@@ -312,8 +358,6 @@ public class DataStream implements iDataStream, iState {
 		return getObjectState().toByteArray();
 	}
 // </editor-fold>
-
-	private static final Logger l = Logger.getLogger(DataStream.class.getName());
 
 	/**
 	 * application associated with the DS
