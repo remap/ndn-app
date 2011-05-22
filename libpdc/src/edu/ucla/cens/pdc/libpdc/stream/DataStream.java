@@ -241,6 +241,8 @@ public class DataStream implements iDataStream, iState {
 	{
 		assert publisher != null;
 
+		Log.info("### GENERATING AND GIVING AUTHENTICATOR TO THE USER ### (Step 2)");
+
 		final String auth_string = StringUtil.genrateRandomString(10);
 		publisher.setAuthenticator(auth_string);
 

@@ -10,6 +10,7 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -31,13 +32,13 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  */
 public class Application implements iApplication, iState {
 	public Application(String name)
-					throws IOException
+			throws IOException
 	{
 		this(name, false);
 	}
 
 	public Application(String name, boolean restore)
-					throws IOException
+			throws IOException
 	{
 		if (restore) {
 			GlobalConfig config = GlobalConfig.getInstance();
@@ -51,7 +52,7 @@ public class Application implements iApplication, iState {
 			this.name = state.getName();
 
 			assert name.equals(this.name) : "Saved state name differs: " + name
-							+ " vs " + this.name;
+					+ " vs " + this.name;
 
 			this._pull_rate = state.getPullRate();
 			setupObject();
@@ -120,14 +121,14 @@ public class Application implements iApplication, iState {
 		return _data_stream.values().iterator();
 	}
 
-        /**
-         * TODO maybe make this part of the interface?
-         * @return
-         */
-        public synchronized Set<String> getDataStreamList()
-        {
-                return _data_stream.keySet();
-        }
+	/**
+	 * TODO maybe make this part of the interface?
+	 * @return
+	 */
+	public synchronized Set<String> getDataStreamList()
+	{
+		return Collections.unmodifiableSet(_data_stream.keySet());
+	}
 
 	synchronized private boolean performPull()
 	{
@@ -139,7 +140,7 @@ public class Application implements iApplication, iState {
 			_to_pull.addAll(_data_stream.keySet());
 
 		Log.debug("Calling pull; iterating through " + _to_pull.size()
-						+ " entries ...");
+				+ " entries ...");
 
 		iter = _to_pull.iterator();
 		while (iter.hasNext()) {
@@ -175,6 +176,9 @@ public class Application implements iApplication, iState {
 
 		_pull_rate = period;
 
+		if (_scheduler == null || _scheduler.isTerminated())
+			_scheduler = Executors.newSingleThreadScheduledExecutor();
+
 		_scheduler.schedule(new Runnable() {
 			public void run()
 			{
@@ -196,23 +200,8 @@ public class Application implements iApplication, iState {
 			return;
 
 		_pull_rate = 0;
-		_scheduler.shutdown();
-	}
-
-	public PublisherPublicKeyDigest getKeyDigest()
-	{
-		return _key_digest;
-	}
-
-	/**
-	 *
-	 * @param digest
-	 * @deprecated this won't be needed later, as the keys will be automatically
-	 * generated
-	 */
-	public void setKeyDigest(PublisherPublicKeyDigest digest)
-	{
-		this._key_digest = digest;
+		if (_scheduler != null)
+			_scheduler.shutdown();
 	}
 
 	@Override
@@ -244,7 +233,7 @@ public class Application implements iApplication, iState {
 	}
 
 	public void storeState()
-					throws IOException
+			throws IOException
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 
@@ -252,7 +241,7 @@ public class Application implements iApplication, iState {
 	}
 
 	public void storeStateRecursive()
-					throws IOException
+			throws IOException
 	{
 		for (DataStream ds : _data_stream.values())
 			ds.storeStateRecursive();
@@ -288,13 +277,7 @@ public class Application implements iApplication, iState {
 
 	private transient Set<String> _to_pull;
 
-	private transient final ScheduledExecutorService _scheduler = Executors.
-					newSingleThreadScheduledExecutor();
+	private transient ScheduledExecutorService _scheduler = null;
 
 	private long _pull_rate = 0;
-
-	/**
-	 * keys associated with our application
-	 */
-	protected PublisherPublicKeyDigest _key_digest;
 }

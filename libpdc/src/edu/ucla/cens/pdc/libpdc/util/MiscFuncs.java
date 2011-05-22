@@ -4,7 +4,6 @@
  */
 package edu.ucla.cens.pdc.libpdc.util;
 
-import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.security.Key;
 
 /**
@@ -16,7 +15,7 @@ public class MiscFuncs {
 	{
 		byte[] keyBytes = key.getEncoded();
 		if (keyBytes == null) {
-			Log.info("Couldn't get key bytes.");
+			Log.error("Couldn't get key bytes.");
 			return;
 		}
 
@@ -28,6 +27,6 @@ public class MiscFuncs {
 			keyBuf.append(hex);
 		}
 
-		Log.info(message + keyBuf.toString());
+		Log.debug(message + keyBuf.toString());
 	}
 }

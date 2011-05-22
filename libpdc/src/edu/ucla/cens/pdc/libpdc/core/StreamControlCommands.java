@@ -4,6 +4,7 @@
  */
 package edu.ucla.cens.pdc.libpdc.core;
 
+import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.datastructures.Authenticator;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
@@ -64,6 +65,8 @@ public class StreamControlCommands extends StreamCommand {
 					"Error while trying to respond to the request with an ACK", ex);
 		}
 
+		Log.info("### REQUESTING AUTHENTICATOR ### (Step 6)");
+
 		try {
 			name = publisher.uri.append(ds.app.getAppName()).append(ds.data_stream_id).
 					append(Constants.STR_CONTROL).append("authenticator").append(config.
@@ -95,6 +98,8 @@ public class StreamControlCommands extends StreamCommand {
 				Log.error("Authenticator value doesn't match");
 				return false;
 			}
+
+			Log.info("### AUTHENTICATOR RECEIVED IS CORRECT ### (Step 6)");
 
 			Log.info("Adding key " + DataUtils.base64Encode(auth.getKeyDigest(),
 					PublisherID.PUBLISHER_ID_LEN * 2) + " to trusted keys.");
@@ -137,6 +142,8 @@ public class StreamControlCommands extends StreamCommand {
 					toURIString());
 			return false;
 		}
+
+		Log.info("### RESPONDING TO AUTHENTICATOR REQUEST ### (Step 6)");
 
 		try {
 			auth = new Authenticator(ds, receiver);
@@ -188,6 +195,8 @@ public class StreamControlCommands extends StreamCommand {
 			return false;
 		}
 
+		Log.info("### SENDING STREAMINFO ### (Step 7)");
+
 		assert encrypted != null;
 
 		try {
@@ -213,9 +222,9 @@ public class StreamControlCommands extends StreamCommand {
 		assert key != null;
 		assert version != null;
 
-		Log.debug("About to send key: " + digest);
+		Log.info("### GOT KEY REQUEST; SENDING MY KEY ### (" + digest + ")");
 
-		KeyLocator locator = new KeyLocator(interest.name(), digest);
+		final KeyLocator locator = new KeyLocator(interest.name(), digest);
 
 		try {
 			PublicKeyObject pko = new PublicKeyObject(interest.name(), key,
@@ -258,7 +267,7 @@ public class StreamControlCommands extends StreamCommand {
 			else if (command.equals("key"))
 				return processKey(ds, remainder, interest);
 			else if (command.equals("pull"))
-				return ds.getTransport().initiateFetchingDataFromUplink(interest);
+				return ds.getTransport().pullInterestHandler(interest);
 			else if (command.equals("list"))
 				return ds.getTransport().publishRecordList(interest, remainder);
 			else {
