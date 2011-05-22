@@ -479,7 +479,7 @@ public class StreamTransport {
 		_ccn_handle.get(pull_uri, SystemConfiguration.LONG_TIMEOUT);
 	}
 
-	boolean fetchNewData()
+	synchronized boolean fetchNewData()
 			throws PDCTransmissionException
 	{
 		PDCPublisher publisher;
