@@ -131,16 +131,25 @@ public class ManageCommand extends GenericCommand {
 
 			//send it across the network
 			CollectionTransport<String> ctApps = new CollectionTransport<String>(apps);
-			ContentObject co = ContentObject.buildContentObject(interest.name(),
-					ctApps.toBSON());
 			try {
-				_globalConfig.getCCNHandle().put(co);
+				CommunicationHelper.publishEncryptedData(_globalConfig.getCCNHandle(),
+						interest, _globalConfig.getKeyManager().getDefaultKeyID(), ctApps.
+						toBSON(), 1);
+				//			ContentObject co = ContentObject.buildContentObject(interest.name(),
+				//					ctApps.toBSON());
+				//			try {
+				//				_globalConfig.getCCNHandle().put(co);
+				//			}
+				//			catch (IOException ex) {
+				//				Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null,
+				//						ex);
+				//TODO use communication helper for encryption
+				//TODO use communication helper for encryption
 			}
-			catch (IOException ex) {
+			catch (PDCTransmissionException ex) {
 				Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null,
 						ex);
 			}
-			//TODO use communication helper for encryption
 
 			return true;
 		}
