@@ -11,105 +11,106 @@ import webClient.ndn.test.NDNTestServlet;
  * This class holds the main function of the web client which sets up all the servlets
  * @author Alexander Bonomo
  */
-public class WebClientServer
-{
-    public static final long DEFAULT_TIMEOUT = 10000;
+public class WebClientServer {
+	public static final long DEFAULT_TIMEOUT = 10000;
 
-    private static int port         = 8081;
-    private static String namespace = "/ucla/edu/webclient";
+	private static int port = 8081;
 
-    public static String getNDNNamespace()
-    {
-        return namespace;
-    }
-    
-    public static void main(String[] args)
-    {
-        //process arguments
-        processArgs(args);
+	private static String namespace = "/ucla/edu/webclient";
 
-        //start log
-        Log log = new Log();
+	public static String getNDNNamespace()
+	{
+		return namespace;
+	}
 
-        Log.write("Starting new server on port " + port);
-        Log.write("Using NDN namespace: " + namespace);
+	public static void main(String[] args)
+	{
+		//process arguments
+		processArgs(args);
 
-        Server server = new Server(port);
+		//start log
+		Log log = new Log();
 
-        //set up the servlets
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS | ServletContextHandler.SECURITY);
-        context.setContextPath("/");
-        server.setHandler(context);
-        context.addServlet(new ServletHolder(new PDVServlet()), "/*");
-        context.addServlet(new ServletHolder(new LoginServlet()), "/login/*");
-        context.addServlet(new ServletHolder(new HomeServlet()), "/home/*");
+		Log.write("Starting new server on port " + port);
+		Log.write("Using NDN namespace: " + namespace);
 
-        //configure servlets
-        context.addServlet(new ServletHolder(new AppServlet()), "/home/configure/*");
-        context.addServlet(new ServletHolder(new DataStreamServlet()), "/home/configure/app/*");
-        context.addServlet(new ServletHolder(new ConfigureServlet()), "/home/configure/app/dataStream/*");
-        
-        //download servlets
-        context.addServlet(new ServletHolder(new AppServlet()), "/home/download/*");
-        context.addServlet(new ServletHolder(new DataStreamServlet()), "/home/download/app/*");
-        context.addServlet(new ServletHolder(new DownloadServlet()), "/home/download/app/dataStream/*");
+		Server server = new Server(port);
 
-        context.addServlet(new ServletHolder(new UploadServlet()), "/home/upload/*");
-        context.addServlet(new ServletHolder(new NDNTestServlet()), "/home/test/*");
+		//set up the servlets
+		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS
+				| ServletContextHandler.SECURITY);
+		context.setContextPath("/");
+		server.setHandler(context);
+		context.addServlet(new ServletHolder(new PDVServlet()), "/*");
+		context.addServlet(new ServletHolder(new LoginServlet()), "/login/*");
+		context.addServlet(new ServletHolder(new HomeServlet()), "/home/*");
 
-        try
-        {
-            server.start();
-            server.join();
-        }
-        catch(InterruptedException e)
-        {
-            return;
-        }
-        catch(Exception e)
-        {
-            return;
-        }
-    }
+		//configure servlets
+		context.addServlet(new ServletHolder(new AppServlet()), "/home/configure/*");
+		context.addServlet(new ServletHolder(new DataStreamServlet()),
+				"/home/configure/app/*");
+		context.addServlet(new ServletHolder(new ConfigureServlet()),
+				"/home/configure/app/dataStream/*");
 
-    //prints usage
-    private static void usage()
-    {
-        System.out.println("Example usage:");
-        System.out.println("java -jar WebClient.jar -port:8081 -namespace:/ucla.edu/webclient");
-    }
+		//download servlets
+		context.addServlet(new ServletHolder(new AppServlet()), "/home/download/*");
+		context.addServlet(new ServletHolder(new DataStreamServlet()),
+				"/home/download/app/*");
+		context.addServlet(new ServletHolder(new DownloadServlet()),
+				"/home/download/app/dataStream/*");
 
-    //processes arguments to the jar
-    private static void processArgs(String[] args)
-    {
-        String portArg = "-port";
-        String portArg2 = "-p";
+		context.addServlet(new ServletHolder(new UploadServlet()), "/home/upload/*");
+		context.addServlet(new ServletHolder(new NDNTestServlet()), "/home/test/*");
 
-        String namespaceArg = "-namespace";
-        String namespaceArg2 = "-n";
-        for(String s : args)
-        {
-            if(s.equalsIgnoreCase("help"))
-            {
-                usage();
-                System.exit(0);
-            }
+		try {
+			server.start();
+			server.join();
+		}
+		catch (InterruptedException e) {
+			return;
+		}
+		catch (Exception e) {
+			return;
+		}
+	}
 
-            //make sure there are 2 components to the argument
-            String[] arg = s.split(":");
-            if(arg.length != 2)
-            {
-                usage();
-                System.exit(1);
-            }
+	//prints usage
+	private static void usage()
+	{
+		System.out.println("Example usage:");
+		System.out.println(
+				"java -jar WebClient.jar -port:8081 -namespace:/ucla.edu/webclient");
+	}
 
-            //if it's the port arg
-            if(arg[0].equalsIgnoreCase(portArg) || arg[0].equalsIgnoreCase(portArg2))
-                WebClientServer.port = (new Integer(arg[1])).intValue();
+	//processes arguments to the jar
+	private static void processArgs(String[] args)
+	{
+		String portArg = "-port";
+		String portArg2 = "-p";
 
-            //if it's the namespace arg
-            if(arg[0].equalsIgnoreCase(namespaceArg) || arg[0].equalsIgnoreCase(namespaceArg2))
-                WebClientServer.namespace = arg[1];
-        }
-    }
+		String namespaceArg = "-namespace";
+		String namespaceArg2 = "-n";
+		for (String s : args) {
+			if (s.equalsIgnoreCase("help")) {
+				usage();
+				System.exit(0);
+			}
+
+			//make sure there are 2 components to the argument
+			String[] arg = s.split(":");
+			if (arg.length != 2) {
+				usage();
+				System.exit(1);
+			}
+
+			//if it's the port arg
+			if (arg[0].equalsIgnoreCase(portArg) || arg[0].equalsIgnoreCase(portArg2))
+				WebClientServer.port = (new Integer(arg[1])).intValue();
+
+			//if it's the namespace arg
+			if (arg[0].equalsIgnoreCase(namespaceArg) || arg[0].equalsIgnoreCase(
+					namespaceArg2))
+				WebClientServer.namespace = arg[1];
+		}
+	}
 }

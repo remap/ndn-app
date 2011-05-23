@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.eclipse.jetty.util.log.Log;
 import webClient.backEnd.PDCDataRecords;
 import webClient.exceptions.NoSuchUserHashException;
 import webClient.session.SessionManager;
@@ -22,131 +23,132 @@ import webClient.session.SessionManager;
  * 
  * @author Alexander Bonomo
  */
-public class DownloadServlet extends HttpServlet
-{
-    private String m_userHash;
+@SuppressWarnings("serial")
+public class DownloadServlet extends HttpServlet {
+	private String m_userHash;
 
-     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException
-    {
-         this.m_userHash = request.getParameter(VarNames.USER_HASH);
-         //make sure this isn't null
-         if(this.m_userHash == null)
-         {
-            return;
-         }
+	@Override
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException
+	{
+		this.m_userHash = request.getParameter(VarNames.USER_HASH);
+		//make sure this isn't null
+		if (this.m_userHash == null)
+			return;
 
-         //set the requested data stream in the session
-         String dataStream = request.getParameter(VarNames.DATA_STREAM);
-         SessionManager.getSession(m_userHash).setCurrentDataStream(dataStream);
+		//set the requested data stream in the session
+		String dataStream = request.getParameter(VarNames.DATA_STREAM);
+		Log.warn("DataStream: " + dataStream);
+		SessionManager.getSession(m_userHash).setCurrentDataStream(dataStream);
 
-         //check to see if a download was requested
-         String record = request.getParameter(VarNames.DATA_RECORD);
-         if(record != null)
-         {
-             DataRecord theRecord = this.getDataRecord(record);
-             //TODO start download
-         }
+		//check to see if a download was requested
+		String record = request.getParameter(VarNames.DATA_RECORD);
+		if (record != null) {
+			DataRecord theRecord = this.getDataRecord(record);
 
-        response.setContentType("text/html");
-        response.setStatus(HttpServletResponse.SC_OK);
+			response.setContentType("text/html");
+			response.setStatus(HttpServletResponse.SC_OK);
+			response.getWriter().println(theRecord.toString());
 
-        response.getWriter().println("<h1> Here are the data records for this stream. </h1>");
-        printRecordsforDownload(request, response);
-     }
+			return;
+		}
 
-     /**
-      * This method prints the data records so that the user can select which one(s)
-      * they would like to download.
-      * 
-      * @param request
-      * @param response
-      */
-     private void printRecordsforDownload(HttpServletRequest request, HttpServletResponse response)
-     {
-         //get the list of records
-         Collection<String> records;
-         try
-         {
-             PDCDataRecords pdcdr = new PDCDataRecords();
-             records = pdcdr.getDataRecordList(this.m_userHash);
-             if(records == null)
-             {
-                 response.getWriter().println("There are no records in this data stream");
-                 return;
-             }
-         }
-         catch (NoSuchUserHashException ex)
-         {
-            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
-            return;
-         }
-         catch (PDCEncryptionException ex)
-         {
-            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
-            return;
-         }
-         catch (IOException ex)
-         {
-            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
-            return;
-         }         
-         catch (MalformedContentNameStringException ex)
-         {
-            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
-            return;
-         }
+		response.setContentType("text/html");
+		response.setStatus(HttpServletResponse.SC_OK);
 
-         //print links for download
-         for(String dr : records)
-         {
-            try 
-            {
-                response.getWriter().println("<a href=\"" + request.getRequestURL().toString()
-                        + "?" + VarNames.DATA_RECORD + "=" + dr + "\"> " + dr
-                        + "</a> <br />");
-            }
-            catch (IOException ex)
-            {
-                Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
-            }
-         }
-     }
+		response.getWriter().println(
+				"<h1> Here are the data records for this stream. </h1>");
+		printRecordsforDownload(request, response);
+	}
 
-     /**
-      * Gets a single data record from the pdv instance for download
-      * @param dataRecord - the id of the requested data record
-      * @param response - the http servlet response
-      * @return
-      */
-     private DataRecord getDataRecord(String dataRecord)
-     {
-         //try to get and return the data record
-        PDCDataRecords pdcdr = new PDCDataRecords();
-        try
-        {
-            try
-            {
-                return pdcdr.getDataRecord(m_userHash, dataRecord);
-            }
-            catch (PDCEncryptionException ex)
-            {
-                Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        catch (IOException ex)
-        {
-            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        catch (MalformedContentNameStringException ex)
-        {
-            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        catch (PDCParseException ex)
-        {
-            Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
-     }
+	/**
+	 * This method prints the data records so that the user can select which one(s)
+	 * they would like to download.
+	 * 
+	 * @param request
+	 * @param response
+	 */
+	private void printRecordsforDownload(HttpServletRequest request,
+			HttpServletResponse response)
+	{
+		//get the list of records
+		Collection<String> records;
+		try {
+			PDCDataRecords pdcdr = new PDCDataRecords();
+			records = pdcdr.getDataRecordList(this.m_userHash);
+			if (records == null) {
+				response.getWriter().println("There are no records in this data stream");
+				return;
+			}
+		}
+		catch (NoSuchUserHashException ex) {
+			Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null,
+					ex);
+			return;
+		}
+		catch (PDCEncryptionException ex) {
+			Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null,
+					ex);
+			return;
+		}
+		catch (IOException ex) {
+			Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null,
+					ex);
+			return;
+		}
+		catch (MalformedContentNameStringException ex) {
+			Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null,
+					ex);
+			return;
+		}
+
+		//print links for download
+		for (String dr : records)
+			try {
+				response.getWriter().println("<a href=\"" + request.getRequestURL().
+						toString()
+						+ "?" + VarNames.USER_HASH + "=" + this.m_userHash + "&"
+						+ VarNames.DATA_STREAM + "=" + SessionManager.getSession(m_userHash).
+						getCurrentDataStream() + "&" + VarNames.DATA_RECORD + "=" + dr
+						+ "\"> " + dr + "</a> <br />");
+			}
+			catch (IOException ex) {
+				Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null,
+						ex);
+			}
+	}
+
+	/**
+	 * Gets a single data record from the pdv instance for download
+	 * @param dataRecord - the id of the requested data record
+	 * @param response - the http servlet response
+	 * @return
+	 */
+	private DataRecord getDataRecord(String dataRecord)
+	{
+		//try to get and return the data record
+		PDCDataRecords pdcdr = new PDCDataRecords();
+		try {
+			try {
+				return pdcdr.getDataRecord(m_userHash, dataRecord);
+			}
+			catch (PDCEncryptionException ex) {
+				Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null,
+						ex);
+			}
+		}
+		catch (IOException ex) {
+			Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null,
+					ex);
+		}
+		catch (MalformedContentNameStringException ex) {
+			Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null,
+					ex);
+		}
+		catch (PDCParseException ex) {
+			Logger.getLogger(DownloadServlet.class.getName()).log(Level.SEVERE, null,
+					ex);
+		}
+		return null;
+	}
 }

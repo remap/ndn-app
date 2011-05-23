@@ -18,6 +18,7 @@ import webClient.session.SessionManager;
  * 
  * @author Alexander Bonomo
  */
+@SuppressWarnings("serial")
 public class DataStreamServlet extends HttpServlet
 {
     private String m_userHash;
