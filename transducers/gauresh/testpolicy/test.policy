@@ -1,0 +1,9 @@
+grant codeBase "file:/home/gauresh/spring2011/cs219estrin/project/ndn-app/transducers/gauresh/testpolicy/transducer-client-RMI/-" {
+	
+
+};
+
+grant codeBase "file:/home/gauresh/spring2011/cs219estrin/project/ndn-app/transducers/gauresh/testpolicy/transducer-server-RMI/-" {
+
+	permission java.security.AllPermission;
+};
