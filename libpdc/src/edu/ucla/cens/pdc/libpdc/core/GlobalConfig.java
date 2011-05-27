@@ -10,13 +10,11 @@ import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iConfigStorage;
 import edu.ucla.cens.pdc.libpdc.iState;
 import edu.ucla.cens.pdc.libpdc.stream.Storage;
-import edu.ucla.cens.pdc.libpdc.stream.DataStream;
-import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -164,6 +162,21 @@ public class GlobalConfig implements iState {
 		}
 	}
 
+	public static void setFeatures(int features)
+	{
+		_features = features;
+	}
+
+	public static int getFeatures()
+	{
+		return _features;
+	}
+
+	public static boolean hasFeature(int feature)
+	{
+		return (_features & feature) != 0;
+	}
+
 	/**
 	 * Set the PDC's root
 	 * @param root PDC's root
@@ -226,63 +239,15 @@ public class GlobalConfig implements iState {
 		return _applications.get(name);
 	}
 
-        /**
-         * Retrieve the list of applications
-         * @return the list of apps as a set of strings
-         */
-        public synchronized Set<String> getAppList()
-        {
-            assert _root != null : "Root wasn't set";
-
-            return _applications.keySet();
-        }
-
 	/**
-	 * Provide proper DataStream object based on the given URI
-	 * @param stream <app>/<ds> component of the name
-	 * @return object associated with the name
+	 * Retrieve the list of applications
+	 * @return the list of apps as a set of strings
 	 */
-	public synchronized DataStream uri2dataStream(ContentName stream)
+	public synchronized Set<String> getAppList()
 	{
-		DataStream ds, result = null;
-		Application app;
-		String app_id, ds_id;
-		Iterator<DataStream> dsi;
-		PDCPublisher publisher;
-		int components;
-		ContentName publisher_uri;
+		assert _root != null : "Root wasn't set";
 
-		//The URI should be like this: ccnx:/some/path/to/pdv/<app>/<ds>
-		components = stream.count();
-		if (components < 2)
-			return null;
-
-		ds_id = stream.stringComponent(--components);
-		app_id = stream.stringComponent(--components);
-		publisher_uri = stream.cut(components);
-
-		app = getApplication(app_id);
-		if (app == null)
-			return null;
-
-		dsi = app.getDataStreamsIterator();
-		while (dsi.hasNext()) {
-			ds = dsi.next();
-			publisher = ds.getPublisher();
-
-			if (publisher == null)
-				continue;
-
-			if (!publisher.uri.equals(publisher_uri))
-				continue;
-
-			if (!publisher.getStreamId().equals(ds_id))
-				continue;
-
-			result = ds;
-		}
-
-		return result;
+		return Collections.unmodifiableSet(_applications.keySet());
 	}
 
 	/**
@@ -424,6 +389,14 @@ public class GlobalConfig implements iState {
 	private static Class<? extends Storage> _data_storage_class = null;
 
 	private static Class<? extends iConfigStorage> _config_storage_class = null;
+
+	public static final int FEAT_SHARING = 0x1;
+
+	public static final int FEAT_MANAGE = 0x2;
+
+	public static final int FEAT_FILTERING = 0x4;
+
+	private static int _features = FEAT_SHARING;
 
 	private transient iConfigStorage _config_storage;
 

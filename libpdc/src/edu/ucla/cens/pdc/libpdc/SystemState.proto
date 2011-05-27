@@ -58,5 +58,5 @@ message PDCReceiver {
 }
 message PDCPublisher {
 	required PDCNode base = 1;
-	optional string stream_id = 2;
+	optional string stream_id = 2 [deprecated=true];
 }

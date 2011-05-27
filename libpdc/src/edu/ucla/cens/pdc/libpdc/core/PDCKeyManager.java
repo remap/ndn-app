@@ -22,6 +22,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import javax.crypto.SecretKey;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.ContentVerifier;
 import org.ccnx.ccn.config.ConfigurationException;
@@ -72,13 +73,14 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 		_defaultKeyID = new PublisherPublicKeyDigest(state.getDefaultKeyId().
 				toByteArray());
 
-		_authenticated_public_key_digests = Collections.synchronizedSet(new HashSet<byte[]>(state.
+		_authenticated_public_key_digests = Collections.synchronizedSet(new HashSet<PublisherPublicKeyDigest>(state.
 				getPublicKeyDigestsCount() * 2));
 		_private_key_digests = new HashSet<byte[]>(state.getPrivateKeyDigestsCount()
 				* 2);
 
 		for (final ByteString key_digest : state.getPublicKeyDigestsList())
-			_authenticated_public_key_digests.add(key_digest.toByteArray());
+			_authenticated_public_key_digests.add(new PublisherPublicKeyDigest(key_digest.
+					toByteArray()));
 		for (final ByteString key_digest : state.getPrivateKeyDigestsList())
 			_private_key_digests.add(key_digest.toByteArray());
 	}
@@ -127,7 +129,8 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 
 	public boolean verify(ContentObject content)
 	{
-		final byte[] co_digest = content.signedInfo().getPublisherKeyID().digest();
+		final PublisherPublicKeyDigest co_digest = content.signedInfo().
+				getPublisherKeyID();
 
 		if (!_authenticated_public_key_digests.contains(co_digest))
 			return false;
@@ -143,7 +146,11 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 
 	public void authenticateKey(byte[] digest)
 	{
-		_authenticated_public_key_digests.add(digest);
+		PublisherPublicKeyDigest pdigest = new PublisherPublicKeyDigest(digest);
+
+		Log.info("### MARKING " + pdigest + " AS TRUSTED ### (Step 6)");
+
+		_authenticated_public_key_digests.add(pdigest);
 	}
 
 	public static KeyPair generateKeys()
@@ -194,6 +201,21 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 		return digest;
 	}
 
+	public SecretKey getWCSymmKey() //TODO will want to add userID parameter
+	{
+		return this._WCSymmKey;
+	}
+
+	public void addWCSymmKey(SecretKey key) //TODO will want to add userID parameter
+	{
+		this._WCSymmKey = key;
+	}
+
+	public KeyPair getKeysForWC()
+	{
+		return this._keysForWC;
+	}
+
 //<editor-fold defaultstate="collapsed" desc="serialization code">
 	final public String getStateGroupName()
 	{
@@ -216,16 +238,14 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 		PrivateKey priv_key;
 
 		Log.debug("Storing public keys");
-		for (final byte[] digest : _authenticated_public_key_digests) {
-			final PublisherPublicKeyDigest digest_obj = new PublisherPublicKeyDigest(
-					digest);
-			Log.debug("Saving " + digest_obj.toString());
+		for (final PublisherPublicKeyDigest digest : _authenticated_public_key_digests) {
+			Log.debug("Saving " + digest.toString());
 			ak_builder.clear();
 
-			version = _publicKeyCache.getPublicKeyVersionFromCache(digest_obj);
+			version = _publicKeyCache.getPublicKeyVersionFromCache(digest);
 			assert version != null;
 
-			pub_key = _publicKeyCache.getPublicKeyFromCache(digest_obj);
+			pub_key = _publicKeyCache.getPublicKeyFromCache(digest);
 			assert pub_key != null;
 
 			ak_builder.setPublicKey(ByteString.copyFrom(pub_key.getEncoded()));
@@ -233,7 +253,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 					getAlgorithm()));
 			ak_builder.setTimestamp(version.getTime());
 
-			config.saveConfig("keys", digest_obj.toString(), ak_builder.build().
+			config.saveConfig("keys", digest.toString(), ak_builder.build().
 					toByteArray());
 		}
 
@@ -280,8 +300,8 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 		assert _defaultKeyID != null;
 		builder.setDefaultKeyId(ByteString.copyFrom(_defaultKeyID.digest()));
 
-		for (byte[] key_digest : _authenticated_public_key_digests)
-			builder.addPublicKeyDigests(ByteString.copyFrom(key_digest));
+		for (final PublisherPublicKeyDigest key_digest : _authenticated_public_key_digests)
+			builder.addPublicKeyDigests(ByteString.copyFrom(key_digest.digest()));
 
 		for (byte[] key_digest : _private_key_digests)
 			builder.addPrivateKeyDigests(ByteString.copyFrom(key_digest));
@@ -368,10 +388,8 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 		Log.debug("Restoring keys");
 
 		Log.debug("Restoring public keys");
-		for (final byte[] digest : _authenticated_public_key_digests) {
-			final PublisherPublicKeyDigest digest_obj = new PublisherPublicKeyDigest(
-					digest);
-			ak_state = restoreKey(digest_obj);
+		for (final PublisherPublicKeyDigest digest : _authenticated_public_key_digests) {
+			ak_state = restoreKey(digest);
 			if (ak_state.hasPrivateKey())
 				Log.warning("Key with id " + digest.toString()
 						+ "has also a private key, an error?");
@@ -435,10 +453,15 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 	}
 //</editor-fold>
 
-	private Set<byte[]> _authenticated_public_key_digests = Collections.
-			synchronizedSet(new HashSet<byte[]>());
+	private Set<PublisherPublicKeyDigest> _authenticated_public_key_digests = Collections.
+			synchronizedSet(new HashSet<PublisherPublicKeyDigest>());
 
 	private Set<byte[]> _private_key_digests = new HashSet<byte[]>();
 
 	private final boolean _restore;
+
+	//TODO will eventually want a map of users to keys
+	private SecretKey _WCSymmKey;
+
+	private final KeyPair _keysForWC = generateKeys();
 }

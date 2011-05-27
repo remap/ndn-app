@@ -8,6 +8,7 @@ import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
+import edu.ucla.cens.pdc.libpdc.util.MiscFuncs;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,21 +22,16 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski
  */
 final public class PDVInstance implements CCNFilterListener {
-	final private Map<String, GenericCommand> _generic_commands = new HashMap<String, GenericCommand>(
-			1);
-
-	final private Map<String, StreamCommand> _stream_commands = new HashMap<String, StreamCommand>(
-			2);
-
-	final private GlobalConfig _config = GlobalConfig.getInstance();
-
 	public PDVInstance()
 	{
 		try {
-			add_stream_command(new StreamDataCommand());
-			add_stream_command(new StreamControlCommands());
-			add_generic_command(new PDVControlCommands());
-                        add_generic_command(new ManageCommand());
+			if (GlobalConfig.hasFeature(GlobalConfig.FEAT_SHARING)) {
+				add_stream_command(new StreamDataCommand());
+				add_stream_command(new StreamControlCommands());
+			}
+
+			if (GlobalConfig.hasFeature(GlobalConfig.FEAT_MANAGE))
+				add_generic_command(new ManageCommand());
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error("Unable to instantiate PDVInstance class", ex);
@@ -47,7 +43,12 @@ final public class PDVInstance implements CCNFilterListener {
 	{
 		ContentName root = _config.getRoot();
 		_config.getCCNHandle().registerFilter(root, this);
-                Log.info("PDV Instance Root: " + root.toURIString());
+
+		if (GlobalConfig.hasFeature(GlobalConfig.FEAT_MANAGE)) {
+			Log.info("PDV Instance Root: " + root.toURIString());
+			MiscFuncs.printKeyToLog(this._config.getKeyManager().getKeysForWC().
+					getPublic(), "Public Key: ");
+		}
 	}
 
 	public void stopListening()
@@ -70,10 +71,13 @@ final public class PDVInstance implements CCNFilterListener {
 		 * Receiver commands:
 		 * <app_id>/control/setup/<stream>
 		 * <app_id>/control/pull/<stream>
-                 *
-                 * Manage commands:
-                 * manage/list/apps
-                 * manage/list/datastreams/<app_id>
+		 *
+		 * Manage commands:
+		 * manage/list/apps
+		 * manage/list/datastreams/<app_id>
+		 * manage/list/datarecords/<app_id>/<ds_id>                 *
+		 * manage/login
+		 * manage/login/isAuthenticated
 		 */
 
 		ContentName root, name, postfix;
@@ -87,20 +91,19 @@ final public class PDVInstance implements CCNFilterListener {
 
 		Log.info("Got interest: " + name + ", postfix: " + postfix);
 
-		if (postfix == null || postfix.count() < 3)
+		if (postfix == null || postfix.count() < 2)
 			return false;
 
-                //check for manage command
-                if(postfix.stringComponent(0).equals(Constants.STR_MANAGE))
-                {
-                    GenericCommand cmd = this._generic_commands.get(Constants.STR_MANAGE);
-                    if(cmd == null)
-                    {
-                        Log.error("manage command not supported by this PDV Instance.");
-                        return false;
-                    }
-                    return cmd.processCommand(postfix.subname(1, 3), interest);
-                }
+		//check for manage command
+		if (postfix.stringComponent(0).equals(Constants.STR_MANAGE)) {
+			GenericCommand cmd = this._generic_commands.get(Constants.STR_MANAGE);
+			if (cmd == null) {
+				Log.error("manage command not supported by this PDV Instance.");
+				return false;
+			}
+			return cmd.processCommand(postfix.subname(1, postfix.count() - 1),
+					interest);
+		}
 
 		app_name = postfix.stringComponent(0);
 		app = _config.getApplication(app_name);
@@ -146,4 +149,12 @@ final public class PDVInstance implements CCNFilterListener {
 	{
 		_generic_commands.put(command.getCommandName(), command);
 	}
+
+	final private Map<String, GenericCommand> _generic_commands = new HashMap<String, GenericCommand>(
+			1);
+
+	final private Map<String, StreamCommand> _stream_commands = new HashMap<String, StreamCommand>(
+			2);
+
+	final private GlobalConfig _config = GlobalConfig.getInstance();
 }
