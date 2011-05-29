@@ -76,14 +76,13 @@ public class JavaRunner implements Runnable {
 		//you would have to figure out how to send the Datarecord object's here DERek ca help...i assume you create a ArrayList of "in" Datarecords and another arrayList of "out" Datarecords, get the data	into the "in" datarecord that you want to pass to the transducer....make a map so that you can keep track of what Datarecords array you have passed to each of the transducer....use similar map for out datarecords...basically keep track of what you are passing...the t.join thing will wait for the threads to finsh and then you can loop to the next level of the nodes
 
 
-		TransducerLoader jrl = new TransducerLoader("file:/home/gauresh/spring2011/cs219estrin/project/ndn-app/transducers/gauresh/classloader/testclasses/"); 
-		ThreadGroup tg = new ThreadGroup("JavaRunner Threadgroup"); 
-		Thread t = new Thread(tg, new JavaRunner(jrl, "edu.ucla.cens.pdc.transducer.test.Test", getArgs(args))); 
-		t.start(); 
-		try { t.join(); } 
-		catch (InterruptedException ie) 
-		{ System.out.println("Thread was interrupted"); 
-	}
-} 
-} 
+			TransducerLoader jrl = new TransducerLoader("file:/home/gauresh/spring2011/cs219estrin/project/ndn-app/transducers/gauresh/classloader/testclasses/"); 
+			ThreadGroup tg = new ThreadGroup("JavaRunner Threadgroup"); 
+			Thread t = new Thread(tg, new JavaRunner(jrl, "edu.ucla.cens.pdc.transducer.test.Test", getArgs(args))); 
+			t.start(); 
+			try { t.join(); } 
+			catch (InterruptedException ie) 
+			{ System.out.println("Thread was interrupted"); }
+		} 
+	} 
 }
