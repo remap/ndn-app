@@ -14,6 +14,7 @@ import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.stream.Storage;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.util.Log;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import org.bson.types.ObjectId;
@@ -36,7 +37,7 @@ final public class MongoDataStorage extends Storage {
 		super(app, data_stream_id);
 
 		_coll = Database.getDBCollection(Database.db_type.DATA, app.name,
-						data_stream_id);
+				data_stream_id);
 
 		_coll.setObjectClass(DataRecord.class);
 	}
@@ -53,7 +54,7 @@ final public class MongoDataStorage extends Storage {
 
 	@Override
 	synchronized public String getLastEntry()
-					throws PDCDatabaseException
+			throws PDCDatabaseException
 	{
 		DataRecord record;
 		DBObject fields, sort;
@@ -74,7 +75,7 @@ final public class MongoDataStorage extends Storage {
 
 		if (!cur.hasNext()) {
 			Log.debug(
-							"Doesn't look like we have anything in the database -> no last_entry");
+					"Doesn't look like we have anything in the database -> no last_entry");
 			return null;
 		}
 
@@ -94,7 +95,7 @@ final public class MongoDataStorage extends Storage {
 
 	@Override
 	public List<String> getRangeIds()
-					throws PDCDatabaseException
+			throws PDCDatabaseException
 	{
 		DBCursor cur = _coll.find();
 
@@ -103,7 +104,7 @@ final public class MongoDataStorage extends Storage {
 
 	@Override
 	public List<String> getRangeIds(String start)
-					throws PDCDatabaseException
+			throws PDCDatabaseException
 	{
 		try {
 			ObjectId startid = new ObjectId(start);
@@ -122,14 +123,14 @@ final public class MongoDataStorage extends Storage {
 
 	@Override
 	public List<String> getRangeIds(String start, String end)
-					throws PDCDatabaseException
+			throws PDCDatabaseException
 	{
 		try {
 			ObjectId startid = new ObjectId(start);
 			ObjectId endid = new ObjectId(end);
 
 			DBObject criteria = new BasicDBObject("$gte", startid).append("$lte",
-							endid);
+					endid);
 			DBObject query = new BasicDBObject("_id", criteria);
 
 			DBCursor cur = _coll.find(query);
@@ -142,7 +143,7 @@ final public class MongoDataStorage extends Storage {
 	}
 
 	private List<String> getRangeIds(DBCursor cur)
-					throws PDCDatabaseException
+			throws PDCDatabaseException
 	{
 		List<String> result = new LinkedList<String>();
 
@@ -154,7 +155,7 @@ final public class MongoDataStorage extends Storage {
 		}
 		catch (RuntimeException ex) {
 			throw new PDCDatabaseException("Unable to fetch data from the database",
-							ex);
+					ex);
 		}
 
 		return result;
@@ -162,7 +163,7 @@ final public class MongoDataStorage extends Storage {
 
 	@Override
 	public DataRecord getRecord(String id)
-					throws PDCDatabaseException
+			throws PDCDatabaseException
 	{
 		ObjectId oid;
 
@@ -182,7 +183,7 @@ final public class MongoDataStorage extends Storage {
 
 	@Override
 	synchronized public boolean insertRecord(DataRecord record)
-					throws PDCDatabaseException
+			throws PDCDatabaseException
 	{
 		_last_entry = null;
 
@@ -194,5 +195,37 @@ final public class MongoDataStorage extends Storage {
 		}
 
 		return true;
+	}
+
+	@Override
+	public DataRecord[] getRecords(String from, int count)
+			throws PDCDatabaseException
+	{
+		//XXX: This method is a hackish way of doing it
+
+		DataRecord[] records;
+		int max;
+		List<String> ids;
+
+		if (from == null)
+			ids = getRangeIds();
+		else
+			ids = getRangeIds(from);
+
+
+		max = Math.min(count, ids.size());
+		records = new DataRecord[max];
+
+		final Iterator<String> iter = ids.listIterator();
+		for (int i = 0; i < max; i++) {
+			assert iter.hasNext();
+			final String id = iter.next();
+			final DataRecord record = getRecord(id);
+			assert record != null;
+
+			records[i] = record;
+		}
+
+		return records;
 	}
 }

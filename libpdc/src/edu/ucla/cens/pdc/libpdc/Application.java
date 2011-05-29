@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
-import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 
 /**
  * Stores information about applications that PDV handles

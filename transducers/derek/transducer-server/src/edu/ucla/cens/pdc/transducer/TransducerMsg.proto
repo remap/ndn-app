@@ -1,0 +1,26 @@
+option java_package = "edu.ucla.cens.pdc.transducer";
+//option optimize_for = LITE_RUNTIME;
+
+message Message {
+	// Standard data packet
+	message StreamData {
+		repeated bytes entry = 1;
+	}
+	repeated StreamData data = 1;
+
+	enum CommandType {
+		TERMINATE = 0; // Turn off the transducer
+		INFO = 1;      // Get input & output info
+	}
+	optional CommandType command = 2;
+
+	message StreamsInfo {
+		message StreamInfo {
+			required uint32 records_number = 1; // Number of entries per call
+			optional string name = 2;           // Optional name of the stream
+		}
+		repeated StreamInfo in_streams = 1;   // Input streams
+		repeated StreamInfo out_streams = 2;  // Output streams
+	}
+	optional StreamsInfo streams_info = 3;
+}
