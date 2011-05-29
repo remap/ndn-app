@@ -1,0 +1,4 @@
+grant codeBase "file:/home/gauresh/spring2011/cs219estrin/project/ndn-app/transducers/gauresh/classloader/transducer-secman/src"{
+	permission java.lang.RuntimePermission "*";
+	permission java.security.AllPermission ;
+};
