@@ -4,9 +4,9 @@
  */
 package edu.ucla.cens.pdc.transducer.client;
 
-import com.google.protobuf.ByteString;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
+import edu.ucla.cens.pdc.transducer.Helpers;
 import edu.ucla.cens.pdc.transducer.TransducerMsg;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -88,53 +88,13 @@ public class Transducer {
 	{
 		//TODO: verify that we have proper number of streams with proper amount of data
 
-		final int stream_count = message.getStreamCount();
-		DataRecord[][] input = new DataRecord[stream_count][];
+		final DataRecord[][] input = Helpers.deserializeData(message);
 		DataRecord[][] output;
 
-		int stream_no = 0;
-		for (final TransducerMsg.Stream stream : message.getStreamList()) {
-			input[stream_no] = new DataRecord[stream.getDataEntryCount()];
-
-			int data_no = 0;
-			for (final ByteString data : stream.getDataEntryList()) {
-				input[stream_no][data_no] = new DataRecord().fromBSON(data.toByteArray());
-				data_no++;
-			}
-
-			stream_no++;
-		}
-
 		output = _filter.processData(input);
-
 		assert output != null;
 
-		return serializeData(output);
-	}
-
-	TransducerMsg.Message serializeData(DataRecord[][] output)
-	{
-		assert output != null;
-
-		final TransducerMsg.Message.Builder msg_builder = TransducerMsg.Message.
-				newBuilder();
-		final TransducerMsg.Stream.Builder stream_builder = TransducerMsg.Stream.
-				newBuilder();
-
-		final int stream_count = output.length;
-		for (int stream_no = 0; stream_no < stream_count; stream_no++) {
-			final int records_count = output[stream_no].length;
-
-			stream_builder.clear();
-			for (int record_no = 0; record_no < records_count; record_no++) {
-				final byte[] data = output[stream_no][record_no].toBSON();
-				stream_builder.addDataEntry(ByteString.copyFrom(data));
-			}
-
-			msg_builder.addStream(stream_builder.build());
-		}
-
-		return msg_builder.build();
+		return Helpers.serializeData(output);
 	}
 
 	static int main(String[] args)
