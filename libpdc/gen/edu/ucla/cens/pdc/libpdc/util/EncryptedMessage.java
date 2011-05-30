@@ -104,8 +104,10 @@ public final class EncryptedMessage {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -396,12 +398,12 @@ public final class EncryptedMessage {
     private int bitField0_;
     // required string command = 1;
     public static final int COMMAND_FIELD_NUMBER = 1;
-    private Object command_;
+    private java.lang.Object command_;
     public boolean hasCommand() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     public String getCommand() {
-      Object ref = command_;
+      java.lang.Object ref = command_;
       if (ref instanceof String) {
         return (String) ref;
       } else {
@@ -415,7 +417,7 @@ public final class EncryptedMessage {
       }
     }
     private com.google.protobuf.ByteString getCommandBytes() {
-      Object ref = command_;
+      java.lang.Object ref = command_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8((String) ref);
@@ -508,8 +510,10 @@ public final class EncryptedMessage {
       return size;
     }
     
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    protected Object writeReplace() throws java.io.ObjectStreamException {
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
     
@@ -728,12 +732,12 @@ public final class EncryptedMessage {
       private int bitField0_;
       
       // required string command = 1;
-      private Object command_ = "";
+      private java.lang.Object command_ = "";
       public boolean hasCommand() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       public String getCommand() {
-        Object ref = command_;
+        java.lang.Object ref = command_;
         if (!(ref instanceof String)) {
           String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
           command_ = s;

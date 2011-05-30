@@ -10,9 +10,9 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
 import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
-import edu.ucla.cens.pdc.libpdc.util.AuthenticationResponse;
 import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
+import edu.ucla.cens.pdc.libpdc.util.MiscFuncs;
 import edu.ucla.cens.pdc.libpdc.util.WCCredentials;
 import java.io.IOException;
 import java.security.KeyFactory;
@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.ccnx.ccn.config.SystemConfiguration;
 import javax.crypto.SecretKey;
 import org.ccnx.ccn.config.SystemConfiguration;
 import org.ccnx.ccn.config.UserConfiguration;
@@ -69,13 +68,8 @@ public class ManageCommand extends GenericCommand
      * /list/datastreams/<app_name>
      * /list/datarecords/<app_name>/<datastream_name>
      *
-<<<<<<< HEAD
-     * /login/<dottedWC>
-     * /login/isAuthenticated
-=======
      * /login/<dottedWC>/<user_hash>
      * /login/isAuthenticated/<user_hash>
->>>>>>> my_changes
      */
 
     @Override
@@ -268,9 +262,10 @@ public class ManageCommand extends GenericCommand
                     this._globalConfig.getKeyManager().addWCSymmKey(symmKey);
                 }
 
-                PDVInstance.printKeyToLog(symmKey, "Symmetric key: ");
+                MiscFuncs.printKeyToLog(symmKey, "Symmetric key: ");
                 byte[] content = EncryptionHelper.wrapKey(_wcPubKey, symmKey);
                 ContentObject co = ContentObject.buildContentObject(interest.name(), content);//symmKey.getEncoded());
+
                 this._globalConfig.getCCNHandle().put(co);
                 
 

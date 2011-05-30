@@ -25,7 +25,6 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import org.ccnx.ccn.CCNHandle;
@@ -253,9 +252,11 @@ public class StreamTransport {
 		if (receiver.getAuthenticator() == null)
 			throw new PDCTransmissionException("Authenticator is not set");
 
+		Log.info("### SENDING SETUP INTEREST TO THE RECEIVER ### (Step 4)");
+
 		try {
-			name = receiver.uri.append(_stream.app.getAppName()).append(
-					_stream.data_stream_id).append(Constants.STR_CONTROL).append("setup");
+			name = _stream.getReceiverStreamURI(receiver).append(Constants.STR_CONTROL).
+					append("setup");
 			co = _ccn_handle.get(name, SystemConfiguration.MEDIUM_TIMEOUT);
 
 			if (co != null && new String(co.content()).equals("ACK"))
@@ -270,6 +271,29 @@ public class StreamTransport {
 		}
 
 		return false;
+	}
+
+	public boolean pullInterestHandler(Interest interest)
+	{
+		try {
+			publishACK(interest);
+		}
+		catch (PDCTransmissionException ex) {
+			Log.error("Error while sending ack: " + ex.getLocalizedMessage());
+		}
+
+		Log.info(
+				"### GOT PULL REQUEST; ATTEMPING TO FETCH DATA FROM THE PRODUCER ### (Step T2)");
+
+		try {
+			fetchNewData();
+		}
+		catch (PDCTransmissionException ex) {
+			Log.error("Error while pulling new records: " + ex.getLocalizedMessage());
+			return false;
+		}
+
+		return true;
 	}
 
 	public synchronized void fetchStreamInfo()
@@ -293,6 +317,8 @@ public class StreamTransport {
 		}
 
 		Log.debug("requesting stream_info data for " + uri.toURIString());
+
+		Log.info("### REQUESTING STREAM INFO ### (Step 7)");
 
 		try {
 			object = _ccn_handle.get(uri, SystemConfiguration.MEDIUM_TIMEOUT);
@@ -378,6 +404,9 @@ public class StreamTransport {
 			if (isFinalFailure(false))
 				throw new PDCTransmissionException("Unable to decrypt the message", ex);
 
+			Log.info(
+					"### UNABLE TO DECRYPT THE DATA; (RE)FETCHING STREAMINFO ### (Step 7)");
+
 			fetchStreamInfo();
 			return null;
 		}
@@ -400,6 +429,8 @@ public class StreamTransport {
 		ContentObject response;
 
 		assert content_id != null;
+
+		Log.info("### FETCHING RECORD " + content_id + " ### (Step T4)");
 
 		publisher_ds = _stream.getPublisherStreamURI();
 
@@ -433,7 +464,22 @@ public class StreamTransport {
 		}
 	}
 
-	public boolean fetchDataFromUplink()
+	void requestPull(PDCReceiver receiver)
+			throws PDCTransmissionException, MalformedContentNameStringException,
+			IOException
+	{
+		ContentName pull_uri;
+
+		if (!_stream._receivers.contains(receiver))
+			return;
+
+		pull_uri = _stream.getReceiverStreamURI(receiver);
+		pull_uri = pull_uri.append(Constants.STR_CONTROL).append("pull");
+
+		_ccn_handle.get(pull_uri, SystemConfiguration.LONG_TIMEOUT);
+	}
+
+	synchronized boolean fetchNewData()
 			throws PDCTransmissionException
 	{
 		PDCPublisher publisher;
@@ -449,6 +495,7 @@ public class StreamTransport {
 			Log.warning("No uplink defined; fetching aborted");
 			return true;
 		}
+
 		try {
 			last_entry = storage.getLastEntry();
 		}
@@ -456,6 +503,8 @@ public class StreamTransport {
 			throw new PDCTransmissionException(
 					"Unable to fetch id of last record from the database", ex);
 		}
+
+		Log.info("### REQUESTING LIST OF NEW DATA IDS ### (Step T3)");
 
 		if (last_entry == null)
 			ids = fetchList();
@@ -472,12 +521,8 @@ public class StreamTransport {
 			return true;
 		}
 
-		Iterator<String> iter = ids.iterator();
-
 		try {
-			while (iter.hasNext()) {
-				String data_id = iter.next();
-
+			for (final String data_id : ids) {
 				Log.debug("pulling: " + data_id);
 				record = fetchRecord(data_id);
 				if (record == null) {
@@ -496,6 +541,12 @@ public class StreamTransport {
 		return true;
 	}
 
+	/**
+	 * This method counts failures so we know when to give up
+	 * when trying to request a key
+	 * @param success was the attempt successful?
+	 * @return returns true if we should give up
+	 */
 	private boolean isFinalFailure(boolean success)
 	{
 		if (!success && _invalid_key_retry-- > 0)
