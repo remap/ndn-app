@@ -10,13 +10,12 @@ import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
  * Null transducer
  * @author Derek Kulinski
  */
-public class TransducerExample implements iTransducerClient {
+public class NOOPTransducer implements iTransducerClient {
 	@Override
 	public StreamInfo[] getInputStreamList()
 	{
 		final StreamInfo[] ret = {
-			new StreamInfo("aaa", 5),
-			new StreamInfo("bbb", 3)
+			new StreamInfo("input", 1),
 		};
 
 		return ret;
@@ -26,8 +25,7 @@ public class TransducerExample implements iTransducerClient {
 	public StreamInfo[] getOutputStreamList()
 	{
 		final StreamInfo[] ret = {
-			new StreamInfo("aaa", 5),
-			new StreamInfo("bbb", 3)
+			new StreamInfo("output", 1),
 		};
 
 		return ret;

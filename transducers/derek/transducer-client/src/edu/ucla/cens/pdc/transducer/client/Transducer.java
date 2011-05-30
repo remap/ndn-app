@@ -9,9 +9,7 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.transducer.Helpers;
 import edu.ucla.cens.pdc.transducer.TransducerMsg;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.MalformedURLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,38 +18,74 @@ import java.util.logging.Logger;
  * @author Derek Kulinski
  */
 public class Transducer {
-	public Transducer(int port, iTransducerClient filter)
+	public static void main(String[] args)
 	{
-		this._port = port;
-		this._filter = filter;
+		Transducer t;
+
+		if (args.length < 2) {
+			System.err.println("Transducer called incorrectly");
+			System.exit(10);
+		}
+
+		try {
+			t = new Transducer(args[0], args[1]);
+			t.start();
+		}
+		catch (ClassNotFoundException ex) {
+			Logger.getLogger(Transducer.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		catch (InstantiationException ex) {
+			Logger.getLogger(Transducer.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+
+	private static Class<? extends iTransducerClient> getTransducerClass(
+			String archive, String class_name)
+			throws MalformedURLException, ClassNotFoundException
+	{
+		final TransducerClassLoader loader = new TransducerClassLoader(archive);
+		final Class<? extends iTransducerClient> transducer_class = loader.load(
+				class_name);
+
+		return transducer_class;
+	}
+
+	public Transducer(String archive, String class_name)
+			throws ClassNotFoundException, InstantiationException
+	{
+		try {
+			final Class<? extends iTransducerClient> cls = getTransducerClass(archive,
+					class_name);
+
+			_filter = cls.newInstance();
+		}
+		catch (IllegalAccessException ex) {
+			Logger.getLogger(Transducer.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		catch (MalformedURLException ex) {
+			Logger.getLogger(Transducer.class.getName()).log(Level.SEVERE, null, ex);
+		}
+
 	}
 
 	public void start()
 	{
+		final TransducerSecurityManager sm = new TransducerSecurityManager();
+		System.setSecurityManager(sm);
+
 		_running = true;
 
-		try {
-			_socket = new ServerSocket(_port, 0, InetAddress.getLocalHost());
-
-			while (_running) {
-				final Socket client_socket = _socket.accept();
-				processMessage(client_socket);
-			}
-
-			_socket.close();
-		}
-		catch (IOException ex) {
-			throw new Error("Unable to create socket", ex);
+		while (_running) {
+			processMessage();
 		}
 	}
 
-	private void processMessage(Socket socket)
-			throws IOException
+	private void processMessage()
 	{
 		TransducerMsg.Message in_message, out_message;
 
 		try {
-			in_message = TransducerMsg.Message.parseFrom(socket.getInputStream());
+			in_message = TransducerMsg.Message.parseFrom(System.in);
 
 			if (in_message.hasCommand()) {
 				processCommand(in_message);
@@ -59,7 +93,8 @@ public class Transducer {
 			}
 
 			out_message = processData(in_message);
-			out_message.writeTo(socket.getOutputStream());
+			out_message.writeTo(System.out);
+			System.out.flush();
 		}
 		catch (PDCParseException ex) {
 			Logger.getLogger(Transducer.class.getName()).log(Level.SEVERE,
@@ -68,9 +103,6 @@ public class Transducer {
 		catch (IOException ex) {
 			Logger.getLogger(Transducer.class.getName()).log(Level.SEVERE,
 					"Error while handling the data", ex);
-		}
-		finally {
-			socket.close();
 		}
 	}
 
@@ -88,39 +120,16 @@ public class Transducer {
 	{
 		//TODO: verify that we have proper number of streams with proper amount of data
 
-		final DataRecord[][] input = Helpers.deserializeData(message);
-		DataRecord[][] output;
+		assert message != null;
 
-		output = _filter.processData(input);
+		final DataRecord[][] input = Helpers.deserializeData(message);
+		assert input != null;
+
+		final DataRecord[][] output = _filter.processData(input);
 		assert output != null;
 
 		return Helpers.serializeData(output);
 	}
-
-	static int main(String[] args)
-	{
-		Transducer t;
-		int port;
-
-		if (args.length < 1)
-			return 10;
-
-		try {
-			port = Integer.parseInt(args[0]);
-
-			t = new Transducer(port, new TransducerExample());
-			t.start();
-		}
-		catch (NumberFormatException ex) {
-			return 20;
-		}
-
-		return 0;
-	}
-
-	private int _port;
-
-	private ServerSocket _socket;
 
 	private boolean _running = false;
 
