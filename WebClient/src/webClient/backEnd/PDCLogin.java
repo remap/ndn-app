@@ -74,7 +74,7 @@ public class PDCLogin implements CCNFilterListener
         this._userHash = Algorithms.md5HashStr(pdv_uri + userName + password);
 
         //begin logon process
-        //this.startLogon(pdv_uri, userName, password);
+        this.startLogon(pdv_uri, userName, password);
     }
 
     public String getUserHash()
@@ -143,19 +143,20 @@ public class PDCLogin implements CCNFilterListener
                     WebClientServer.DEFAULT_TIMEOUT);
 
             //check for null response
-            /*if(coIsAuthenticated == null)
+            if(coIsAuthenticated == null)
             {
                 Log.write("No response from PDV instance on status of login.");
                 return false;
             }
-
+            /*
             AuthenticationResponse ar = decodeAuthorizationResponse(coIsAuthenticated);
 
             if(ar == null || !ar.isAuthenticated())
                 return false;
              */
 
-            SecretKey symmKey = (new SecretKeySpec(coIsAuthenticated.content(), "AES"));//EncryptionHelper.unwrapKey(this._keys.getPrivate(), coIsAuthenticated.content());
+            SecretKey symmKey = EncryptionHelper.unwrapKey(this._keys.getPrivate(), coIsAuthenticated.content());
+            //SecretKey symmKey = (new SecretKeySpec(coIsAuthenticated.content(), "AES"));//EncryptionHelper.unwrapKey(this._keys.getPrivate(), coIsAuthenticated.content());
             
             //register a new session
             SessionManager.registerSession(_userHash, symmKey);

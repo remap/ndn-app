@@ -1,21 +1,12 @@
 package edu.ucla.cens.pdc.libpdc.util;
 
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
-import edu.ucla.cens.pdc.libpdc.iBSONExportable;
 import edu.ucla.cens.pdc.libpdc.transport.BasicBSONExportableImpl;
 import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
-import java.security.NoSuchAlgorithmException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import org.bson.BSONDecoder;
-import org.bson.BSONEncoder;
-import org.bson.BSONObject;
 
 /**
  * This class is the authentication response from the PDV that lets the web client

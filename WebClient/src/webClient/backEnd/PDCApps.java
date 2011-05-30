@@ -11,9 +11,7 @@ import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import webClient.frontEnd.WebClientServer;
 import webClient.session.SessionManager;
-import java.security.PublicKey;
 import webClient.exceptions.NoSuchUserHashException;
-import webClient.lib.Algorithms;
 import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
 import webClient.log.Log;
 import webClient.session.Session;
@@ -66,6 +64,15 @@ public class PDCApps
             //SignedInterest interest = session.getSignedInterest(uri);
             //apps = this._ccnHandle.get(interest, WebClientServer.DEFAULT_TIMEOUT); //COMPILE ERROR b/c SignedInterest does not extend Interest...
             apps = this._ccnHandle.get(ContentName.fromURI(uri), WebClientServer.DEFAULT_TIMEOUT);
+
+            //decrypt data
+            //TODO FIX this doesn't work...
+            byte[] content = apps.content();//session.decryptData(apps.content());
+
+            //convert to a collection and return
+            CollectionTransport<String> ctApps = new CollectionTransport<String>();
+            ctApps.fromBSON(content);
+            return ctApps.toCollection();
         }
         catch (MalformedContentNameStringException ex)
         {
@@ -74,15 +81,6 @@ public class PDCApps
             Log.write("Bad PDV URI given!");
             return null;
         }
-
-        //decrypt data
-        byte[] content = apps.content();//session.decryptBytes(apps.content());
-
-        //convert to a collection and return
-        CollectionTransport<String> ctApps = new CollectionTransport<String>();
-        ctApps.fromBSON(content);
-
-        return ctApps.toCollection();
     }
 
 }

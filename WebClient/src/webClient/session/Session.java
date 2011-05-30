@@ -2,6 +2,7 @@ package webClient.session;
 
 import edu.ucla.cens.pdc.libpdc.stream.DataEncryptor;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
+import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.SignedInterest;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -35,17 +36,16 @@ public class Session
      * the symmetric key and data encryptor
      */
     private SecretKey symmetricKey;
-    //private DataEncryptor symmetricEncryptor;
 
-    /*public byte[] encryptData(byte[] data) throws PDCEncryptionException
+    public byte[] encryptData(byte[] data) throws PDCEncryptionException
     {
-        return this.symmetricEncryptor.encryptData(data);
+        return EncryptionHelper.encryptSymData(symmetricKey, data);
     }
 
     public byte[] decryptData(byte[] data) throws PDCEncryptionException
     {
-        return this.symmetricEncryptor.decryptData(data);
-    }*/
+        return EncryptionHelper.decryptSymData(symmetricKey, data);
+    }
 
     ////////////////////////////////////////////////////////////////////////////
 

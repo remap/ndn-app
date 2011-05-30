@@ -127,13 +127,21 @@ public class ManageCommand extends GenericCommand
             
             //send it across the network
             CollectionTransport<String> ctApps = new CollectionTransport<String>(apps);
-            ContentObject co = ContentObject.buildContentObject(interest.name(), ctApps.toBSON());
+            byte[] content = ctApps.toBSON();
+            
+            //encrypt data
+            /*try {
+                content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(), ctApps.toBSON());
+            } catch (PDCEncryptionException ex) {
+                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+            }*/
+            
+            ContentObject co = ContentObject.buildContentObject(interest.name(), content);
             try {
                 _globalConfig.getCCNHandle().put(co);
             } catch (IOException ex) {
                 Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
             }
-            //TODO use communication helper for encryption
 
             return true;
         }
@@ -238,7 +246,7 @@ public class ManageCommand extends GenericCommand
         {
             try
             {
-                /*if(this._wcPubKey == null)
+                if(this._wcPubKey == null)
                 {
                     try {
                         Thread.sleep(SystemConfiguration.MEDIUM_TIMEOUT);
@@ -250,7 +258,7 @@ public class ManageCommand extends GenericCommand
                 {
                     Log.error("WC public key not yet known.");
                     return false;
-                }*/
+                }
                 //TODO use CommunicationHelper
                 //AuthenticationResponse ar = new AuthenticationResponse(true);
                 SecretKey symmKey = this._globalConfig.getKeyManager().getWCSymmKey();
@@ -261,8 +269,8 @@ public class ManageCommand extends GenericCommand
                 }
 
                 PDVInstance.printKeyToLog(symmKey, "Symmetric key: ");
-                //byte[] content = EncryptionHelper.wrapKey(_wcPubKey, symmKey);
-                ContentObject co = ContentObject.buildContentObject(interest.name(), symmKey.getEncoded());
+                byte[] content = EncryptionHelper.wrapKey(_wcPubKey, symmKey);
+                ContentObject co = ContentObject.buildContentObject(interest.name(), content);//symmKey.getEncoded());
                 this._globalConfig.getCCNHandle().put(co);
                 
 
