@@ -9,33 +9,63 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.stream.Storage;
+import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Derek Kulinski
  */
 public class TransducerClient {
-	public TransducerClient(String class_name, DataStream[][] streams,
+	public TransducerClient(File directory, String jar_file, String class_name,
+			DataStream[][] streams,
 			int[] record_count)
 			throws UnknownHostException
 	{
-		_transducer_class_name = class_name;
-		_host = InetAddress.getLocalHost();
-		_port = 1234;
+		List<String> args = new LinkedList<String>();
+		args.add("java");
+		args.add("-jar");
+		args.add("dist/transducer-client.jar");
+		args.add(jar_file);
+		args.add(class_name);
+
+		_transducer_proc_builder = new ProcessBuilder(args);
+		_transducer_proc_builder.directory(directory);
 
 		_in_streams = streams[0];
 		_out_streams = streams[1];
 		_in_stream_count = _in_streams.length;
 		_in_stream_recordcount = record_count;
 	}
-	
+
 	private void startTransducer()
 	{
-//		ProcessBuilder proc_build = new ProcessBuilder("java", );
+		try {
+			_transducer_client = _transducer_proc_builder.start();
+		}
+		catch (IOException ex) {
+			Logger.getLogger(TransducerClient.class.getName()).log(Level.SEVERE, null,
+					ex);
+		}
+	}
+
+	private void stopTransducer()
+			throws IOException, InterruptedException
+	{
+		if (_transducer_client == null)
+			return;
+
+		TransducerMsg.Message.Builder builder = TransducerMsg.Message.newBuilder();
+		builder.setCommand(TransducerMsg.Message.CommandType.TERMINATE);
+		builder.build().writeTo(_transducer_client.getOutputStream());
+		_transducer_client.getOutputStream().flush();
+		_transducer_client.waitFor();
+		_transducer_client = null;
 	}
 
 	public void newDataCheck()
@@ -87,26 +117,15 @@ public class TransducerClient {
 		TransducerMsg.Message result;
 		DataRecord[][] data_result;
 
-		final Socket sock = new Socket(_host, _port);
+		message.writeTo(_transducer_client.getOutputStream());
+		result = TransducerMsg.Message.parseFrom(_transducer_client.getInputStream());
 
-		try {
-			message.writeTo(sock.getOutputStream());
-			result = TransducerMsg.Message.parseFrom(sock.getInputStream());
+		data_result = Helpers.deserializeData(result);
 
-			data_result = Helpers.deserializeData(result);
-
-			return data_result;
-		}
-		finally {
-			sock.close();
-		}
+		return data_result;
 	}
 
-	private final InetAddress _host;
-
-	private int _port;
-
-	private final String _transducer_class_name;
+	private final ProcessBuilder _transducer_proc_builder;
 
 	private final int _in_stream_count;
 
@@ -115,6 +134,8 @@ public class TransducerClient {
 	private final DataStream[] _in_streams;
 
 	private final DataStream[] _out_streams;
+
+	private Process _transducer_client;
 
 	private String[] _in_last_record;
 }

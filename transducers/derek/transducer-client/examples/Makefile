@@ -5,3 +5,6 @@ edu/ucla/cens/pdc/transducers/client/NOOPTransducer.class:
 
 Transducers.jar: edu/ucla/cens/pdc/transducers/client/NOOPTransducer.class
 	jar -cf Transducers.jar edu
+
+clean:
+	rm -rf edu Transducers.jar
