@@ -22,8 +22,8 @@ import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
+//import sun.misc.Signal;
+//import sun.misc.SignalHandler;
 
 /**
  *
@@ -116,21 +116,21 @@ public class Main {
 		int pdv_started = 0;
 		boolean RESTORE_CONFIG = true;
 		final boolean SAVE_CONFIG = true;
-		PDVInstance test = null;
-		PublisherPublicKeyDigest digest = null;
+		//PDVInstance test = null;
+		//PublisherPublicKeyDigest digest = null;
 
 		if (args.length < 1)
 			usage();
 
-		if (args.length >= 2)
-			digest = new PublisherPublicKeyDigest(args[1]);
+		//if (args.length >= 2)
+		//	digest = new PublisherPublicKeyDigest(args[1]);
 
 		String arg = args[0];
 
 		if (arg.equals("pdv1"))
 			pdv_started = 1;
-		else if (arg.equals("pdv2"))
-			pdv_started = 2;
+		//else if (arg.equals("pdv2"))
+		//	pdv_started = 2;
 		else if (arg.equals("database"))
 			pdv_started = -1;
 		else {
@@ -141,10 +141,10 @@ public class Main {
 		if (pdv_started == 1 || pdv_started == -1) {
 			MongoDataStorage.setPrefix("pdv1_");
 			MongoConfigStorage.setPrefix("pdv1_");
-		} else if (pdv_started == 2) {
-			MongoDataStorage.setPrefix("pdv2_");
-			MongoConfigStorage.setPrefix("pdv2_");
-		}
+		}// else if (pdv_started == 2) {
+		//	MongoDataStorage.setPrefix("pdv2_");
+		//	MongoConfigStorage.setPrefix("pdv2_");
+		//}
 
 		GlobalConfig.setFeatures(GlobalConfig.FEAT_SHARING
 				| GlobalConfig.FEAT_MANAGE);
@@ -168,12 +168,12 @@ public class Main {
 		if (!RESTORE_CONFIG)
 			setupPDV(pdv_started);
 
-		Signal.handle(new Signal("INT"), new IntHander());
+	//	Signal.handle(new Signal("INT"), new IntHander());
 
-		if (pdv_started > 0)
-			test = new PDVInstance();
+	//	if (pdv_started > 0)
+	//		test = new PDVInstance();
 
-		Log.debug(config.toString());
+	//	Log.debug(config.toString());
 		if (SAVE_CONFIG)
 			config.storeStateRecursive();
 
@@ -182,25 +182,25 @@ public class Main {
 		case -1:
 			fillDatabase(ds);
 			System.exit(0);
-		case 1:
-			if (digest != null) {
-				Log.debug("Setting up pdv2's key");
-				PDCReceiver receiver = ds.getReceivers().iterator().next();
-				receiver.setPublickeyDigest(digest);
-				ds.storeStateRecursive();
-			}
-		/* fallthrough */
-		case 2:
-			final PublisherPublicKeyDigest dsdigest = ds.getTransport().getEncryptor().
-					getStreamKeyDigest();
-			Log.info("myds key: " + dsdigest.toString());
+	//	case 1:
+	//		if (digest != null) {
+	//			Log.debug("Setting up pdv2's key");
+	//			PDCReceiver receiver = ds.getReceivers().iterator().next();
+	//			receiver.setPublickeyDigest(digest);
+	//			ds.storeStateRecursive();
+	//		}
+	//	/* fallthrough */
+	//	case 2:
+	//		final PublisherPublicKeyDigest dsdigest = ds.getTransport().getEncryptor().
+	//				getStreamKeyDigest();
+	//		Log.info("myds key: " + dsdigest.toString());
 		}
 
-		test.startListening();
+	//	test.startListening();
 
-		Log.debug("Listening");
+	//	Log.debug("Listening");
 
-		if (pdv_started == 1) {
+	/*	if (pdv_started == 1) {
 			final PDCReceiver receiver = ds.getReceivers().iterator().next();
 			if (args.length >= 3)
 				ds.setupReceiver(receiver, args[2]);
@@ -217,9 +217,10 @@ public class Main {
 //			config.getApplication("myapp").getDataStream("myds").getTransport().
 //					fetchDataFromUplink();
 		}
+	*/
 	}
 
-	static class IntHander implements SignalHandler {
+/*	static class IntHander implements SignalHandler {
 		public void handle(Signal signal)
 		{
 			System.out.println("Saving the configuration ...");
@@ -237,4 +238,5 @@ public class Main {
 			System.exit(0);
 		}
 	}
+*/
 }

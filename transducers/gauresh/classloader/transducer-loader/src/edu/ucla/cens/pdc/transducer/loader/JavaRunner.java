@@ -3,6 +3,14 @@ package edu.ucla.cens.pdc.transducer.loader;
 import java.lang.reflect.*;
 import edu.ucla.cens.pdc.transducer.loader.TransducerLoader;
 import edu.ucla.cens.pdc.transducer.secman.TransducerSecMan;
+import edu.ucla.cens.pdc.transducer.datastructures.StreamData;
+import edu.ucla.cens.pdc.*;
+import org.ccnx.ccn.config.ConfigurationException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
+import java.security.InvalidKeyException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
+import org.xmlpull.v1.XmlPullParserException;
+
 
 public class JavaRunner implements Runnable { 
 	
@@ -19,7 +27,7 @@ public class JavaRunner implements Runnable {
 	void invokeInit(Class clazz) 
 	{ 
 		//Here you invoke create the init method of transducer which will be a static method
-		Class argList[] = new Class[] {String[].class};
+		Class argList[] = new Class[] {StreamData[].class};
 
 		Method mainMethod = null;
 		try {
@@ -59,30 +67,64 @@ public class JavaRunner implements Runnable {
 
 	} 
 
-	static Object[] getArgs(String args[]) 
+	static Object[] getArgs() 
 	{  
- 		return new Object[] {new String[]{"abc"}};
+ 		StreamData[] args = new StreamData[10];
+		return new Object[] {args};
+		//return new Object[] {new String[]{"abc"}};
 	} 
 
-	public static void main(String args[]) throws ClassNotFoundException { 
+	public static void main(String args[]) throws ClassNotFoundException,org.ccnx.ccn.protocol.MalformedContentNameStringException,java.io.IOException,
+			ConfigurationException, PDCTransmissionException, PDCDatabaseException, InvalidKeyException 
+	{ 
+		
+		//Setting up Global Instance of PDV
+		Main.main(new String[]{"database"});
 
-		//Class self = Class.forName("JavaRunner");
-
+		//Setting Up Security Manager
 		System.setSecurityManager(new TransducerSecMan()); 
 		System.out.println("After Security Manager is set");
-		//Parse the XMl
-		//Loop till all the nodes are traversed do below thing
-		{
-		//you would have to figure out how to send the Datarecord object's here DERek ca help...i assume you create a ArrayList of "in" Datarecords and another arrayList of "out" Datarecords, get the data	into the "in" datarecord that you want to pass to the transducer....make a map so that you can keep track of what Datarecords array you have passed to each of the transducer....use similar map for out datarecords...basically keep track of what you are passing...the t.join thing will wait for the threads to finsh and then you can loop to the next level of the nodes
+	
+		//Running multiple configurations
 
+		for(i = 1; i < args.length; i ++) {
 
-			TransducerLoader jrl = new TransducerLoader("file:/home/gauresh/spring2011/cs219estrin/project/ndn-app/transducers/gauresh/classloader/testclasses/"); 
-			ThreadGroup tg = new ThreadGroup("JavaRunner Threadgroup"); 
-			Thread t = new Thread(tg, new JavaRunner(jrl, "edu.ucla.cens.pdc.transducer.test.Test", getArgs(args))); 
-			t.start(); 
-			try { t.join(); } 
-			catch (InterruptedException ie) 
-			{ System.out.println("Thread was interrupted"); }
-		} 
+			try{
+				//Parse the XMl
+				String configFile = args[i];
+
+				parser.setFileName(filename);
+
+				//parse the configuration file
+				Configuration config = parser.parse();
+
+				//get TransducerList
+				ArrayList<TransducerConfig> transducerList = (ArrayList<TransducerConfig>) config.getTransducerConfigList(); 
+			
+				//Creating a ThreadGroup
+				ThreadGroup tg = new ThreadGroup("Transducer AppID : " + config.getAppId() + " threadgroup");
+
+				for(TransducerConfig transducer: transducerList) {
+
+					TransducerLoader jrl = new TransducerLoader(transducer.getCodeSource()); 
+					Thread t = new Thread(tg, new JavaRunner(jrl, transducer.getTransducerId(), getArgs(transducer))); 
+
+					//Starting The Thread
+					t.start(); 
+					try { 
+						t.join(); 
+					} catch (InterruptedException ie) { 
+						System.out.println("Thread was interrupted"); 
+					}
+				}
+
+			} catch (XmlPullParserException e) {
+        	                e.printStackTrace();
+                	} catch (FileNotFoundException e) {
+                        	// TODO Auto-generated catch block
+	                        e.printStackTrace();
+                	}
+
+			System.out.println("Completed Execution");
 	} 
 }

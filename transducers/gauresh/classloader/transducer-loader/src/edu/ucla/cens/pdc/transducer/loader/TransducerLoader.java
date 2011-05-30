@@ -60,7 +60,6 @@ public class TransducerLoader extends SecureClassLoader {
 			Policy classPolicy = Policy.getPolicy();
 			PermissionCollection pc = classPolicy.getPermissions(cs);
 			pc.add(new java.lang.RuntimePermission("accessClassinPackage.{java.lang}"));
-			System.out.println("i was here");
                         cl = defineClass(name, buf, 0, buf.length, cs);
                         return cl;
                 } catch (Exception e) {
