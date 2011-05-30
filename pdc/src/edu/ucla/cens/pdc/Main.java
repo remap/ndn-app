@@ -209,14 +209,15 @@ public class Main {
 			final String authenticator = ds.setupPublisher(publisher);
 			Log.info("Authenticator for the publisher: " + authenticator);
 
-//			config.getApplication("myapp").periodicPullStart(5);
+			config.getApplication("myapp").periodicPullStart(5);
 
-//			//first one will fail, but it'll obtain an encryption key
-//			config.getApplication("myapp").getDataStream("myds").getTransport().
-//					fetchDataFromUplink();
-//			config.getApplication("myapp").getDataStream("myds").getTransport().
-//					fetchDataFromUplink();
+			//first one will fail, but it'll obtain an encryption key
+			config.getApplication("myapp").getDataStream("myds").getTransport().
+					fetchDataFromUplink();
+			config.getApplication("myapp").getDataStream("myds").getTransport().
+					fetchDataFromUplink();
 		}
+	
 	}
 
 	static class IntHander implements SignalHandler {
@@ -237,4 +238,5 @@ public class Main {
 			System.exit(0);
 		}
 	}
+
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<application>myapp
+	<transducer>edu.ucla.cens.pdc.transducer.test.Test
+		<codeSource>file:/home/gauresh/spring2011/cs219estrin/project/ndn-app/transducers/gauresh/classloader/testclasses/</codeSource>
+		<inputStream>
+			<streamName>inStream</streamName>
+			<start>0</start>
+		</inputStream>
+		<outputStream>
+			outStream
+		</outputStream>
+	</transducer>
+</application>
