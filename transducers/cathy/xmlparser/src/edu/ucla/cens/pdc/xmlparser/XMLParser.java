@@ -22,13 +22,13 @@ public class XMLParser {
 
 	private Configuration _config;
 
-	XMLParser()
+	public XMLParser()
 	{
 		_parser = new KXmlParser();
 		_config = new Configuration();
 	}
 
-	void setFileName(String filename)
+	public void setFileName(String filename)
 			throws XmlPullParserException, FileNotFoundException
 	{
 		FileInputStream fis = new FileInputStream(filename);
@@ -37,7 +37,7 @@ public class XMLParser {
 		//System.out.println("setFileName");
 	}
 
-	Configuration parse()
+	public Configuration parse()
 			throws XmlPullParserException, IOException
 	{
 		_parser.nextTag();

@@ -1,7 +1,12 @@
 grant codeBase "file:/home/gauresh/spring2011/cs219estrin/project/ndn-app/transducers/gauresh/classloader/transducer-loader/src/-" { 
-	permission java.lang.RuntimePermission "*";
 	permission java.security.AllPermission;
+	permission java.lang.RuntimePermission "*";
+	permission java.io.FilePermission "/home/gauresh/-" , "*";
 	permission java.net.SocketPermission "*" , "connect, accept, resolve, listen";
+};
+
+grant codeBase "file:/home/gauresh/spring2011/cs219estrin/project/ndn-app/transducers/cathy/xmlparser/src/-" {
+	permission java.security.AllPermission;
 };
 
 grant codeBase "file:/home/gauresh/spring2011/cs219estrin/project/ndn-app/transducers/gauresh/classloader/testclasses/-" {
