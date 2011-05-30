@@ -67,9 +67,12 @@ public class JavaRunner implements Runnable {
 
 	} 
 
-	static Object[] getArgs() 
+	static Object[] getArgs(TransducerConfig transducer) 
 	{  
- 		StreamData[] args = new StreamData[10];
+ 		StreamData[] args = new StreamData[transducer.inputStreamSize()];
+		for(StreamData argument: args){
+			
+		}
 		return new Object[] {args};
 		//return new Object[] {new String[]{"abc"}};
 	} 
