@@ -18,14 +18,14 @@ public final class StreamData {
 	private String start;
 	static GlobalConfig config = GlobalConfig.getInstance();
 
-	private StreamData(String appName,String streamId,DataStream ds, int count) {
+	private StreamData(String appName,String streamId,DataStream ds) {
 		this.streamId = streamId;
 		this.appName = appName;
 		this.ds = ds;
 
 	}
 
-	private StreamData(Application app,String appName,String streamId,int count) throws IOException{
+	private StreamData(Application app,String appName,String streamId) throws IOException{
 		this.streamId = streamId;
 		this.appName = appName;
 		this.start = null;
@@ -34,7 +34,7 @@ public final class StreamData {
 	}
 
 
-	public StreamData getStream(String appName, String streamId,int count){
+	public static StreamData getStream(String appName, String streamId){
 		//TODO: Change the configuration object
 
 		//Find whether the application already exists	
@@ -42,19 +42,19 @@ public final class StreamData {
 		if(app != null){	
 			DataStream ds = app.getDataStream(streamId);
 			if(ds != null){
-				 return new StreamData(appName,streamId,ds,count);
+				 return new StreamData(appName,streamId,ds);
 			}
 		}
 		throw new SecurityException("Stream Does not Exists");
 
 	}
 
-	public static StreamData createNewStream(String streamId, String appName,int count){
+	public static StreamData createNewStream(String appName,String streamId){
 		try{
 		Application app = config.getApplication(appName);
 		if(app != null)
 			if(app.getDataStream(streamId) == null) {
-				StreamData data = new StreamData(app,appName,streamId,count);			
+				StreamData data = new StreamData(app,appName,streamId);			
 				app.addDataStream(data.ds);
 				return data;
 			}

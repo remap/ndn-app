@@ -10,7 +10,9 @@ import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import java.security.InvalidKeyException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import org.xmlpull.v1.XmlPullParserException;
-
+import edu.ucla.cens.pdc.xmlparser.*;
+import java.util.*;
+import java.io.FileNotFoundException;
 
 public class JavaRunner implements Runnable { 
 	
@@ -67,12 +69,12 @@ public class JavaRunner implements Runnable {
 
 	} 
 
-	static Object[] getArgs(TransducerConfig transducer) 
+	static Object[] getArgs(TransducerConfig transducer,String AppId) 
 	{  
- 		StreamData[] args = new StreamData[transducer.inputStreamSize()];
-		for(StreamData argument: args){
-			
-		}
+ 		StreamData[] args = new StreamData[transducer.inputStreamsize()];
+		for(int i = 0;i < transducer.inputStreamsize();i++)
+			args[i] = StreamData.getStream(AppId,transducer.getInputStreamName(i));
+		
 		return new Object[] {args};
 		//return new Object[] {new String[]{"abc"}};
 	} 
@@ -80,23 +82,30 @@ public class JavaRunner implements Runnable {
 	public static void main(String args[]) throws ClassNotFoundException,org.ccnx.ccn.protocol.MalformedContentNameStringException,java.io.IOException,
 			ConfigurationException, PDCTransmissionException, PDCDatabaseException, InvalidKeyException 
 	{ 
-		
+		System.out.println("I reached here");
+
 		//Setting up Global Instance of PDV
-		Main.main(new String[]{"database"});
+		System.out.println(Main.main(new String[]{"database"}));
 
 		//Setting Up Security Manager
 		System.setSecurityManager(new TransducerSecMan()); 
 		System.out.println("After Security Manager is set");
+
+		//Instantiating XML Parser
+		XMLParser parser = new	XMLParser();
+
+		System.out.println("Argument length: " + args.length);
 	
 		//Running multiple configurations
 
-		for(i = 1; i < args.length; i ++) {
+		for(int i = 0; i < args.length; i ++) {
 
 			try{
 				//Parse the XMl
 				String configFile = args[i];
+				System.out.println(args[i]);
 
-				parser.setFileName(filename);
+				parser.setFileName(configFile);
 
 				//parse the configuration file
 				Configuration config = parser.parse();
@@ -110,7 +119,7 @@ public class JavaRunner implements Runnable {
 				for(TransducerConfig transducer: transducerList) {
 
 					TransducerLoader jrl = new TransducerLoader(transducer.getCodeSource()); 
-					Thread t = new Thread(tg, new JavaRunner(jrl, transducer.getTransducerId(), getArgs(transducer))); 
+					Thread t = new Thread(tg, new JavaRunner(jrl, transducer.getTransducerId(), getArgs(transducer,config.getAppId()))); 
 
 					//Starting The Thread
 					t.start(); 
@@ -121,13 +130,17 @@ public class JavaRunner implements Runnable {
 					}
 				}
 
+				System.out.println(config.getAppId());
+				System.out.println(transducerList.get(0).getTransducerId());
+				System.out.println(transducerList.get(0).inputStreamsize());
+
 			} catch (XmlPullParserException e) {
         	                e.printStackTrace();
                 	} catch (FileNotFoundException e) {
                         	// TODO Auto-generated catch block
 	                        e.printStackTrace();
                 	}
-
-			System.out.println("Completed Execution");
+		}
+		System.out.println("Completed Execution");
 	} 
 }
