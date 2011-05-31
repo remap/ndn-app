@@ -60,10 +60,10 @@ public class Transducer {
 			_filter = cls.newInstance();
 		}
 		catch (IllegalAccessException ex) {
-			Logger.getLogger(Transducer.class.getName()).log(Level.SEVERE, null, ex);
+			throw new Error("Can't load transducer", ex);
 		}
 		catch (MalformedURLException ex) {
-			Logger.getLogger(Transducer.class.getName()).log(Level.SEVERE, null, ex);
+			throw new Error("Can't load transducer", ex);
 		}
 
 	}
