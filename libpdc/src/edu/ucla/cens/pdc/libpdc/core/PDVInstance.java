@@ -9,6 +9,7 @@ import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.MiscFuncs;
+import edu.ucla.cens.pdc.transducer.TransducerServer;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +33,11 @@ final public class PDVInstance implements CCNFilterListener {
 
 			if (GlobalConfig.hasFeature(GlobalConfig.FEAT_MANAGE))
 				add_generic_command(new ManageCommand());
+
+			if (GlobalConfig.hasFeature(GlobalConfig.FEAT_FILTERING)) {
+				_transducers = new TransducerServer("not used right now");
+				_transducers.initialize();
+			}
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error("Unable to instantiate PDVInstance class", ex);
@@ -55,6 +61,11 @@ final public class PDVInstance implements CCNFilterListener {
 	{
 		ContentName root = _config.getRoot();
 		_config.getCCNHandle().unregisterFilter(root, this);
+	}
+
+	public TransducerServer getTransducers()
+	{
+		return _transducers;
 	}
 
 	public boolean handleInterest(Interest interest)
@@ -155,6 +166,8 @@ final public class PDVInstance implements CCNFilterListener {
 
 	final private Map<String, StreamCommand> _stream_commands = new HashMap<String, StreamCommand>(
 			2);
+
+	private TransducerServer _transducers = null;
 
 	final private GlobalConfig _config = GlobalConfig.getInstance();
 }

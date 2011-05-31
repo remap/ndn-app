@@ -5,6 +5,7 @@
 package edu.ucla.cens.pdc.transducer;
 
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
+import edu.ucla.cens.pdc.transducer.Helpers;
 import edu.ucla.cens.pdc.transducer.TransducerMsg.Message;
 import org.junit.After;
 import org.junit.AfterClass;

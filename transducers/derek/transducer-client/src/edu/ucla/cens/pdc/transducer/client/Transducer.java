@@ -74,7 +74,6 @@ public class Transducer {
 		System.setSecurityManager(sm);
 
 		_running = true;
-
 		while (_running) {
 			processMessage();
 		}
@@ -85,7 +84,7 @@ public class Transducer {
 		TransducerMsg.Message in_message, out_message;
 
 		try {
-			in_message = TransducerMsg.Message.parseFrom(System.in);
+			in_message = TransducerMsg.Message.parseDelimitedFrom(System.in);
 
 			if (in_message.hasCommand()) {
 				processCommand(in_message);
@@ -93,7 +92,7 @@ public class Transducer {
 			}
 
 			out_message = processData(in_message);
-			out_message.writeTo(System.out);
+			out_message.writeDelimitedTo(System.out);
 			System.out.flush();
 		}
 		catch (PDCParseException ex) {
@@ -121,6 +120,8 @@ public class Transducer {
 		//TODO: verify that we have proper number of streams with proper amount of data
 
 		assert message != null;
+
+		System.err.println("Client got: " + message);
 
 		final DataRecord[][] input = Helpers.deserializeData(message);
 		assert input != null;

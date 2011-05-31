@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<application>app1
+	<transducer>edu.ucla.cens.pdc.transducer.coarselocation
+		<codeSource>file:/home/Cathy/coarselocaion/</codeSource>
+		<inputStream>
+			<streamName>UserDataStream</streamName>
+			<start>0</start>
+		</inputStream>
+		<outputStream>coarseLocationOutputStream</outputStream>
+	</transducer>
+	<transducer>edu.ucla.cens.pdc.transducer.coarsetime
+		<codeSource>file:/home/Cathy/coarsetime/</codeSource>
+		<inputStream>
+			<streamName>coarselocationOutputStream</streamName>
+			<start>0</start>
+		</inputStream>
+		<outputStream>coarseTimeOutputStream</outputStream>
+	</transducer>
+</application>
