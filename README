@@ -1,0 +1,29 @@
+transducer/gauresh/classloader/
+Has the complete code.
+
+transducer/gauresh/classloader/global-env/ 
+	package  that sets up the PDV server
+
+transducer/gauresh/classloader/testclasses/
+	package that has sample transducer code
+
+transducer/gauresh/classloader/transducer-loader/
+	contains main policy file...
+	contains packages that provide environment for the transducer..
+	These are the packages that involve actual environment code
+	edu.ucla.cens.pdc.transducer.loader.Javarunner.java - contains main that sets off the environment
+	edu.ucla.cens.pdc.transducer.loader.datastructures.StreamData.java -  Class that provides access for transducers to data streams
+	transducer have to import this package
+
+transducer/gauresh/classloader/transducer-secman/
+	contains packages that implement the security manager
+
+Running the program
+
+1. You should have ccnx compiled and installed. Go to the bin directory and run ccndstart script. Also install google protobuffers.
+2. CLASSPATH should have  ccnx.jar, mongo.jar, protobuf.jar, and the classfiles in the classloader class. you would find them in libpdc
+3. go to transducers/gauresh/classloader/src and  run
+	java -Djava.security.policy=../allPolicy.policy edu.ucla.cens.pdc.transducer.loader.JavaRunner ./edu/ucla/cens/pdc/transducer/loader/config1.xml
+4. The config1.xml is the config file that is read to figure out how the transducers are oranized and there input and output
+
+
