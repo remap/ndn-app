@@ -134,8 +134,6 @@ public class PDCLogin implements CCNFilterListener
      */
     public boolean isUserAuthenticated(String pdv_uri, String userName, String password) throws PDCEncryptionException
     {
-        //return true;
-        //* commented out until login functionality is implemented in the PDC
         try
         {
             ContentObject coIsAuthenticated = this._ccnHandle.get(
@@ -143,7 +141,7 @@ public class PDCLogin implements CCNFilterListener
                     WebClientServer.DEFAULT_TIMEOUT);
 
             //check for null response
-            if(coIsAuthenticated == null)
+            if(coIsAuthenticated == null || coIsAuthenticated.content() == null)
             {
                 Log.write("No response from PDV instance on status of login.");
                 return false;
@@ -188,6 +186,14 @@ public class PDCLogin implements CCNFilterListener
 
             //start listening before we send just in case
             this.startListening();
+            //encrypt and make the content object
+            byte[] content = EncryptionHelper.encryptAsymData(_pdvKey, this._keys.getPublic().getEncoded());
+            ContentObject coWCPubKey = ContentObject.buildContentObject(_namespace, content);
+
+            //sign data
+            coWCPubKey.sign(this._keys.getPrivate());
+
+            this._ccnHandle.put(coWCPubKey);
 
             //TODO use signed interests
 
@@ -201,6 +207,12 @@ public class PDCLogin implements CCNFilterListener
                 Log.write("No response from PDV instance to log in.");
                 throw new NoPDVResponseException();
             }
+        } catch (InvalidKeyException ex) {
+            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SignatureException ex) {
+            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (PDCEncryptionException ex) {
+            Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
         } catch (MalformedContentNameStringException ex) {
             Logger.getLogger(PDCLogin.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {

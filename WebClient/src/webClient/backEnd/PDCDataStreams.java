@@ -1,9 +1,10 @@
 package webClient.backEnd;
 
-import edu.ucla.cens.pdc.libpdc.stream.DataStream;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
@@ -12,7 +13,7 @@ import webClient.frontEnd.WebClientServer;
 import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
 import webClient.log.Log;
 import webClient.session.SessionManager;
-import webClient.ndn.test.PDCDataStreamTest;
+import webClient.session.Session;
 
 /**
  * This class grabs a list of all the data streams for a particular app.
@@ -39,7 +40,8 @@ public class PDCDataStreams
      */
     public Collection<String> getDataStreams(String userHash, String appID) throws IOException, MalformedContentNameStringException
     {
-        String pdv_uri = SessionManager.getSession(userHash).getPDV_URI();
+        Session session = SessionManager.getSession(userHash);
+        String pdv_uri = session.getPDV_URI();
 
         Log.write("Retrieving data streams " + pdv_uri + "/manage/list/datastreams/" + appID);
 
@@ -48,19 +50,19 @@ public class PDCDataStreams
 
         if(streams == null) //communication error
             return null;
+
+        byte[] content;
+        try {
+            content = session.decryptData(streams.content());
+        } catch (PDCEncryptionException ex) {
+            Logger.getLogger(PDCDataStreams.class.getName()).log(Level.SEVERE, null, ex);
+            Log.write("ERROR: " + ex.getLocalizedMessage());
+            return null;
+        }
+        CollectionTransport<String> ctDataStreams = new CollectionTransport<String>();
+        ctDataStreams.fromBSON(content);
+        return ctDataStreams.toCollection();
         
-        return decodeStreamsCO(streams);
     }
 
-    /**
-     * Decodes the returned ContentObject into a list of DataStreams
-     * @param streams - the content object returned by the PDV
-     * @return - the list of available data streams
-     */
-    private Collection<String> decodeStreamsCO(ContentObject streams)
-    {
-        CollectionTransport<String> ctDataStreams = new CollectionTransport<String>();
-        ctDataStreams.fromBSON(streams.content());
-        return ctDataStreams.toCollection();
-    }
 }

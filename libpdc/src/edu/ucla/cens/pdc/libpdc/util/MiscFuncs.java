@@ -27,6 +27,6 @@ public class MiscFuncs {
 			keyBuf.append(hex);
 		}
 
-		Log.debug(message + keyBuf.toString());
+		Log.info(message + keyBuf.toString());
 	}
 }

@@ -6,10 +6,14 @@ package edu.ucla.cens.pdc.libpdc.core;
 
 import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.Constants;
+import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
+import edu.ucla.cens.pdc.libpdc.transport.CommunicationHelper;
 import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.MiscFuncs;
@@ -39,62 +43,70 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  *
  * @author Derek Kulinski, Alexander Bonomo
  */
-public class ManageCommand extends GenericCommand
-{    
-    //ManageCommand constants
-    public static final String LIST_CMD    = "list";
-    public static final String LOGIN_CMD   = "login";
-    public static final String STR_APPS    = "apps";
-    public static final String STR_DS      = "datastreams";
-    public static final String STR_DR      = "datarecords";
-    public static final String STR_isAuth  = "isAuthenticated";
+public class ManageCommand extends GenericCommand {
+	//ManageCommand constants
+	public static final String LIST_CMD = "list";
 
-    //private member variables
-    private GlobalConfig    _globalConfig;
-    private WCCredentials   _credentials;
-    private PublicKey       _wcPubKey;
+	public static final String LOGIN_CMD = "login";
 
+	public static final String CONTENT_CMD = "getcontent";
 
-    public ManageCommand()
-    {
-        super(Constants.STR_MANAGE);
-        _globalConfig   = GlobalConfig.getInstance();
-        _credentials    = new WCCredentials();
-    }
+	public static final String STR_APPS = "apps";
 
-    /* Commands:
-     * 
-     * /list/apps
-     * /list/datastreams/<app_name>
-     * /list/datarecords/<app_name>/<datastream_name>
-     *
-     * /login/<dottedWC>/<user_hash>
-     * /login/isAuthenticated/<user_hash>
-     */
+	public static final String STR_DS = "datastreams";
 
-    @Override
-    boolean processCommand(ContentName postfix, Interest interest)
-    {
-        //make sure there is a command
-        if (postfix.count() == 0)
-        {
-            Log.error("No subcommand!");
-            return false;
+	public static final String STR_DR = "datarecords";
+
+	public static final String STR_isAuth = "isAuthenticated";
+
+	//private member variables
+	private GlobalConfig _globalConfig;
+
+	private WCCredentials _credentials;
+
+	private PublicKey _wcPubKey;
+
+	public ManageCommand()
+	{
+		super(Constants.STR_MANAGE);
+		_globalConfig = GlobalConfig.getInstance();
+		_credentials = new WCCredentials();
 	}
 
-        //check if it's the list command
-        if(postfix.stringComponent(0).equals(LIST_CMD))
-            return handleListCmd(postfix, interest);
+	/* Commands:
+	 * 
+	 * /list/apps
+	 * /list/datastreams/<app_name>
+	 * /list/datarecords/<app_name>/<datastream_name>
+	 *
+	 * /login/<dottedWC>/<user_hash>
+	 * /login/isAuthenticated/<user_hash>
+	 */
+	@Override
+	boolean processCommand(ContentName postfix, Interest interest)
+	{
+		//make sure there is a command
+		if (postfix.count() == 0) {
+			Log.error("No subcommand!");
+			return false;
+		}
 
-        //check for login command
-        if(postfix.stringComponent(0).equals(LOGIN_CMD))
-            return handleLoginCmd(postfix, interest);
+		//check if it's the list command
+		if (postfix.stringComponent(0).equals(LIST_CMD))
+			return handleListCmd(postfix, interest);
 
-        //more commands here...
+		//check for login command
+		if (postfix.stringComponent(0).equals(LOGIN_CMD))
+			return handleLoginCmd(postfix, interest);
 
-        //if we get here, the command isn't supported
-        return false;
-    }
+		if (postfix.stringComponent(0).equals(CONTENT_CMD))
+			return handleContentCmd(postfix.subname(1, postfix.count() - 1), interest);
+
+		//more commands here...
+
+		//if we get here, the command isn't supported
+		return false;
+	}
 
     /**
      * Handle list command
@@ -121,14 +133,14 @@ public class ManageCommand extends GenericCommand
             
             //send it across the network
             CollectionTransport<String> ctApps = new CollectionTransport<String>(apps);
-            byte[] content = ctApps.toBSON();
-            
+            byte[] content;
             //encrypt data
-            /*try {
+            try {
                 content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(), ctApps.toBSON());
             } catch (PDCEncryptionException ex) {
-                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-            }*/
+                Log.error(ex);
+                return false;
+            }
             
             ContentObject co = ContentObject.buildContentObject(interest.name(), content);
             try {
@@ -160,12 +172,18 @@ public class ManageCommand extends GenericCommand
             Log.info("Sending back list: " + dataStreams.toString());
             
             //send it across the network
-            CollectionTransport<String> ctDS = new CollectionTransport<String>(dataStreams);
-            ContentObject co = ContentObject.buildContentObject(interest.name(), ctDS.toBSON());
-            try {
+            try
+            {
+                CollectionTransport<String> ctDS = new CollectionTransport<String>(dataStreams);
+                byte[] content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(), ctDS.toBSON());
+                ContentObject co = ContentObject.buildContentObject(interest.name(), content);
                 _globalConfig.getCCNHandle().put(co);
+            } catch (PDCEncryptionException ex) {
+                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+                Log.error(ex.getLocalizedMessage());
             } catch (IOException ex) {
                 Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+                Log.error(ex.getLocalizedMessage());
             }
 
             //TODO use communication helper for encryption
@@ -197,9 +215,14 @@ public class ManageCommand extends GenericCommand
                 //the data records
                 Collection<String> drList = ds.getStorage().getRangeIds();
                 CollectionTransport<String> ctDRList = new CollectionTransport<String>(drList);
-                ContentObject co = ContentObject.buildContentObject(interest.name(), ctDRList.toBSON());
+                byte[] content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(), ctDRList.toBSON());
+                ContentObject co = ContentObject.buildContentObject(interest.name(), content);
                 this._globalConfig.getCCNHandle().put(co);
             } 
+            catch (PDCEncryptionException ex) {
+                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+                Log.error(ex);
+            }
             catch (IOException ex)
             {
                 Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
@@ -335,4 +358,55 @@ public class ManageCommand extends GenericCommand
 
         return true;
     }
+
+	private boolean handleContentCmd(ContentName postfix, Interest interest)
+	{
+		if (postfix.count() != 3) {
+			Log.error("Invalid arguments to getcontent command");
+			return false;
+		}
+
+		final String s_app = postfix.stringComponent(0);
+		final String s_ds = postfix.stringComponent(1);
+		final String data_id = postfix.stringComponent(2);
+
+		final Application app = _globalConfig.getApplication(s_app);
+		if (app == null) {
+			Log.error("No app " + s_app);
+			return false;
+		}
+
+		final DataStream ds = app.getDataStream(s_ds);
+		if (ds == null) {
+			Log.error("No ds " + s_ds);
+			return false;
+		}
+		try {
+			final DataRecord record = ds.getStorage().getRecord(data_id);
+			if (record == null) {
+				Log.error("No record " + data_id);
+				return false;
+			}
+
+			byte[] content = EncryptionHelper.encryptSymData(_globalConfig.getKeyManager().getWCSymmKey(), record.toBSON());
+                        ContentObject co = ContentObject.buildContentObject(interest.name(), content);
+                        _globalConfig.getCCNHandle().put(co);
+		}
+                catch (IOException ex) {
+                    Log.error(ex);
+                    return false;
+                }
+                catch (PDCEncryptionException ex) {
+                    Log.error(ex);
+                    return false;
+                }
+		catch (PDCDatabaseException ex) {
+			Log.error("Unable to fetch the data from the database: " + ex.
+					getLocalizedMessage());
+			return false;
+		}
+
+		return true;
+	}
+
 }

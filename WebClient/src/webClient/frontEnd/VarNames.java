@@ -4,7 +4,7 @@ package webClient.frontEnd;
  * This class holds the variable names of variables passed between pages
  * @author Alexander Bonomo
  */
-public class VarNames
+public interface VarNames
 {
     public static final String PDV_URI      = "pdv_uri";
     public static final String PDV_PUBKEY   = "pdv_pubkey";

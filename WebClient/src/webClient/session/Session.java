@@ -23,11 +23,7 @@ public class Session
 {
     public Session(SecretKey symmetricKey)
     {
-        //this.keyPair = Security.generateKeyPair(512);
         this.symmetricKey = symmetricKey;
-        //this.symmetricEncryptor = new DataEncryptor();
-       /// this.symmetricEncryptor.setDecryptKey(this.symmetricKey.getEncoded());
-        //this.symmetricEncryptor.setEncryptKey(this.symmetricKey.getEncoded());
     }
 
     ////////////////////////////////////////////////////////////////////////////

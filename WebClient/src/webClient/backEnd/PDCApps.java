@@ -66,8 +66,7 @@ public class PDCApps
             apps = this._ccnHandle.get(ContentName.fromURI(uri), WebClientServer.DEFAULT_TIMEOUT);
 
             //decrypt data
-            //TODO FIX this doesn't work...
-            byte[] content = apps.content();//session.decryptData(apps.content());
+            byte[] content = session.decryptData(apps.content());
 
             //convert to a collection and return
             CollectionTransport<String> ctApps = new CollectionTransport<String>();
