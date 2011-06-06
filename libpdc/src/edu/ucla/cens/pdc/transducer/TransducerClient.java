@@ -138,7 +138,7 @@ public class TransducerClient {
 		TransducerMsg.Message result;
 		DataRecord[][] data_result;
 
-		Log.debug("Sending: " + message.toString());
+		Log.debug("Sending: " + input[0][0]);
 
 //		OutputStream os = new FileOutputStream("output.dbg");
 //		message.writeTo(os);
@@ -168,9 +168,8 @@ public class TransducerClient {
 			System.err.println(br.readLine());
 		}
 
-		Log.debug("Got: " + result.toString());
-
 		data_result = Helpers.deserializeData(result);
+		Log.debug("Got: " + data_result[0][0]);
 
 		return data_result;
 	}

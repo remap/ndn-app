@@ -15,9 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,9 +58,10 @@ public class TransducerServer {
 		//XXX: this should be automatically guessed
 		final int[] record_count = new int[]{1};
 
-		TransducerClient client = new TransducerClient("NOOP", directory,
+		TransducerClient client = new TransducerClient("CounterMultiplier",
+				directory,
 				"/home/takeda/Documents/cens/ndn-app/transducers/derek/transducer-client/examples/Transducers.jar",
-				"NOOPTransducer", streams, record_count);
+				"CounterMultiplier", streams, record_count);
 
 		_transducers.add(client);
 

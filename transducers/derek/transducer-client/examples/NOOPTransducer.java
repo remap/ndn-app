@@ -12,11 +12,14 @@ import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
  */
 public class NOOPTransducer implements iTransducerClient {
 	@Override
+	public void configure(String[] args)
+	{
+	}
+
+	@Override
 	public StreamInfo[] getInputStreamList()
 	{
-		final StreamInfo[] ret = {
-			new StreamInfo("input", 1),
-		};
+		final StreamInfo[] ret = {new StreamInfo("input", 1)};
 
 		return ret;
 	}
@@ -24,9 +27,7 @@ public class NOOPTransducer implements iTransducerClient {
 	@Override
 	public StreamInfo[] getOutputStreamList()
 	{
-		final StreamInfo[] ret = {
-			new StreamInfo("output", 1),
-		};
+		final StreamInfo[] ret = {new StreamInfo("output", 1)};
 
 		return ret;
 	}

@@ -11,6 +11,8 @@ import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
  * @author Derek Kulinski
  */
 public interface iTransducerClient {
+	void configure(String[] args);
+
 	StreamInfo[] getInputStreamList();
 
 	StreamInfo[] getOutputStreamList();

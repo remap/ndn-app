@@ -121,7 +121,7 @@ public class Transducer {
 
 		assert message != null;
 
-		System.err.println("Client got: " + message);
+//		System.err.println("Client got: " + message);
 
 		final DataRecord[][] input = Helpers.deserializeData(message);
 		assert input != null;
