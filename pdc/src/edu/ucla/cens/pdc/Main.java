@@ -34,7 +34,8 @@ public class Main {
 	{
 		System.err.printf("Usage: pdc.jar database\n");
 		System.err.printf("       pdc.jar pdv2\n");
-		System.err.printf("       pdc.jar pdv1 ccnx:/path/to/pdv2/key key_digest\n");
+		System.err.printf(
+				"       pdc.jar pdv1 <receiver's authenticator> <receiver's key digest>\n");
 		System.exit(10);
 	}
 
@@ -122,8 +123,8 @@ public class Main {
 		if (args.length < 1)
 			usage();
 
-		if (args.length >= 2)
-			digest = new PublisherPublicKeyDigest(args[1]);
+		if (args.length >= 3)
+			digest = new PublisherPublicKeyDigest(args[2]);
 
 		String arg = args[0];
 
@@ -202,8 +203,10 @@ public class Main {
 
 		if (pdv_started == 1) {
 			final PDCReceiver receiver = ds.getReceivers().iterator().next();
-			if (args.length >= 3)
-				ds.setupReceiver(receiver, args[2]);
+			if (args.length >= 2)
+				ds.setupReceiver(receiver, args[1]);
+			else
+				ds.requestPull();
 		} else if (pdv_started == 2) {
 			final PDCPublisher publisher = ds.getPublisher();
 			final String authenticator = ds.setupPublisher(publisher);

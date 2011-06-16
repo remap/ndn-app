@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import org.ccnx.ccn.CCNHandle;
+import org.ccnx.ccn.ContentVerifier;
 import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.config.SystemConfiguration;
 import org.ccnx.ccn.protocol.ContentName;
@@ -259,6 +260,8 @@ public class StreamTransport {
 					append("setup");
 			co = _ccn_handle.get(name, SystemConfiguration.MEDIUM_TIMEOUT);
 
+			// No verification since trust isn't established yet
+
 			if (co != null && new String(co.content()).equals("ACK"))
 				return true;
 		}
@@ -330,6 +333,12 @@ public class StreamTransport {
 		if (object == null)
 			return;
 
+		// Checking authenticity
+		final ContentVerifier verifier = _ccn_handle.keyManager().getDefaultVerifier();
+		if (!verifier.verify(object))
+			throw new PDCTransmissionException(
+					"Got a packet which I can't verify credentials.");
+
 		try {
 			decrypted = _encryptor.decryptAsymData(object.content());
 		}
@@ -397,6 +406,13 @@ public class StreamTransport {
 		if (response == null)
 			return null;
 
+		// Checking authenticity
+		final ContentVerifier verifier = _ccn_handle.keyManager().getDefaultVerifier();
+		if (!verifier.verify(response)) {
+			Log.warning("Got a packet which I can't verify credentials.");
+			return null;
+		}
+
 		try {
 			decoded = _encryptor.decryptData(response.content());
 		}
@@ -447,6 +463,14 @@ public class StreamTransport {
 
 			if (response == null)
 				return null;
+
+			// Checking authenticity
+			final ContentVerifier verifier = _ccn_handle.keyManager().
+					getDefaultVerifier();
+			if (!verifier.verify(response)) {
+				Log.warning("Got a packet which I can't verify credentials.");
+				return null;
+			}
 
 			try {
 				record = _encryptor.decryptRecord(response.content());
