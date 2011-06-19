@@ -1,5 +1,6 @@
 package webClient.backEnd;
 
+import edu.ucla.cens.pdc.libpdc.core.ManageCommand;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import java.io.IOException;
 import java.util.Collection;
@@ -50,7 +51,7 @@ public class PDCDataStreams
 
         if(streams == null) //communication error
             return null;
-
+        
         byte[] content;
         try {
             content = session.decryptData(streams.content());
@@ -65,4 +66,37 @@ public class PDCDataStreams
         
     }
 
+    public boolean addDataStream(String userHash, String dsName)
+    {
+        try
+        {
+            Session session = SessionManager.getSession(userHash);
+            String pdv_uri = session.getPDV_URI();
+            String app = session.getCurrentApp();
+            ContentName name = ContentName.fromURI(pdv_uri + "/manage/" + ManageCommand.ADD_CMD + "/" + ManageCommand.STR_DS + "/" + app + "/" + dsName);
+            ContentObject ack = this._ccnHandle.get(name, WebClientServer.DEFAULT_TIMEOUT);
+                       
+            if (ack == null)
+            {
+                return false;
+            }
+
+            byte[] content = session.decryptData(ack.content());
+
+            if(content != null)
+                return true;
+        }
+        catch (PDCEncryptionException ex) {
+            Log.write(ex.getLocalizedMessage());
+        }
+        catch (IOException ex) {
+            Log.write(ex.getLocalizedMessage());
+        }
+        catch (MalformedContentNameStringException ex) {
+            Log.write(ex.getLocalizedMessage());
+        }
+
+        //if we get here, an exception was thrown
+        return false;
+    }
 }

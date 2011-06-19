@@ -49,6 +49,8 @@ public class WebClientServer {
 		context.addServlet(new ServletHolder(new AppServlet()), "/home/configure/*");
 		context.addServlet(new ServletHolder(new DataStreamServlet()),
 				"/home/configure/app/*");
+                context.addServlet(new ServletHolder(new AddDSServlet()),
+				"/home/configure/app/add/*");
 		context.addServlet(new ServletHolder(new ConfigureServlet()),
 				"/home/configure/app/dataStream/*");
 
@@ -56,6 +58,8 @@ public class WebClientServer {
 		context.addServlet(new ServletHolder(new AppServlet()), "/home/download/*");
 		context.addServlet(new ServletHolder(new DataStreamServlet()),
 				"/home/download/app/*");
+                context.addServlet(new ServletHolder(new AddDSServlet()),
+				"/home/download/app/add/*");
 		context.addServlet(new ServletHolder(new DownloadServlet()),
 				"/home/download/app/dataStream/*");
 

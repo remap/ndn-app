@@ -10,6 +10,7 @@ import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCTransmissionException;
+import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
@@ -45,6 +46,8 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  */
 public class ManageCommand extends GenericCommand {
 	//ManageCommand constants
+        public static final String ADD_CMD = "add";
+
 	public static final String LIST_CMD = "list";
 
 	public static final String LOGIN_CMD = "login";
@@ -74,7 +77,9 @@ public class ManageCommand extends GenericCommand {
 	}
 
 	/* Commands:
-	 * 
+	 *
+         * /add/datastreams/<app_name>/<datastream_name>
+         *
 	 * /list/apps
 	 * /list/datastreams/<app_name>
 	 * /list/datarecords/<app_name>/<datastream_name>
@@ -99,9 +104,14 @@ public class ManageCommand extends GenericCommand {
 		if (postfix.stringComponent(0).equals(LOGIN_CMD))
 			return handleLoginCmd(postfix, interest);
 
+                //check for content command
 		if (postfix.stringComponent(0).equals(CONTENT_CMD))
 			return handleContentCmd(postfix.subname(1, postfix.count() - 1), interest);
 
+                //check for add command
+                if(postfix.stringComponent(0).equals(ADD_CMD))
+                    return handleAddCmd(postfix.subname(1, postfix.count()-1), interest);
+                
 		//more commands here...
 
 		//if we get here, the command isn't supported
@@ -409,4 +419,58 @@ public class ManageCommand extends GenericCommand {
 		return true;
 	}
 
+    private boolean handleAddCmd(ContentName postfix, Interest interest)
+    {
+        //make sure there are more postifx components
+        if(postfix.count() == 0)
+        {
+            Log.error("No subcommand after add.");
+            return false;
+        }
+        
+        //if we're adding a datastream
+        if(postfix.stringComponent(0).equals(STR_DS))
+        {
+            //make sure there's enough subcomponents
+            if(postfix.count() < 3)
+            {
+                Log.error("Not enough subcomponents");
+                return false;
+            }
+
+            //get the app
+            iApplication app = this._globalConfig.getApplication(postfix.stringComponent(1));
+            if(app == null)
+            {
+                //TODO send some response back saying app DNE
+                Log.error("could not retrieve application");
+                return false;
+            }
+
+            try
+            {
+                DataStream newStream = new DataStream(this._globalConfig.getCCNHandle(), app, postfix.stringComponent(2));
+                app.addDataStream(newStream);
+                String ack = "ACK";
+                byte[] content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(),
+                        ack.getBytes());
+                ContentObject co = ContentObject.buildContentObject(interest.name(), content);
+                this._globalConfig.getCCNHandle().put(co);
+            }
+            catch (PDCEncryptionException ex) {
+                //TODO send back error message
+                Log.error(ex.getLocalizedMessage());
+                return false;
+            }
+            catch (IOException ex)
+            {
+                //TODO send back an error message
+                Log.error(ex.getLocalizedMessage());
+                return false;
+            }
+            
+            return true;
+        }
+        return false;
+    }
 }

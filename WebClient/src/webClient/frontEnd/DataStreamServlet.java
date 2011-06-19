@@ -34,7 +34,7 @@ public class DataStreamServlet extends HttpServlet
 
         this.m_userHash = request.getParameter(VarNames.USER_HASH);
 
-        //printAddRemoveStreams(request, response);
+        printAddRemoveStreams(request, response);
         printDataStreams(request, response);
     }
 
@@ -91,7 +91,9 @@ public class DataStreamServlet extends HttpServlet
             //print add stream
             response.getWriter().println("Add Stream: " + "<form method=\"post\" action=\"" + request.getRequestURL().toString() + "/add" + "\" name=pdvform>");
             response.getWriter().println("<input type=\"text\" name=\"" + VarNames.DATA_STREAM + "\">");
-            response.getWriter().println("<input type=\"submit\" value=\"Add\"> <br />");
+            response.getWriter().println("<input type=\"submit\" value=\"Add\">");
+            response.getWriter().println("<input type=\"hidden\" name=\"" + VarNames.USER_HASH
+                    + "\" value=\"" + this.m_userHash + "\" <br />");
 
             response.getWriter().print("<br /> To remove a stream click "
                     + "<a href=\"" + request.getRequestURL().toString() + "/remove?"
