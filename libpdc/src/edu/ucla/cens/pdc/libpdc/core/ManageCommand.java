@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package edu.ucla.cens.pdc.libpdc.core;
 
 import edu.ucla.cens.pdc.libpdc.Application;
@@ -15,6 +11,8 @@ import edu.ucla.cens.pdc.libpdc.iDataStream;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
 import edu.ucla.cens.pdc.libpdc.transport.CommunicationHelper;
+import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
+import edu.ucla.cens.pdc.libpdc.transport.PDCReceiver;
 import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.MiscFuncs;
@@ -54,6 +52,10 @@ public class ManageCommand extends GenericCommand {
 
 	public static final String CONTENT_CMD = "getcontent";
 
+        public static final String REMOVE_CMD = "remove";
+
+        public static final String SET_PUBLISHER_CMD = "set_publisher";
+
 	public static final String STR_APPS = "apps";
 
 	public static final String STR_DS = "datastreams";
@@ -61,6 +63,8 @@ public class ManageCommand extends GenericCommand {
 	public static final String STR_DR = "datarecords";
 
 	public static final String STR_isAuth = "isAuthenticated";
+
+        public static final String STR_Receiver = "receiver";
 
 	//private member variables
 	private GlobalConfig _globalConfig;
@@ -79,6 +83,7 @@ public class ManageCommand extends GenericCommand {
 	/* Commands:
 	 *
          * /add/datastreams/<app_name>/<datastream_name>
+         * /add/receiver/<app_name>/<datastream_name>/<receiver_uri>
          *
 	 * /list/apps
 	 * /list/datastreams/<app_name>
@@ -86,6 +91,11 @@ public class ManageCommand extends GenericCommand {
 	 *
 	 * /login/<dottedWC>/<user_hash>
 	 * /login/isAuthenticated/<user_hash>
+         *
+         * /remove/datastreams/<app_name>/<datastream_name>
+         *
+         * /set_publisher/<app_name>/<datastream_name>/<publisher_uri>
+         * 
 	 */
 	@Override
 	boolean processCommand(ContentName postfix, Interest interest)
@@ -111,7 +121,15 @@ public class ManageCommand extends GenericCommand {
                 //check for add command
                 if(postfix.stringComponent(0).equals(ADD_CMD))
                     return handleAddCmd(postfix.subname(1, postfix.count()-1), interest);
-                
+
+                //check for remove command
+                //if(postfix.stringComponent(0).equals(REMOVE_CMD))
+                //    return handleRemoveCmd(postfix.subname(1, postfix.count()-1), interest);
+
+                //check for set publisher command
+                if(postfix.stringComponent(0).equals(SET_PUBLISHER_CMD))
+                    return handleSetPubCmd(postfix.subname(1, postfix.count()-1), interest);
+
 		//more commands here...
 
 		//if we get here, the command isn't supported
@@ -321,7 +339,9 @@ public class ManageCommand extends GenericCommand {
             this._globalConfig.getCCNHandle().put(co);
 
             //send interest
-            String wcNamespace = "ccnx:" + postfix.stringComponent(1).replace('.', '/');
+            String wcNamespace = "ccnx:";
+            for(int i = 1; i < postfix.count() - 1; i++)
+                wcNamespace += "/" + postfix.stringComponent(i);
             Log.info("Sending interest for credentials: " + wcNamespace + "/login");
             ContentObject coWCPubKey = this._globalConfig.getCCNHandle().get(
                     ContentName.fromURI(wcNamespace + "/login"), SystemConfiguration.MEDIUM_TIMEOUT);
@@ -419,6 +439,17 @@ public class ManageCommand extends GenericCommand {
 		return true;
 	}
 
+    /**
+     * Handles add command
+     *
+     * @param postfix
+     * @param interest
+     * @return
+     *
+     * /add/datastreams/<app_name>/<datastream_name>
+     * /add/receiver/<app_name>/<datastream_name>/<receiver_uri>
+     *
+     */
     private boolean handleAddCmd(ContentName postfix, Interest interest)
     {
         //make sure there are more postifx components
@@ -451,16 +482,7 @@ public class ManageCommand extends GenericCommand {
             {
                 DataStream newStream = new DataStream(this._globalConfig.getCCNHandle(), app, postfix.stringComponent(2));
                 app.addDataStream(newStream);
-                String ack = "ACK";
-                byte[] content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(),
-                        ack.getBytes());
-                ContentObject co = ContentObject.buildContentObject(interest.name(), content);
-                this._globalConfig.getCCNHandle().put(co);
-            }
-            catch (PDCEncryptionException ex) {
-                //TODO send back error message
-                Log.error(ex.getLocalizedMessage());
-                return false;
+                return putAck(interest.name());
             }
             catch (IOException ex)
             {
@@ -468,9 +490,136 @@ public class ManageCommand extends GenericCommand {
                 Log.error(ex.getLocalizedMessage());
                 return false;
             }
-            
+        }
+
+        //check to see if we're adding a receiver
+        if(postfix.stringComponent(0).equals(STR_Receiver))
+        {
+            if(postfix.count() < 4)
+                return false;
+
+            //get the app and datastream
+            String appName      = postfix.stringComponent(1);
+            String dsName       = postfix.stringComponent(2);
+            iApplication app    = this._globalConfig.getApplication(appName);
+            iDataStream ds      = app.getDataStream(dsName);
+
+            //get the URI of the receiver
+            String receiver_uri = "";
+            for(int i = 3; i < postfix.count(); i++)
+                receiver_uri += "/" + postfix.stringComponent(i);
+
+            //create the receiver and add it to the datastream
+            PDCReceiver receiver;
+            try {
+                receiver = new PDCReceiver(receiver_uri);
+            } catch (MalformedContentNameStringException ex) {
+                Log.error(ex.getLocalizedMessage());
+                return false;
+            }
+            ds.addReceiver(receiver);
+
+            this.putAck(interest.name());
+
             return true;
         }
+
         return false;
+    }
+
+    /**
+     * Handles remove command
+     *
+     * @param postfix
+     * @param interest
+     * @return
+     *
+     * /remove/datastreams/<app_name>/<datastream_name>
+     *
+     */
+    /*private boolean handleRemoveCmd(ContentName postfix, Interest interest)
+    {
+        //check for no subcommands
+        if(postfix.count() == 0)
+            return false;
+
+        //check for remove datastream
+        if(postfix.stringComponent(0).equals(STR_DS))
+        {
+            //make sure enough components in postfix
+            if(postfix.count() < 3)
+                return false;
+
+            //get the application and datastream to remove
+            String appName = postfix.stringComponent(1);
+            Application app = this._globalConfig.getApplication(appName);
+            String dataStream = postfix.stringComponent(2);
+
+            //app.
+
+
+        }
+
+        return false;
+    }*/
+
+    /**
+     * handle set publisher command
+     *
+     * @param postfix
+     * @param interest
+     * @return
+     *
+     * /set_publisher/<app_name>/<datastream_name>/<publisher_uri>
+     */
+    private boolean handleSetPubCmd(ContentName postfix, Interest interest)
+    {
+        //make sure enough information is provided
+        if(postfix.count() < 3)
+            return false;
+        
+        //get the application
+        String app_name = postfix.stringComponent(0);
+        iApplication app = this._globalConfig.getApplication(app_name);
+
+        //get the datastream
+        String ds_name = postfix.stringComponent(1);
+        iDataStream ds = app.getDataStream(ds_name);
+
+        //build the publisher uri
+        String publisher_uri = "";
+        for(int i = 2; i < postfix.count(); i++)
+            publisher_uri += "/" + postfix.stringComponent(i);
+
+        //create and set the publisher
+        PDCPublisher publisher;
+        try {
+            publisher = new PDCPublisher(publisher_uri);
+        } catch (MalformedContentNameStringException ex) {
+            Log.error(ex.getLocalizedMessage());
+            return false;
+        }
+        ds.setPublisher(publisher);
+
+        this.putAck(interest.name());
+
+        return true;
+    }
+
+    private boolean putAck(ContentName name)
+    {
+        try {
+            String ack = "ACK";
+            byte[] content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(), ack.getBytes());
+            ContentObject co = ContentObject.buildContentObject(name, content);
+            this._globalConfig.getCCNHandle().put(co);
+            return true;
+        } catch (IOException ex) {
+            Log.error(ex.getLocalizedMessage());
+            return false;
+        } catch (PDCEncryptionException ex) {
+            Log.error(ex.getLocalizedMessage());
+            return false;
+        }
     }
 }

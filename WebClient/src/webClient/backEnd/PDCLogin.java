@@ -196,9 +196,8 @@ public class PDCLogin implements CCNFilterListener
             this._ccnHandle.put(coWCPubKey);
 
             //TODO use signed interests
-
-            String dottedNamespace = (WebClientServer.getNDNNamespace()).replace('/', '.');
-            String interestURI = pdv_uri + "/manage/login/" + dottedNamespace + "/" + _userHash;
+            
+            String interestURI = pdv_uri + "/manage/login/" + WebClientServer.getNDNNamespace() + "/" + _userHash;
             Log.write("Sending interest to: " + interestURI);
             ContentObject ack = this._ccnHandle.get(ContentName.fromURI(interestURI), WebClientServer.DEFAULT_TIMEOUT);
 

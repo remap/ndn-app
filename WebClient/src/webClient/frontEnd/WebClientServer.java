@@ -53,6 +53,8 @@ public class WebClientServer {
 				"/home/configure/app/add/*");
 		context.addServlet(new ServletHolder(new ConfigureServlet()),
 				"/home/configure/app/dataStream/*");
+                context.addServlet(new ServletHolder(new ConfirmConfigServlet()),
+                        "/home/configure/app/dataStream/confirm_config/*");
 
 		//download servlets
 		context.addServlet(new ServletHolder(new AppServlet()), "/home/download/*");
