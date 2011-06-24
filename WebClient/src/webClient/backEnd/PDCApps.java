@@ -82,4 +82,30 @@ public class PDCApps
         }
     }
 
+    public boolean addApp(String userHash, String appName)
+    {
+        try
+        {
+            String uri = SessionManager.getSession(userHash).getPDV_URI() + "/manage/add/apps/" + appName;
+            ContentObject ack = this._ccnHandle.get(ContentName.fromURI(uri), WebClientServer.DEFAULT_TIMEOUT);
+
+            //make sure ack is good
+            if(ack == null) return false;
+            byte[] decrypted = SessionManager.getSession(userHash).decryptData(ack.content());
+            if(decrypted == null) return false;
+
+            return true;
+            
+        } catch (PDCEncryptionException ex) {
+            Log.write(ex.getLocalizedMessage());
+        } catch (IOException ex) {
+            Log.write(ex.getLocalizedMessage());
+        } catch (MalformedContentNameStringException ex) {
+            Log.write(ex.getLocalizedMessage());
+        }
+
+        //if we get here, an exception was thrown
+        return false;
+    }
+
 }

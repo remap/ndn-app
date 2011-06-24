@@ -82,6 +82,7 @@ public class ManageCommand extends GenericCommand {
 
 	/* Commands:
 	 *
+         * /add/apps/<app_name>
          * /add/datastreams/<app_name>/<datastream_name>
          * /add/receiver/<app_name>/<datastream_name>/<receiver_uri>
          *
@@ -446,6 +447,7 @@ public class ManageCommand extends GenericCommand {
      * @param interest
      * @return
      *
+     * /add/apps/<app_name>
      * /add/datastreams/<app_name>/<datastream_name>
      * /add/receiver/<app_name>/<datastream_name>/<receiver_uri>
      *
@@ -458,7 +460,28 @@ public class ManageCommand extends GenericCommand {
             Log.error("No subcommand after add.");
             return false;
         }
-        
+
+        //if we're adding an app
+        if(postfix.stringComponent(0).equals(STR_APPS))
+        {
+            if(postfix.count() < 2)
+                return false;
+
+            String appName = postfix.stringComponent(1);
+            try
+            {
+                Application app = new Application(appName);
+                this._globalConfig.addApplication(app);
+                return this.putAck(interest.name());
+            }
+            catch (IOException ex)
+            {
+                Log.error(ex.getLocalizedMessage());
+                return false;
+            }
+
+        }
+
         //if we're adding a datastream
         if(postfix.stringComponent(0).equals(STR_DS))
         {
