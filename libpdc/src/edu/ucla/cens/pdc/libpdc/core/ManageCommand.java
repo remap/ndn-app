@@ -86,6 +86,8 @@ public class ManageCommand extends GenericCommand {
          * /add/datastreams/<app_name>/<datastream_name>
          * /add/receiver/<app_name>/<datastream_name>/<receiver_uri>
          *
+         * /getcontent/<app_name>/<ds_name>/<data_id>
+         *
 	 * /list/apps
 	 * /list/datastreams/<app_name>
 	 * /list/datarecords/<app_name>/<datastream_name>
@@ -276,7 +278,7 @@ public class ManageCommand extends GenericCommand {
      * @param interest
      * @return
      *
-     * /login/<dottedWC>/<user_hash>
+     * /login/<WC_URI>/<user_hash>
      * /login/isAuthenticated/<user_hash>
      */
     private boolean handleLoginCmd(ContentName postfix, Interest interest)
@@ -461,6 +463,10 @@ public class ManageCommand extends GenericCommand {
             return false;
         }
 
+        //get the prefix
+        int count = interest.name().count() - postfix.count() - 1;
+        ContentName prefix = interest.name().cut(count);
+
         //if we're adding an app
         if(postfix.stringComponent(0).equals(STR_APPS))
         {
@@ -472,7 +478,17 @@ public class ManageCommand extends GenericCommand {
             {
                 Application app = new Application(appName);
                 this._globalConfig.addApplication(app);
+
+                //re-list applications
+                ContentName listAppCmd = ContentName.fromURI("/" + LIST_CMD + "/" + this.STR_APPS);
+                Interest listAppInt = new Interest(prefix.append(listAppCmd));
+                handleListCmd(listAppCmd, listAppInt);
+
                 return this.putAck(interest.name());
+            }
+            catch (MalformedContentNameStringException ex) {
+                Log.error(ex.getLocalizedMessage());
+                return false;
             }
             catch (IOException ex)
             {
