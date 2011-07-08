@@ -17,6 +17,7 @@ import edu.ucla.cens.pdc.libpdc.util.Log;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.logging.Level;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.ConfigurationException;
@@ -64,12 +65,12 @@ public class Main {
 	{
 		GlobalConfig config = GlobalConfig.getInstance();
 		CCNHandle handle;
-		byte[] key = new byte[]{'t', 'e', 's', 't', 'k', 'e', 'y', 0};
-		Application n1_app = null, n2_app = null;
-		DataStream n1_ds = null, n2_ds = null;
+		Application n1_app = null, n2_app = null, n3_app = null;
+		DataStream n1_ds = null, n2_ds = null, n3_ds = null;
 
 		PDCPublisher node1 = new PDCPublisher("ccnx:/ucla.edu/apps/pdv1");
 		PDCReceiver node2 = new PDCReceiver("ccnx:/ucla.edu/apps/pdv2");
+		PDCReceiver node3 = new PDCReceiver("ccnx:/ucla.edu/apps/pdv3");
 
 		handle = config.getCCNHandle();
 
@@ -80,6 +81,7 @@ public class Main {
 			n1_ds = new DataStream(handle, n1_app, "myds", false);
 //			n1_ds.getTransport().getEncryptor().setEncryptKey(key.clone());
 			n1_ds.addReceiver(node2);
+			n1_ds.addReceiver(node3);
 
 			n1_app.addDataStream(n1_ds);
 			config.addApplication(n1_app);
@@ -93,6 +95,15 @@ public class Main {
 
 			n2_app.addDataStream(n2_ds);
 			config.addApplication(n2_app);
+		} else if (pdv_started == 3) {
+			config.setRoot(node3.uri);
+
+			n3_app = new Application("myapp");
+			n3_ds = new DataStream(handle, n3_app, "myds");
+			n3_ds.setPublisher(node1);
+
+			n3_app.addDataStream(n3_ds);
+			config.addApplication(n3_app);
 		} else if (pdv_started == -1) {
 			config.setRoot(node1.uri);
 			Application app = new Application("myapp", false);
@@ -132,6 +143,8 @@ public class Main {
 			pdv_started = 1;
 		else if (arg.equals("pdv2"))
 			pdv_started = 2;
+		else if (arg.equals("pdv3"))
+			pdv_started = 3;
 		else if (arg.equals("database"))
 			pdv_started = -1;
 		else {
@@ -142,9 +155,9 @@ public class Main {
 		if (pdv_started == 1 || pdv_started == -1) {
 			MongoDataStorage.setPrefix("pdv1_");
 			MongoConfigStorage.setPrefix("pdv1_");
-		} else if (pdv_started == 2) {
-			MongoDataStorage.setPrefix("pdv2_");
-			MongoConfigStorage.setPrefix("pdv2_");
+		} else if (pdv_started > 1) {
+			MongoDataStorage.setPrefix("pdv" + pdv_started + "_");
+			MongoConfigStorage.setPrefix("pdv" + pdv_started + "_");
 		}
 
 		GlobalConfig.setFeatures(GlobalConfig.FEAT_SHARING
@@ -186,12 +199,15 @@ public class Main {
 		case 1:
 			if (digest != null) {
 				Log.debug("Setting up pdv2's key");
-				PDCReceiver receiver = ds.getReceivers().iterator().next();
+				final Iterator<PDCReceiver> iter = ds.getReceivers().iterator();
+//				iter.next();
+				PDCReceiver receiver = iter.next();
 				receiver.setPublickeyDigest(digest);
 				ds.storeStateRecursive();
 			}
 		/* fallthrough */
 		case 2:
+		case 3:
 			final PublisherPublicKeyDigest dsdigest = ds.getTransport().getEncryptor().
 					getStreamKeyDigest();
 			Log.info("myds key: " + dsdigest.toString());
@@ -202,12 +218,16 @@ public class Main {
 		Log.debug("Listening");
 
 		if (pdv_started == 1) {
-			final PDCReceiver receiver = ds.getReceivers().iterator().next();
+			final Iterator<PDCReceiver> iter = ds.getReceivers().iterator();
+//			iter.next();
+			final PDCReceiver receiver = iter.next();
 			if (args.length >= 2)
 				ds.setupReceiver(receiver, args[1]);
-			else
+			else {
 				ds.requestPull();
-		} else if (pdv_started == 2) {
+//				Log.debug("Last record: " + ds.getLastRecordId());
+			}
+		} else if (pdv_started >= 2) {
 			final PDCPublisher publisher = ds.getPublisher();
 			final String authenticator = ds.setupPublisher(publisher);
 			Log.info("Authenticator for the publisher: " + authenticator);

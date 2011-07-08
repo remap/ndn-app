@@ -4,9 +4,9 @@
  */
 package edu.ucla.cens.pdc.libpdc.core;
 
-import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.datastructures.Authenticator;
 import edu.ucla.cens.pdc.libpdc.Constants;
+import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
@@ -242,6 +242,33 @@ public class StreamControlCommands extends StreamCommand {
 		return false;
 	}
 
+	boolean processLast(DataStream ds, Interest interest)
+	{
+		final GlobalConfig config = GlobalConfig.getInstance();
+		final PublisherPublicKeyDigest publisher = ds.getTransport().getEncryptor().
+				getStreamKeyDigest();
+		String last;
+
+		try {
+
+			last = ds.getStorage().getLastEntry();
+
+			//in case of no data, send empty response
+			if (last == null)
+				last = "";
+
+			return CommunicationHelper.publishUnencryptedData(config.getCCNHandle(),
+					interest, publisher, last.getBytes(), 1);
+		}
+		catch (PDCTransmissionException ex) {
+			Log.error("Unable to send data: " + ex.getLocalizedMessage());
+		}
+		catch (PDCDatabaseException ex) {
+			Log.error("Unable to access the data: " + ex.getLocalizedMessage());
+		}
+		return false;
+	}
+
 	@Override
 	boolean processCommand(DataStream ds, ContentName postfix, Interest interest)
 	{
@@ -270,6 +297,8 @@ public class StreamControlCommands extends StreamCommand {
 				return ds.getTransport().pullInterestHandler(interest);
 			else if (command.equals("list"))
 				return ds.getTransport().publishRecordList(interest, remainder);
+			else if (command.equals("last"))
+				return processLast(ds, interest);
 			else {
 				Log.info("Invalid request: " + interest.name().toURIString());
 

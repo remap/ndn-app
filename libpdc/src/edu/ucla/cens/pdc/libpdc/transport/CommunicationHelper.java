@@ -20,10 +20,10 @@ import org.ccnx.ccn.protocol.SignedInfo;
  * @author Derek Kulinski
  */
 public class CommunicationHelper {
-	public static boolean publishEncryptedData(CCNHandle handle,
-					Interest interest, PublisherPublicKeyDigest sender_identity,
-					byte[] data, int freshness)
-					throws PDCTransmissionException
+	public static boolean publishData(CCNHandle handle,
+			Interest interest, PublisherPublicKeyDigest sender_identity, byte[] data,
+			int freshness, SignedInfo.ContentType type)
+			throws PDCTransmissionException
 	{
 		GlobalConfig config;
 		SignedInfo si;
@@ -47,8 +47,7 @@ public class CommunicationHelper {
 		assert key_locator != null;
 
 		try {
-			si = new SignedInfo(sender_identity, SignedInfo.ContentType.ENCR,
-							key_locator, freshness, null);
+			si = new SignedInfo(sender_identity, type, key_locator, freshness, null);
 			co = new ContentObject(interest.name(), si, data, signing_key);
 
 			handle.put(co);
@@ -58,5 +57,23 @@ public class CommunicationHelper {
 		catch (Exception ex) {
 			throw new PDCTransmissionException("Error while publishing data", ex);
 		}
+
+	}
+
+	public static boolean publishUnencryptedData(CCNHandle handle,
+			Interest interest, PublisherPublicKeyDigest sender_identity, byte[] data,
+			int freshness)
+			throws PDCTransmissionException
+	{
+		return publishData(handle, interest, sender_identity, data, freshness,
+				SignedInfo.ContentType.DATA);
+	}
+
+	public static boolean publishEncryptedData(CCNHandle handle, Interest interest,
+			PublisherPublicKeyDigest sender_identity, byte[] data, int freshness)
+			throws PDCTransmissionException
+	{
+		return publishData(handle, interest, sender_identity, data, freshness,
+				SignedInfo.ContentType.ENCR);
 	}
 }

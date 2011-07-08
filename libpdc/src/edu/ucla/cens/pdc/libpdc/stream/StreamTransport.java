@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import org.bson.types.ObjectId;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.ContentVerifier;
 import org.ccnx.ccn.KeyManager;
@@ -500,6 +501,8 @@ public class StreamTransport {
 		pull_uri = _stream.getReceiverStreamURI(receiver);
 		pull_uri = pull_uri.append(Constants.STR_CONTROL).append("pull");
 
+		Log.debug("Requesting: " + pull_uri.toURIString());
+
 		_ccn_handle.get(pull_uri, SystemConfiguration.LONG_TIMEOUT);
 	}
 
@@ -563,6 +566,68 @@ public class StreamTransport {
 		}
 
 		return true;
+	}
+
+	String getLowestRecordId()
+	{
+		String smallest = null;
+
+		synchronized (_stream._receivers) {
+			for (PDCReceiver receiver : _stream._receivers) {
+				final String result = getLowestRecordId(receiver);
+
+				// no response or no data -> return no data
+				// since that's smallest value
+				if (result == null || result.equals(""))
+					return "";
+
+				// no value assigned, or current value is smaller
+				if (smallest == null || result.compareTo(smallest) < 0)
+					smallest = result;
+			}
+		}
+
+		return smallest == null ? "" : smallest;
+	}
+
+	String getLowestRecordId(PDCReceiver receiver)
+	{
+		ContentName uri;
+
+		try {
+			uri = _stream.getReceiverStreamURI(receiver);
+			uri = uri.append(Constants.STR_CONTROL).append("last");
+
+			Log.debug("Requesting: " + uri.toURIString());
+
+			final ContentObject co = _ccn_handle.get(uri,
+					SystemConfiguration.MEDIUM_TIMEOUT);
+
+			if (co == null)
+				return null;
+
+			final byte[] content = co.content();
+
+			// special case: the receiver has no data
+			if (content.length == 0)
+				return "";
+
+			final String id = new String(content);
+			if (!ObjectId.isValid(id)) {
+				Log.error("Got invalid id: " + id + " from: "
+						+ receiver.uri.toURIString());
+				return "";
+			}
+
+			return id;
+		}
+		catch (IOException ex) {
+			Log.warning("No response from " + receiver.uri.toURIString());
+			return null;
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error("Unable to construct uri", ex);
+		}
 	}
 
 	/**

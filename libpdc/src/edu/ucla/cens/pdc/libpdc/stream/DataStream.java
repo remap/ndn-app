@@ -286,6 +286,16 @@ public class DataStream implements iDataStream, iState {
 		}
 	}
 
+	public String getLowestRecordId()
+	{
+		return _transport.getLowestRecordId();
+	}
+
+	public String getLowestRecordId(PDCReceiver receiver)
+	{
+		return _transport.getLowestRecordId(receiver);
+	}
+
 	public boolean fetchNewData()
 			throws PDCTransmissionException
 	{
