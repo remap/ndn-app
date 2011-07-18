@@ -201,16 +201,6 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 		return digest;
 	}
 
-	public SecretKey getWCSymmKey() //TODO will want to add userID parameter
-	{
-		return this._WCSymmKey;
-	}
-
-	public void addWCSymmKey(SecretKey key) //TODO will want to add userID parameter
-	{
-		this._WCSymmKey = key;
-	}
-
 	public KeyPair getKeysForWC()
 	{
 		return this._keysForWC;
@@ -459,9 +449,6 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 	private Set<byte[]> _private_key_digests = new HashSet<byte[]>();
 
 	private final boolean _restore;
-
-	//TODO will eventually want a map of users to keys
-	private SecretKey _WCSymmKey;
 
 	private final KeyPair _keysForWC = generateKeys();
 }

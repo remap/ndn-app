@@ -14,7 +14,6 @@ import edu.ucla.cens.pdc.libpdc.iApplication;
 import edu.ucla.cens.pdc.libpdc.iDataStream;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
 import edu.ucla.cens.pdc.libpdc.transport.CollectionTransport;
-import edu.ucla.cens.pdc.libpdc.transport.CommunicationHelper;
 import edu.ucla.cens.pdc.libpdc.util.EncryptionHelper;
 import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.MiscFuncs;
@@ -45,41 +44,20 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski, Alexander Bonomo
  */
 public class ManageCommand extends GenericCommand {
-	//ManageCommand constants
-        public static final String ADD_CMD = "add";
-
-	public static final String LIST_CMD = "list";
-
-	public static final String LOGIN_CMD = "login";
-
-	public static final String CONTENT_CMD = "getcontent";
-
-	public static final String STR_APPS = "apps";
-
-	public static final String STR_DS = "datastreams";
-
-	public static final String STR_DR = "datarecords";
-
-	public static final String STR_isAuth = "isAuthenticated";
-
-	//private member variables
-	private GlobalConfig _globalConfig;
-
-	private WCCredentials _credentials;
-
-	private PublicKey _wcPubKey;
-
-	public ManageCommand()
+	public ManageCommand(PDCWebClient web_client)
 	{
 		super(Constants.STR_MANAGE);
+
+		assert web_client != null;
+		_web_client = web_client;
 		_globalConfig = GlobalConfig.getInstance();
 		_credentials = new WCCredentials();
 	}
 
 	/* Commands:
 	 *
-         * /add/datastreams/<app_name>/<datastream_name>
-         *
+	 * /add/datastreams/<app_name>/<datastream_name>
+	 *
 	 * /list/apps
 	 * /list/datastreams/<app_name>
 	 * /list/datarecords/<app_name>/<datastream_name>
@@ -96,278 +74,245 @@ public class ManageCommand extends GenericCommand {
 			return false;
 		}
 
-		//check if it's the list command
-		if (postfix.stringComponent(0).equals(LIST_CMD))
-			return handleListCmd(postfix, interest);
+		try {
+			final String command = postfix.stringComponent(0);
+			final ContentName args = MiscFuncs.shift(postfix);
 
-		//check for login command
-		if (postfix.stringComponent(0).equals(LOGIN_CMD))
-			return handleLoginCmd(postfix, interest);
+			//check if it's the list command
+			if (command.equals(LIST_CMD))
+				return handleListCmd(args, interest);
 
-                //check for content command
-		if (postfix.stringComponent(0).equals(CONTENT_CMD))
-			return handleContentCmd(postfix.subname(1, postfix.count() - 1), interest);
+			//check for login command
+			if (command.equals(LOGIN_CMD))
+				return handleLoginCmd(postfix, interest);
 
-                //check for add command
-                if(postfix.stringComponent(0).equals(ADD_CMD))
-                    return handleAddCmd(postfix.subname(1, postfix.count()-1), interest);
-                
-		//more commands here...
+			//check for content command
+			if (command.equals(CONTENT_CMD))
+				return handleContentCmd(postfix.subname(1, postfix.count() - 1),
+						interest);
+
+			//check for add command
+			if (command.equals(ADD_CMD))
+				return handleAddCmd(postfix.subname(1, postfix.count() - 1), interest);
+		}
+		catch (PDCTransmissionException ex) {
+			Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		catch (PDCEncryptionException ex) {
+			Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+		}
 
 		//if we get here, the command isn't supported
 		return false;
 	}
 
-    /**
-     * Handle list command
-     * @param postfix
-     * @param interest
-     * @return
-     */
-    private boolean handleListCmd(ContentName postfix, Interest interest)
-    {
-        //make sure there are enough components in the postfix
-        if(postfix.count() < 2)
-        {
-            Log.error("No subcommand after /list/");
-            return false;
-        }
+	/**
+	 * Handle list command
+	 * @param postfix
+	 * @param interest
+	 * @return
+	 */
+	private boolean handleListCmd(ContentName postfix, Interest interest)
+			throws PDCTransmissionException, PDCEncryptionException
+	{
+		//make sure there are enough components in the postfix
+		if (postfix.count() < 1) {
+			Log.error("No subcommand after /list/");
+			return false;
+		}
 
-        //apps
-        if(postfix.stringComponent(1).equals(STR_APPS))
-        {
-            Log.info("Received list apps command");
-            
-            //get the app list
-            Set<String> apps = _globalConfig.getAppList();
-            
-            //send it across the network
-            CollectionTransport<String> ctApps = new CollectionTransport<String>(apps);
-            byte[] content;
-            //encrypt data
-            try {
-                content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(), ctApps.toBSON());
-            } catch (PDCEncryptionException ex) {
-                Log.error(ex);
-                return false;
-            }
-            
-            ContentObject co = ContentObject.buildContentObject(interest.name(), content);
-            try {
-                _globalConfig.getCCNHandle().put(co);
-            } catch (IOException ex) {
-                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-            }
+		//apps
+		if (postfix.stringComponent(0).equals(STR_APPS)) {
+			Log.info("Received list apps command");
 
-            return true;
-        }
+			//get the app list
+			Set<String> apps = _globalConfig.getAppList();
 
-        //make sure there are enough components in the postfix for datastreams
-        if(postfix.count() < 3)
-        {
-            Log.error("Cannot perform list command. Not enough arguments.");
-            return false;
-        }
+			//send it across the network
+			CollectionTransport<String> ctApps = new CollectionTransport<String>(apps);
+			_web_client.sendEncryptedResponse(interest, ctApps);
+			return true;
+		}
 
-        //datastreams
-        if(postfix.stringComponent(1).equals(STR_DS))
-        {
-            Log.info("Received list datastreams command for " + postfix.stringComponent(2));
-            
-            //get the list of data streams
-            String appName          = postfix.stringComponent(2);
-            Application app         = _globalConfig.getApplication(appName);
-            Set<String> dataStreams = app.getDataStreamList();
+		//make sure there are enough components in the postfix for datastreams
+		if (postfix.count() < 2) {
+			Log.error("Cannot perform list command. Not enough arguments.");
+			return false;
+		}
 
-            Log.info("Sending back list: " + dataStreams.toString());
-            
-            //send it across the network
-            try
-            {
-                CollectionTransport<String> ctDS = new CollectionTransport<String>(dataStreams);
-                byte[] content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(), ctDS.toBSON());
-                ContentObject co = ContentObject.buildContentObject(interest.name(), content);
-                _globalConfig.getCCNHandle().put(co);
-            } catch (PDCEncryptionException ex) {
-                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-                Log.error(ex.getLocalizedMessage());
-            } catch (IOException ex) {
-                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-                Log.error(ex.getLocalizedMessage());
-            }
+		//datastreams
+		if (postfix.stringComponent(0).equals(STR_DS)) {
+			Log.info("Received list datastreams command for " + postfix.
+					stringComponent(1));
 
-            //TODO use communication helper for encryption
+			//get the list of data streams
+			String appName = postfix.stringComponent(1);
+			Application app = _globalConfig.getApplication(appName);
+			Set<String> dataStreams = app.getDataStreamList();
 
-            return true;
-        }
+			Log.info("Sending back list: " + dataStreams.toString());
 
-        //datarecords
-        if(postfix.stringComponent(1).equals(STR_DR))
-        {
-            //make sure there are enough components in the postfix
-            if(postfix.count() < 4)
-            {
-                Log.error("Cannot perform list command. Not enough arguments.");
-                return false;
-            }
+			//send it across the network
+			CollectionTransport<String> ctDS = new CollectionTransport<String>(
+					dataStreams);
 
-            Log.info("Received list data record command.");
-            
-            //grab arguments needed to list the data records
-            String appName  = postfix.stringComponent(2);
-            String dsName   = postfix.stringComponent(3);
-            Application app = this._globalConfig.getApplication(appName);
-            iDataStream ds  = app.getDataStream(dsName);
+			_web_client.sendEncryptedResponse(interest, ctDS);
+			return true;
+		}
 
-            //get the data record list and publish it
-            try
-            {
-                //the data records
-                Collection<String> drList = ds.getStorage().getRangeIds();
-                CollectionTransport<String> ctDRList = new CollectionTransport<String>(drList);
-                byte[] content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(), ctDRList.toBSON());
-                ContentObject co = ContentObject.buildContentObject(interest.name(), content);
-                this._globalConfig.getCCNHandle().put(co);
-            } 
-            catch (PDCEncryptionException ex) {
-                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-                Log.error(ex);
-            }
-            catch (IOException ex)
-            {
-                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-                Log.error(ex);
-            }
-            catch (PDCDatabaseException ex)
-            {
-                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-                Log.error(ex);
-            }
+		//datarecords
+		if (postfix.stringComponent(0).equals(STR_DR)) {
+			//make sure there are enough components in the postfix
+			if (postfix.count() < 3) {
+				Log.error("Cannot perform list command. Not enough arguments.");
+				return false;
+			}
 
-            return true;
-        }
+			Log.info("Received list data record command.");
 
-        //if we get here, the command isn't supported
-        return false;
-    }
+			//grab arguments needed to list the data records
+			String appName = postfix.stringComponent(1);
+			String dsName = postfix.stringComponent(2);
+			Application app = this._globalConfig.getApplication(appName);
+			iDataStream ds = app.getDataStream(dsName);
 
-    /**
-     * Handle login commands
-     * @param postfix
-     * @param interest
-     * @return
-     *
-     * /login/<dottedWC>/<user_hash>
-     * /login/isAuthenticated/<user_hash>
-     */
-    private boolean handleLoginCmd(ContentName postfix, Interest interest)
-    {
-        //make sure there are enough components in the postfix
-        if(postfix.count() < 2)
-        {
-            Log.error("No subcommand after /login/");
-            return false;
-        }
+			//get the data record list and publish it
+			Collection<String> drList;
+			try {
+				//the data records
+				drList = ds.getStorage().getRangeIds();
+			}
+			catch (PDCDatabaseException ex) {
+				Log.error(ex);
+				return false;
+			}
 
-        if(postfix.stringComponent(1).equals(STR_isAuth))
-        {
-            try
-            {
-                if(this._wcPubKey == null)
-                {
-                    try {
-                        Thread.sleep(SystemConfiguration.MEDIUM_TIMEOUT);
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                if(this._wcPubKey == null)
-                {
-                    Log.error("WC public key not yet known.");
-                    return false;
-                }
-                //TODO use CommunicationHelper
-                //AuthenticationResponse ar = new AuthenticationResponse(true);
-                SecretKey symmKey = this._globalConfig.getKeyManager().getWCSymmKey();
-                if(symmKey == null)
-                {
-                    symmKey = EncryptionHelper.generateSymKey();
-                    this._globalConfig.getKeyManager().addWCSymmKey(symmKey);
-                }
+			CollectionTransport<String> ctDRList = new CollectionTransport<String>(
+					drList);
 
-                MiscFuncs.printKeyToLog(symmKey, "Symmetric key: ");
-                byte[] content = EncryptionHelper.wrapKey(_wcPubKey, symmKey);
-                ContentObject co = ContentObject.buildContentObject(interest.name(), content);//symmKey.getEncoded());
+			_web_client.sendEncryptedResponse(interest, ctDRList);
+			return true;
+		}
 
-                this._globalConfig.getCCNHandle().put(co);
-                
+		//if we get here, the command isn't supported
+		return false;
+	}
 
-                return true;
-            } catch (IOException ex) {
-                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (PDCEncryptionException ex) {
-                Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-            }
+	/**
+	 * Handle login commands
+	 * @param postfix
+	 * @param interest
+	 * @return
+	 *
+	 * /login/<dottedWC>/<user_hash>
+	 * /login/isAuthenticated/<user_hash>
+	 */
+	private boolean handleLoginCmd(ContentName postfix, Interest interest)
+	{
+		//make sure there are enough components in the postfix
+		if (postfix.count() < 2) {
+			Log.error("No subcommand after /login/");
+			return false;
+		}
 
-            return false;
-        }
+		if (postfix.stringComponent(1).equals(STR_isAuth)) {
+			try {
+				if (this._wcPubKey == null)
+					try {
+						Thread.sleep(SystemConfiguration.MEDIUM_TIMEOUT);
+					}
+					catch (InterruptedException ex) {
+						Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE,
+								null, ex);
+					}
+				if (this._wcPubKey == null) {
+					Log.error("WC public key not yet known.");
+					return false;
+				}
+				//TODO use CommunicationHelper
+				//AuthenticationResponse ar = new AuthenticationResponse(true);
+				SecretKey symmKey = _web_client.getWCSymmKey();
+				if (symmKey == null) {
+					symmKey = EncryptionHelper.generateSymKey();
+					_web_client.setWCSymmKey(symmKey);
+				}
 
-        //otherwise the next string component will have the dotted WC namespace
-        try 
-        {
-            //send ack
-            String ack = "ACK";
-            ContentObject co = ContentObject.buildContentObject(interest.name(), ack.getBytes());
-            this._globalConfig.getCCNHandle().put(co);
+				MiscFuncs.printKeyToLog(symmKey, "Symmetric key: ");
+				byte[] content = EncryptionHelper.wrapKey(_wcPubKey, symmKey);
+				ContentObject co = ContentObject.buildContentObject(interest.name(),
+						content);//symmKey.getEncoded());
 
-            //send interest
-            String wcNamespace = "ccnx:" + postfix.stringComponent(1).replace('.', '/');
-            Log.info("Sending interest for credentials: " + wcNamespace + "/login");
-            ContentObject coWCPubKey = this._globalConfig.getCCNHandle().get(
-                    ContentName.fromURI(wcNamespace + "/login"), SystemConfiguration.MEDIUM_TIMEOUT);
+				this._globalConfig.getCCNHandle().put(co);
 
-            if(coWCPubKey == null)
-            {
-                Log.warning("No credentials received from Web Client.");
-                return false;
-            }
 
-            byte[] wcPubKeyBytes = EncryptionHelper.decryptAsymData(this._globalConfig.getKeyManager().getKeysForWC().getPrivate(), coWCPubKey.content());
-            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(wcPubKeyBytes);
-            KeyFactory keyFactory = KeyFactory.getInstance(UserConfiguration.defaultKeyAlgorithm());
-            this._wcPubKey = keyFactory.generatePublic(pubKeySpec);
-            
-            //_credentials.fromBSON(coWCPubKey.content());
-            Log.info("WC PublicKey Received: " + _wcPubKey);
-        } 
-        catch (InvalidKeySpecException ex)
-        {
-            Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-            Log.error(ex.getLocalizedMessage());
-        }
-        catch (NoSuchAlgorithmException ex)
-        {
-            Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-            Log.error(ex.getLocalizedMessage());
-        }        
-        catch (PDCEncryptionException ex)
-        {
-            Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-            Log.error(ex.getLocalizedMessage());
-        }
-        catch (MalformedContentNameStringException ex)
-        {
-            Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-            Log.error(ex.getLocalizedMessage());
-        }
-        catch (IOException ex)
-        {
-            Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
-            Log.error(ex.getLocalizedMessage());
-        }
+				return true;
+			}
+			catch (IOException ex) {
+				Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null,
+						ex);
+			}
+			catch (PDCEncryptionException ex) {
+				Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null,
+						ex);
+			}
 
-        return true;
-    }
+			return false;
+		}
+
+		//otherwise the next string component will have the dotted WC namespace
+		try {
+			//send ack
+			String ack = "ACK";
+			ContentObject co = ContentObject.buildContentObject(interest.name(), ack.
+					getBytes());
+			this._globalConfig.getCCNHandle().put(co);
+
+			//send interest
+			String wcNamespace = "ccnx:"
+					+ postfix.stringComponent(1).replace('.', '/');
+			Log.info("Sending interest for credentials: " + wcNamespace + "/login");
+			ContentObject coWCPubKey = this._globalConfig.getCCNHandle().get(
+					ContentName.fromURI(wcNamespace + "/login"),
+					SystemConfiguration.MEDIUM_TIMEOUT);
+
+			if (coWCPubKey == null) {
+				Log.warning("No credentials received from Web Client.");
+				return false;
+			}
+
+			byte[] wcPubKeyBytes = EncryptionHelper.decryptAsymData(this._globalConfig.
+					getKeyManager().getKeysForWC().getPrivate(), coWCPubKey.content());
+			X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(wcPubKeyBytes);
+			KeyFactory keyFactory = KeyFactory.getInstance(UserConfiguration.
+					defaultKeyAlgorithm());
+			this._wcPubKey = keyFactory.generatePublic(pubKeySpec);
+
+			//_credentials.fromBSON(coWCPubKey.content());
+			Log.info("WC PublicKey Received: " + _wcPubKey);
+		}
+		catch (InvalidKeySpecException ex) {
+			Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+			Log.error(ex.getLocalizedMessage());
+		}
+		catch (NoSuchAlgorithmException ex) {
+			Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+			Log.error(ex.getLocalizedMessage());
+		}
+		catch (PDCEncryptionException ex) {
+			Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+			Log.error(ex.getLocalizedMessage());
+		}
+		catch (MalformedContentNameStringException ex) {
+			Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+			Log.error(ex.getLocalizedMessage());
+		}
+		catch (IOException ex) {
+			Logger.getLogger(ManageCommand.class.getName()).log(Level.SEVERE, null, ex);
+			Log.error(ex.getLocalizedMessage());
+		}
+
+		return true;
+	}
 
 	private boolean handleContentCmd(ContentName postfix, Interest interest)
 	{
@@ -398,18 +343,20 @@ public class ManageCommand extends GenericCommand {
 				return false;
 			}
 
-			byte[] content = EncryptionHelper.encryptSymData(_globalConfig.getKeyManager().getWCSymmKey(), record.toBSON());
-                        ContentObject co = ContentObject.buildContentObject(interest.name(), content);
-                        _globalConfig.getCCNHandle().put(co);
+			byte[] content = EncryptionHelper.encryptSymData(
+					_web_client.getWCSymmKey(), record.toBSON());
+			ContentObject co = ContentObject.buildContentObject(interest.name(),
+					content);
+			_globalConfig.getCCNHandle().put(co);
 		}
-                catch (IOException ex) {
-                    Log.error(ex);
-                    return false;
-                }
-                catch (PDCEncryptionException ex) {
-                    Log.error(ex);
-                    return false;
-                }
+		catch (IOException ex) {
+			Log.error(ex);
+			return false;
+		}
+		catch (PDCEncryptionException ex) {
+			Log.error(ex);
+			return false;
+		}
 		catch (PDCDatabaseException ex) {
 			Log.error("Unable to fetch the data from the database: " + ex.
 					getLocalizedMessage());
@@ -419,58 +366,81 @@ public class ManageCommand extends GenericCommand {
 		return true;
 	}
 
-    private boolean handleAddCmd(ContentName postfix, Interest interest)
-    {
-        //make sure there are more postifx components
-        if(postfix.count() == 0)
-        {
-            Log.error("No subcommand after add.");
-            return false;
-        }
-        
-        //if we're adding a datastream
-        if(postfix.stringComponent(0).equals(STR_DS))
-        {
-            //make sure there's enough subcomponents
-            if(postfix.count() < 3)
-            {
-                Log.error("Not enough subcomponents");
-                return false;
-            }
+	private boolean handleAddCmd(ContentName postfix, Interest interest)
+	{
+		//make sure there are more postifx components
+		if (postfix.count() == 0) {
+			Log.error("No subcommand after add.");
+			return false;
+		}
 
-            //get the app
-            iApplication app = this._globalConfig.getApplication(postfix.stringComponent(1));
-            if(app == null)
-            {
-                //TODO send some response back saying app DNE
-                Log.error("could not retrieve application");
-                return false;
-            }
+		//if we're adding a datastream
+		if (postfix.stringComponent(0).equals(STR_DS)) {
+			//make sure there's enough subcomponents
+			if (postfix.count() < 3) {
+				Log.error("Not enough subcomponents");
+				return false;
+			}
 
-            try
-            {
-                DataStream newStream = new DataStream(this._globalConfig.getCCNHandle(), app, postfix.stringComponent(2));
-                app.addDataStream(newStream);
-                String ack = "ACK";
-                byte[] content = EncryptionHelper.encryptSymData(this._globalConfig.getKeyManager().getWCSymmKey(),
-                        ack.getBytes());
-                ContentObject co = ContentObject.buildContentObject(interest.name(), content);
-                this._globalConfig.getCCNHandle().put(co);
-            }
-            catch (PDCEncryptionException ex) {
-                //TODO send back error message
-                Log.error(ex.getLocalizedMessage());
-                return false;
-            }
-            catch (IOException ex)
-            {
-                //TODO send back an error message
-                Log.error(ex.getLocalizedMessage());
-                return false;
-            }
-            
-            return true;
-        }
-        return false;
-    }
+			//get the app
+			iApplication app = this._globalConfig.getApplication(postfix.
+					stringComponent(1));
+			if (app == null) {
+				//TODO send some response back saying app DNE
+				Log.error("could not retrieve application");
+				return false;
+			}
+
+			try {
+				DataStream newStream = new DataStream(this._globalConfig.getCCNHandle(),
+						app, postfix.stringComponent(2));
+				app.addDataStream(newStream);
+				String ack = "ACK";
+				byte[] content = EncryptionHelper.encryptSymData(_web_client.
+						getWCSymmKey(), ack.getBytes());
+				ContentObject co = ContentObject.buildContentObject(interest.name(),
+						content);
+				this._globalConfig.getCCNHandle().put(co);
+			}
+			catch (PDCEncryptionException ex) {
+				//TODO send back error message
+				Log.error(ex.getLocalizedMessage());
+				return false;
+			}
+			catch (IOException ex) {
+				//TODO send back an error message
+				Log.error(ex.getLocalizedMessage());
+				return false;
+			}
+
+			return true;
+		}
+		return false;
+	}
+
+	//ManageCommand constants
+	public static final String ADD_CMD = "add";
+
+	public static final String LIST_CMD = "list";
+
+	public static final String LOGIN_CMD = "login";
+
+	public static final String CONTENT_CMD = "getcontent";
+
+	public static final String STR_APPS = "apps";
+
+	public static final String STR_DS = "datastreams";
+
+	public static final String STR_DR = "datarecords";
+
+	public static final String STR_isAuth = "isAuthenticated";
+
+	//private member variables
+	private GlobalConfig _globalConfig;
+
+	private final PDCWebClient _web_client;
+
+	private WCCredentials _credentials;
+
+	private PublicKey _wcPubKey;
 }

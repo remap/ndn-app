@@ -5,6 +5,7 @@
 package edu.ucla.cens.pdc.libpdc.util;
 
 import java.security.Key;
+import org.ccnx.ccn.protocol.ContentName;
 
 /**
  *
@@ -28,5 +29,10 @@ public class MiscFuncs {
 		}
 
 		Log.info(message + keyBuf.toString());
+	}
+
+	public static ContentName shift(ContentName name)
+	{
+		return name.subname(1, name.count() - 1);
 	}
 }
