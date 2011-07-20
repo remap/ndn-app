@@ -2,10 +2,10 @@ package webClient.backEnd;
 
 import edu.ucla.cens.pdc.libpdc.core.ManageCommand;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
-import java.io.IOException;
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.IOException;
+import java.util.Collection;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
@@ -93,6 +93,67 @@ public class PDCDataStreams
             Log.write(ex.getLocalizedMessage());
         }
         catch (MalformedContentNameStringException ex) {
+            Log.write(ex.getLocalizedMessage());
+        }
+
+        //if we get here, an exception was thrown
+        return false;
+    }
+
+    public boolean setPublisher(String userHash, String publisherURI)
+    {
+        try 
+        {
+            Session session = SessionManager.getSession(userHash);
+            //get the app name and datastream name
+            String appName = session.getCurrentApp();
+            String dsName = session.getCurrentDataStream();
+            String uri = session.getPDV_URI() + "/manage/" + ManageCommand.SET_PUBLISHER_CMD + "/" + appName + "/" + dsName + "/" + publisherURI;
+            ContentName name = ContentName.fromURI(uri);
+            ContentObject ack = this._ccnHandle.get(name, WebClientServer.DEFAULT_TIMEOUT);
+
+            //make sure ack is valid
+            if(ack == null) return false;
+            byte[] decryptedAck = session.decryptData(ack.content());
+            if(decryptedAck == null) return false;
+
+            return true;
+        }
+        catch (PDCEncryptionException ex) {
+            Logger.getLogger(PDCDataStreams.class.getName()).log(Level.SEVERE, null, ex);
+        }        catch (IOException ex) {
+            Log.write(ex.getLocalizedMessage());
+        }
+        catch (MalformedContentNameStringException ex) {
+            Log.write(ex.getLocalizedMessage());
+        }
+
+        //if we get here, an exception was thrown
+        return false;
+    }
+
+    public boolean addReceiver(String userHash, String receiverURI)
+    {
+        try {
+            Session session = SessionManager.getSession(userHash);
+            //get the app name and ds name
+            String app = session.getCurrentApp();
+            String ds = session.getCurrentDataStream();
+            String uri = session.getPDV_URI() + "/manage/add/receiver/" + app + "/" + ds + "/" + receiverURI;
+            ContentName name = ContentName.fromURI(uri);
+            ContentObject ack = this._ccnHandle.get(name, WebClientServer.DEFAULT_TIMEOUT);
+
+            //make sure ack is good
+            if(ack == null) return false;
+            byte[] ackBytes = session.decryptData(ack.content());
+            if(ackBytes == null) return false;
+
+            return true;
+        } catch (PDCEncryptionException ex) {
+            Log.write(ex.getLocalizedMessage());
+        } catch (IOException ex) {
+            Log.write(ex.getLocalizedMessage());
+        } catch (MalformedContentNameStringException ex) {
             Log.write(ex.getLocalizedMessage());
         }
 

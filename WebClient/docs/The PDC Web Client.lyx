@@ -1,0 +1,798 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing double
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+The PDC Web Client
+\end_layout
+
+\begin_layout Author
+Alexander Bonomo
+\end_layout
+
+\begin_layout Abstract
+This document describes and outlines the web client for the Personal Data
+ Cloud.
+ A user's PDC
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "PDC"
+description "Personal Data Cloud"
+
+\end_inset
+
+ is composed of one or more secure repositories of data, also known as Personal
+ Data Vaults (PDVs).
+ The PDC runs on top of NDN
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "NDN"
+description "Named Data Networking"
+
+\end_inset
+
+.
+ This document also provides example use cases for using the web client.
+ It describes in detail both how the web client serves web pages to the
+ user on the front end, as well as how it communicates with the PDC via
+ NDN on the back end.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset nomencl_print
+LatexCommand printnomenclature
+set_width "none"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+The PDC Web Client allows a user to connect to a particular PDV instance.
+ Once authenticated and connected to the PDV instance, a user can use the
+ web client to download or upload data from the PDV.
+ Perhaps more importantly, the user can also use the web client to manage
+ their data and configure security settings for the data.
+ This includes but is not limited to setting a publisher and adding receivers
+ to data streams, as well as adding and removing apps and data streams.
+\end_layout
+
+\begin_layout Section
+Overview
+\end_layout
+
+\begin_layout Subsection
+Front End
+\end_layout
+
+\begin_layout Standard
+On the front end, the web client serves HTTP web pages to the user.
+ It does this using the Jetty web server API for Java.
+ Each web page displayed to a user is done so by the use of servlets.
+ Servlets receive an HTTP request, process any necessary data, then display
+ HTML to the user.
+ For example, the home page servlet receives the user's login credentials,
+ then checks the credentials with the PDC.
+ If the user is authenticated to log in, the home page will be displayed,
+ otherwise the login has failed, and the user will be redirected to try
+ to log in again.
+ Each servlet is registered to the web server for a particular URL namespace.
+ Thus each HTML web page accessed in the web client is served to the user
+ by the appropriate servlet.
+\end_layout
+
+\begin_layout Subsection
+Back End
+\end_layout
+
+\begin_layout Standard
+On the back end, the web client communicates with the PDC via NDN.
+ There is a class for each type of data on the PDC.
+ For example, the PDCApps class lists, adds, and removes the applications
+ for the user on this PDV instance.
+ These commands are executed by sending interests to the appropriate namespace
+ in the PDV instance.
+ The PDV instance then responds with an appropriate data packet.
+ There are also a couple classes that handle interests and provide data
+ to the PDC, namely the user's login credentials.
+ Thus this portion of the software is essentially used to communicate with
+ the PDV instance.
+ These classes are the level of indirection used by the front end for communicat
+ion with the PDC.
+\end_layout
+
+\begin_layout Subsection
+Other Features of the Software
+\end_layout
+
+\begin_layout Standard
+A couple other features of the software include a logging service, a customized
+ session manager, and a library of tools and utilities to facilitate development.
+ The logging service runs on a separate thread, so as not to interrupt normal
+ execution of the web client.
+ It handles requests to write to the log.
+ The session manager manages all the sessions currently logged in on a PDV
+ instance.
+ Each session contains information about the user's session.
+ For example, the URI of the PDV instance which they are connected to is
+ stored in the Session instance.
+ The Session instance also contains the symmetric key and any information
+ which the user has selected (e.g.
+ if they have selected an application, datastream, etc.).
+\end_layout
+
+\begin_layout Standard
+The webClient.lib package contains various tools and utilities to aid the
+ current and any future development of the web client.
+ The Algorithms class houses static algorithms for others to use, such as
+ an MD5 hash.
+ The Security class is similar to the Algorithms class in that it also houses
+ static functions for others to use; however, these functions are for security
+ purposes (e.g.
+ generating a public/private key pair).
+ The lib package also contains classes to encapsulate data that needs to
+ be transmitted via NDN.
+ This includes basic implementations of iBSONExportable and CCNFilterListener,
+ which can be extended to specific uses.
+ A few examples of these extentions are classes used for the logging in
+ steps of the protocol (Credentials and AuthenticationResponse), as well
+ as a CollectionTransport class which can be used to transmit a collection
+ of objects via NDN.
+\end_layout
+
+\begin_layout Section
+Use Cases
+\end_layout
+
+\begin_layout Standard
+The following sections describe how a user would use the web client to interact
+ with the PDC to download data and to modify their datastream configuration
+ settings.
+\end_layout
+
+\begin_layout Subsection
+Downloading Data
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:Downloading-Data-Use-Case"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+The user first navigates to the URL of the web client.
+ A page is displayed where they provide the location (an NDN URI) of a PDV
+ instance to connect to and a hexadecimal representation of the PDV's public
+ key.
+\end_layout
+
+\begin_layout Enumerate
+The user then provides his username and password as credentials of his/her
+ identity.
+\end_layout
+
+\begin_layout Enumerate
+The user then selects the download link on the home page.
+\end_layout
+
+\begin_layout Enumerate
+A list of applications will then be presented upon which the user will select
+ the desired app to pull data from.
+\end_layout
+
+\begin_layout Enumerate
+A list of datastreams will then be presented.
+ The user will select which data stream they want to download from.
+\end_layout
+
+\begin_layout Enumerate
+A list of data records for the stream will then be presented.
+ The user can then select the records which they want to download.
+\end_layout
+
+\begin_layout Subsection
+Configuring Settings
+\end_layout
+
+\begin_layout Enumerate
+The user first navigates to the URL of the web client.
+ A page is displayed where they provide the location (an NDN URI) of a PDV
+ instance to connect to and a hexadecimal representation of the PDV's public
+ key.
+\end_layout
+
+\begin_layout Enumerate
+The user then provides his username and password as credentials of his/her
+ identity.
+\end_layout
+
+\begin_layout Enumerate
+The user then selects the configure link on the home page.
+\end_layout
+
+\begin_layout Enumerate
+A list of applications will then be presented upon which the user will select
+ the desired app.
+\end_layout
+
+\begin_layout Enumerate
+A list of datastreams will then be presented.
+ The user will select which data stream they want to configure.
+\end_layout
+
+\begin_layout Enumerate
+A page is displayed that allows a user to set the publisher for the data
+ stream or add a receiver to the data stream.
+\end_layout
+
+\begin_layout Section
+Protocols and Commands
+\end_layout
+
+\begin_layout Standard
+For all the following interactions, we assume that the public key of the
+ PDC is publicly available and already known to the Web Client.
+ <PDV> and <WC> represent the URI's of the PDV instance and WC, respectively.
+\end_layout
+
+\begin_layout Subsection
+Logging in:
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:loginprot"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+The WC notifies a PDV instance it wants to log in a user.
+ 
+\begin_inset Newline newline
+\end_inset
+
+ 
+\begin_inset Newline newline
+\end_inset
+
+ 
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features tabularvalignment="middle">
+<column alignment="left" valignment="top" width="20col%">
+<column alignment="left" valignment="top" width="60col%">
+<row>
+<cell multicolumn="1" alignment="none" valignment="top" topline="true" bottomline="true" usebox="none" width="80col%">
+\begin_inset Text
+
+\begin_layout Plain Layout
+WC sends interest for: 
+\emph on
+<PDV
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "PDV"
+description "A PDV instance. For example: /ucla.edu/pdv1"
+
+\end_inset
+
+>\SpecialChar \slash{}
+manage\SpecialChar \slash{}
+login\SpecialChar \slash{}
+<WC
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "WC"
+description "The Web Client. For example: /ucla.edu/pdc/webclient"
+
+\end_inset
+
+>
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data packet Content: 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Okay or ACK
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data packet Encryption
+\begin_inset space ~
+\end_inset
+
+Key: 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+None
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data packet Signing
+\begin_inset space ~
+\end_inset
+
+Key: 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+PDV private key.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+The PDV then sends an interest to the WC for the user's credentials (username
+ and password).
+ The WC also gives the PDV its own public key.
+ 
+\begin_inset Newline newline
+\end_inset
+
+ 
+\begin_inset Newline newline
+\end_inset
+
+ 
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features tabularvalignment="middle">
+<column alignment="left" valignment="top" width="20col%">
+<column alignment="left" valignment="top" width="60col%">
+<row>
+<cell multicolumn="1" alignment="none" valignment="top" topline="true" bottomline="true" usebox="none" width="80col%">
+\begin_inset Text
+
+\begin_layout Plain Layout
+PDC sends interest for: 
+\emph on
+<WC>\SpecialChar \slash{}
+login\SpecialChar \slash{}
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data packet Content: 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+User credentials, and the WC's public key (encapsulated in the Credentials
+ class)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data packet Encryption
+\begin_inset space ~
+\end_inset
+
+Key: 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+PDV public key 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data packet Signing
+\begin_inset space ~
+\end_inset
+
+Key: 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+WC private key.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+After the PDV has received the user's credentials, the WC checks to see
+ if the PDV has authenticated the user.
+ 
+\begin_inset Newline newline
+\end_inset
+
+ 
+\begin_inset Newline newline
+\end_inset
+
+ 
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features tabularvalignment="middle">
+<column alignment="left" valignment="top" width="20col%">
+<column alignment="left" valignment="top" width="60col%">
+<row>
+<cell multicolumn="1" alignment="none" valignment="top" topline="true" bottomline="true" usebox="none" width="80col%">
+\begin_inset Text
+
+\begin_layout Plain Layout
+WC sends interest for: <PDV>\SpecialChar \slash{}
+manage/login\SpecialChar \slash{}
+isAuthenticated
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data packet Content: 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+A response from the PDV either confirming or denying the login.
+ If it is confirmed, the data packet will also contain a symmetric key to
+ use for the remainder of the session.
+ This response is encapsulated in the AuthenticationResponse class.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data packet Encryption
+\begin_inset space ~
+\end_inset
+
+Key: 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+WC public key 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data packet Signing
+\begin_inset space ~
+\end_inset
+
+Key: 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+PDV private key.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Manage Command 
+\end_layout
+
+\begin_layout Standard
+The web client interacts with a PDV instance by use of the manage command.
+ Below are the commands that the web client issues to a particular PDV instance.
+ All the commands have a prefix: /<PDV>/manage.
+ All data passed between the web client and the PDV instance is encrypted
+ with the symmetric key established in the log on procedure.
+\end_layout
+
+\begin_layout Itemize
+Adding apps, data streams, receivers:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+/add/apps/<app_name>
+\end_layout
+
+\begin_layout Itemize
+/add/datastreams/<app_name>/<datastream_name> 
+\end_layout
+
+\begin_layout Itemize
+/add/receiver/<app_name>/<datastream_name>/<receiver_uri>
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Retrieving a data record:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+/getcontent/<app_name>/<ds_name>/<data_id>
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Retrieving a list of available apps, datastreams, and data records:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+/list/apps 
+\end_layout
+
+\begin_layout Itemize
+/list/datastreams/<app_name> 
+\end_layout
+
+\begin_layout Itemize
+/list/datarecords/<app_name>/<datastream_name>
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Setting the publisher for a data stream:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+/set_publisher/<app_name>/<datastream_name>/<publisher_uri>
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Known Issues and Future Work
+\end_layout
+
+\begin_layout Standard
+One issue with modifying a PDV instance (e.g.
+ adding an app, data stream, or receiver) is that the changes are not immediatel
+y reflected by the web client as a result of the NDN cache.
+ For example, if we add an app then ask to re-list the apps, the old, cached
+ list of apps is returned to the web client, rather than the updated list
+ with the new app.
+\end_layout
+
+\begin_layout Standard
+In order for the initial key exchange to work correctly, it seems as though
+ everything must be freshly restarted.
+ That is, if either the PDC or web client are restarted, the logon procedure
+ and setup of a symmetric key fails.
+ As such, ccnd, mongodb, the pdc, and the web client must be freshly started
+ in order for the logon procedure to work correctly.
+\end_layout
+
+\begin_layout Standard
+As of now, interests between the web client and PDC are not yet signed.
+ In order to augment security, interests should be signed using the symmetric
+ key.
+ Furthermore, objects transmitted between the two entities should be done
+ via protobufs, as implementations of iBSONExportable do not seem to work
+ reliably.
+ This includes, but is not limited to, the user's logon credentials and
+ the web client's public key.
+ The ability to remove apps and datastreams should also be implemented.
+\end_layout
+
+\end_body
+\end_document

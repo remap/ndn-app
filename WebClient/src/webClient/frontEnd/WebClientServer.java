@@ -5,7 +5,6 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import webClient.log.Log;
-import webClient.ndn.test.NDNTestServlet;
 
 /**
  * This class holds the main function of the web client which sets up all the servlets
@@ -47,15 +46,19 @@ public class WebClientServer {
 
 		//configure servlets
 		context.addServlet(new ServletHolder(new AppServlet()), "/home/configure/*");
+                context.addServlet(new ServletHolder(new AddAppServlet()), "/home/configure/add/*");
 		context.addServlet(new ServletHolder(new DataStreamServlet()),
 				"/home/configure/app/*");
                 context.addServlet(new ServletHolder(new AddDSServlet()),
 				"/home/configure/app/add/*");
 		context.addServlet(new ServletHolder(new ConfigureServlet()),
 				"/home/configure/app/dataStream/*");
+                context.addServlet(new ServletHolder(new ConfirmConfigServlet()),
+                        "/home/configure/app/dataStream/confirm_config/*");
 
 		//download servlets
 		context.addServlet(new ServletHolder(new AppServlet()), "/home/download/*");
+                context.addServlet(new ServletHolder(new AddAppServlet()), "/home/download/add/*");
 		context.addServlet(new ServletHolder(new DataStreamServlet()),
 				"/home/download/app/*");
                 context.addServlet(new ServletHolder(new AddDSServlet()),
@@ -64,7 +67,6 @@ public class WebClientServer {
 				"/home/download/app/dataStream/*");
 
 		context.addServlet(new ServletHolder(new UploadServlet()), "/home/upload/*");
-		context.addServlet(new ServletHolder(new NDNTestServlet()), "/home/test/*");
 
 		try {
 			server.start();

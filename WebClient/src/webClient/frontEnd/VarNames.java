@@ -12,4 +12,7 @@ public interface VarNames
     public static final String APPLICATION  = "app";
     public static final String DATA_STREAM  = "dataStream";
     public static final String DATA_RECORD  = "dataRecord";
+    public static final String PUBLISHER    = "publisher";
+    public static final String RECEIVER     = "receiver";
+    public static final String SUBMIT       = "submitButton";
 }

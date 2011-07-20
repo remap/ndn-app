@@ -32,7 +32,8 @@ public class AppServlet extends HttpServlet {
 			response.getWriter().println("<h1> user hash not transferred. </h1>");
 
 		response.getWriter().println("<h1> Your Apps. </h1>");
-                
+
+                printAddRemoveApps(request, response);
 		printApps(request, response);
 	}
 
@@ -76,4 +77,25 @@ public class AppServlet extends HttpServlet {
 				Logger.getLogger(AppServlet.class.getName()).log(Level.SEVERE, null, ex);
 			}
 	}
+
+        private void printAddRemoveApps(HttpServletRequest request, HttpServletResponse response)
+    {
+        try
+        {
+            //print add stream
+            response.getWriter().println("Add App: " + "<form method=\"post\" action=\"" + request.getRequestURL().toString() + "add" + "\" name=pdvform>");
+            response.getWriter().println("<input type=\"text\" name=\"" + VarNames.APPLICATION + "\">");
+            response.getWriter().println("<input type=\"submit\" value=\"Add\">");
+            response.getWriter().println("<input type=\"hidden\" name=\"" + VarNames.USER_HASH
+                    + "\" value=\"" + this._userHash + "\" <br />");
+
+            response.getWriter().print("<br /> To remove an App click "
+                    + "<a href=\"" + request.getRequestURL().toString() + "/remove?"
+                    + VarNames.USER_HASH + "=" + this._userHash + "\">here. </a> <br /> <br />");
+        }
+        catch (IOException ex)
+        {
+            Logger.getLogger(DataStreamServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }
