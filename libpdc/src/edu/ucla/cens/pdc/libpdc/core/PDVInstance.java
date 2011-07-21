@@ -30,8 +30,10 @@ final public class PDVInstance implements CCNFilterListener {
 				add_stream_command(new StreamControlCommands());
 			}
 
-			if (GlobalConfig.hasFeature(GlobalConfig.FEAT_MANAGE))
-				add_generic_command(new ManageCommand());
+			if (GlobalConfig.hasFeature(GlobalConfig.FEAT_MANAGE)) {
+				_web_client = new PDCWebClient();
+				add_generic_command(new ManageCommand(_web_client));
+			}
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error("Unable to instantiate PDVInstance class", ex);
@@ -149,6 +151,8 @@ final public class PDVInstance implements CCNFilterListener {
 	{
 		_generic_commands.put(command.getCommandName(), command);
 	}
+
+	private PDCWebClient _web_client = null;
 
 	final private Map<String, GenericCommand> _generic_commands = new HashMap<String, GenericCommand>(
 			1);
