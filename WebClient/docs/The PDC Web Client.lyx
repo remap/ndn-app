@@ -229,6 +229,7 @@ The user first navigates to the URL of the web client.
  A page is displayed where they provide the location (an NDN URI) of a PDV
  instance to connect to and a hexadecimal representation of the PDV's public
  key.
+ 
 \end_layout
 
 \begin_layout Enumerate
@@ -294,10 +295,21 @@ A page is displayed that allows a user to set the publisher for the data
 Protocols and Commands
 \end_layout
 
+\begin_layout Subsection
+Workflow
+\end_layout
+
 \begin_layout Standard
-For all the following interactions, we assume that the public key of the
- PDC is publicly available and already known to the Web Client.
- <PDV> and <WC> represent the URI's of the PDV instance and WC, respectively.
+When a user first connects to the Web Client, they must provide the URI
+ of a PDV instance to connect to as well as that PDV instance's public key.
+ The user then provides their logon credentials (i.e.
+ username and password combination).
+ The public key is only used during the logon process to encrypt the user's
+ credentials and to securely establish a symmetric key.
+ This symmetric key is then used to encrypt all data between the PDV and
+ the WC.
+ If authenticated, a user is then directed to a home page from which they
+ can manage the given PDV instance.
 \end_layout
 
 \begin_layout Subsection
@@ -312,6 +324,10 @@ name "subsec:loginprot"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+<PDV> and <WC> represent the URI's of the PDV instance and WC, respectively.
 \end_layout
 
 \begin_layout Enumerate
